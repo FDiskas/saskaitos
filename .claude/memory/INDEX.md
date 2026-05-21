@@ -9,3 +9,4 @@
 ## developer/
 - [workflow-style](developer/workflow-style.md) — stage-by-stage vibe-coding prompts with acceptance criteria; replies in Lithuanian. keywords: workflow, vibe-coding, lithuanian, prompts
 - [pnpm-package-manager](developer/pnpm-package-manager.md) — use pnpm everywhere, never npm/yarn. keywords: pnpm, package-manager, install, scripts
+- [typescript-erasable-syntax](developer/typescript-erasable-syntax.md) — erasableSyntaxOnly is on; no parameter properties / enums. keywords: typescript, erasableSyntaxOnly, classes, parameter-properties
