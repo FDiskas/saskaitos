@@ -1,10 +1,47 @@
+import type { ReactNode } from 'react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { RouterProvider } from '@tanstack/react-router';
+import { GoogleAuthProvider, useGoogleAuth } from '@/hooks';
+import { StorageProvider } from '@/lib/storage';
+import { env } from '@/env';
+import { router } from '@/router';
+import type { TokenSource } from '@/lib/drive';
+
+const queryClient = new QueryClient({
+  defaultOptions: { queries: { retry: false, refetchOnWindowFocus: false } },
+});
+
+const noopTokenSource: TokenSource = {
+  getAccessToken: () => null,
+  refreshAccessToken: async () => null,
+};
+
 export function App() {
+  if (env.useInMemory) {
+    return (
+      <QueryClientProvider client={queryClient}>
+        <StorageProvider useInMemory hasToken={false} tokenSource={noopTokenSource}>
+          <RouterProvider router={router} />
+        </StorageProvider>
+      </QueryClientProvider>
+    );
+  }
   return (
-    <main className="flex h-full items-center justify-center bg-slate-50 text-slate-900">
-      <div className="text-center">
-        <h1 className="text-2xl font-semibold">Sąskaitos</h1>
-        <p className="mt-2 text-sm text-slate-500">Etapas 0 — Bootstrap parengtas.</p>
-      </div>
-    </main>
+    <QueryClientProvider client={queryClient}>
+      <GoogleAuthProvider clientId={env.googleClientId}>
+        <StorageWiring>
+          <RouterProvider router={router} />
+        </StorageWiring>
+      </GoogleAuthProvider>
+    </QueryClientProvider>
+  );
+}
+
+function StorageWiring({ children }: { children: ReactNode }) {
+  const { accessToken, tokenSource } = useGoogleAuth();
+  return (
+    <StorageProvider useInMemory={false} hasToken={accessToken !== null} tokenSource={tokenSource}>
+      {children}
+    </StorageProvider>
   );
 }
