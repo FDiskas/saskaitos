@@ -1,7 +1,8 @@
 import { useEffect } from 'react';
-import { useNavigate } from '@tanstack/react-router';
+import { Link, useNavigate } from '@tanstack/react-router';
 import { useBootstrap, useGoogleAuth } from '@/hooks';
 import { env } from '@/env';
+import { SyncStatusBadge } from '@/components/shared';
 
 export function DashboardPage() {
   const { user, isAuthenticated, logout } = useGoogleAuth();
@@ -23,15 +24,24 @@ export function DashboardPage() {
             {env.useInMemory ? 'In-memory dev rėžimas' : user?.email ?? 'Sąskaitos sistema'}
           </p>
         </div>
-        {!env.useInMemory ? (
-          <button
-            type="button"
-            onClick={logout}
-            className="rounded-md bg-slate-900 px-3 py-1.5 text-sm text-white hover:bg-slate-800"
+        <div className="flex items-center gap-3">
+          <SyncStatusBadge />
+          <Link
+            to="/settings"
+            className="rounded-md bg-white px-3 py-1.5 text-sm text-slate-700 ring-1 ring-slate-200 hover:bg-slate-50"
           >
-            Atsijungti
-          </button>
-        ) : null}
+            Nustatymai
+          </Link>
+          {!env.useInMemory ? (
+            <button
+              type="button"
+              onClick={logout}
+              className="rounded-md bg-slate-900 px-3 py-1.5 text-sm text-white hover:bg-slate-800"
+            >
+              Atsijungti
+            </button>
+          ) : null}
+        </div>
       </header>
       <section className="rounded-lg bg-white p-5 shadow-sm ring-1 ring-slate-200">
         <h2 className="text-sm font-medium uppercase tracking-wide text-slate-500">
@@ -48,7 +58,7 @@ export function DashboardPage() {
         </p>
       </section>
       <p className="mt-6 text-xs text-slate-400">
-        Etapas 1 baigtas. Kiti etapai pridės nustatymus, klientus ir sąskaitas.
+        Etapas 2 baigtas: nustatymai ir įmonės rekvizitai. Kiti etapai pridės klientus ir sąskaitas.
       </p>
     </main>
   );

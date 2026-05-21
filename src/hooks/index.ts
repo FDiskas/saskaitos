@@ -5,3 +5,4 @@ export {
   type GoogleUser,
 } from './useGoogleAuth';
 export { useBootstrap } from './useBootstrap';
+export { useSettings, type UseSettingsResult } from './useSettings';
