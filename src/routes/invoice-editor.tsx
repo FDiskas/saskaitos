@@ -31,31 +31,20 @@ import {
 } from '@/components/invoice';
 import { type Invoice, ClientId } from '@/lib/domain';
 import {
-  createBlockInstance,
-  createTemplateRow,
   findBlockInstance,
-  findDataBlockInstance,
-  insertInstance,
   mergeColumnWithRight,
-  moveBlockInstanceToColumn,
   removeBlockInstanceFromTemplate,
   removeTemplateRow,
-  reorderTemplateRows,
   resizeTemplateRowColumns,
   splitColumn,
   updateBlockInstance,
   type BlockInstance,
-  type BlockKind,
   type InvoiceTemplateLayoutDto,
 } from '@/lib/invoice-template/layout';
-import { blockLabel, isSingletonDataKind } from '@/lib/invoice-template/blocks';
 import {
-  parseCanvasColumnDropId,
-  parseCanvasInstanceDragId,
-  parseCanvasRowSortableId,
-  parseLibraryBlockDragId,
-  parseLibraryRowDragId,
-} from '@/lib/invoice-template/dnd';
+  resolveDragLabel,
+  resolveNextLayoutFromDragEnd,
+} from './invoice-editor-dnd';
 
 export function InvoiceEditorPage() {
   const { id } = useParams({ from: '/invoice-editor/$id' });
@@ -157,60 +146,6 @@ export function InvoiceEditorPage() {
 
   if (!localInvoice || !settings) return null;
 
-  const resolveDropTargetColumn = (overId: string): { rowId: string; columnId: string } | null => {
-    if (overId === 'canvas:root') {
-      const firstRow = settings.invoiceLayout.layout[0];
-      const firstColumn = firstRow?.columns[0];
-      if (!firstRow || !firstColumn) return null;
-      return { rowId: firstRow.id, columnId: firstColumn.id };
-    }
-
-    const directColumn = parseCanvasColumnDropId(overId);
-    if (directColumn) return directColumn;
-
-    const overInstanceId = parseCanvasInstanceDragId(overId);
-    if (overInstanceId) {
-      for (const row of settings.invoiceLayout.layout) {
-        for (const column of row.columns) {
-          if (column.content.some((existing) => existing.id === overInstanceId)) {
-            return { rowId: row.id, columnId: column.id };
-          }
-        }
-      }
-    }
-
-    const overRowId = parseCanvasRowSortableId(overId);
-    if (!overRowId) return null;
-
-    const row = settings.invoiceLayout.layout.find((candidate) => candidate.id === overRowId);
-    const firstColumn = row?.columns[0];
-    if (!firstColumn) return null;
-    return { rowId: overRowId, columnId: firstColumn.id };
-  };
-
-  const resolveDropTargetRow = (overId: string): string | null => {
-    if (overId === 'canvas:root') {
-      const rows = settings.invoiceLayout.layout;
-      const lastRow = rows[rows.length - 1];
-      return lastRow?.id ?? null;
-    }
-
-    const directRowId = parseCanvasRowSortableId(overId);
-    if (directRowId) return directRowId;
-
-    const overColumn = parseCanvasColumnDropId(overId);
-    if (overColumn) return overColumn.rowId;
-
-    const overInstanceId = parseCanvasInstanceDragId(overId);
-    if (!overInstanceId) return null;
-
-    const rowWithInstance = settings.invoiceLayout.layout.find((row) =>
-      row.columns.some((column) => column.content.some((item) => item.id === overInstanceId)),
-    );
-
-    return rowWithInstance?.id ?? null;
-  };
-
   const handleDragEnd = (event: DragEndEvent) => {
     if (isPreview) return;
 
@@ -219,59 +154,14 @@ export function InvoiceEditorPage() {
     if (!overId) return;
 
     const activeId = String(event.active.id);
+    const nextLayout = resolveNextLayoutFromDragEnd({
+      layout: settings.invoiceLayout,
+      activeId,
+      overId,
+    });
+    if (!nextLayout) return;
 
-    const activeRowId = parseCanvasRowSortableId(activeId);
-    const overRowId = resolveDropTargetRow(overId);
-    if (activeRowId && overRowId && activeRowId !== overRowId) {
-      handleLayoutChange(reorderTemplateRows(settings.invoiceLayout, activeRowId, overRowId));
-      return;
-    }
-
-    const libraryRowColumns = parseLibraryRowDragId(activeId);
-    if (libraryRowColumns !== null) {
-      const nextRow = createTemplateRow(libraryRowColumns);
-      const nextRows = [...settings.invoiceLayout.layout];
-
-      if (overRowId) {
-        const insertIndex = nextRows.findIndex((row) => row.id === overRowId);
-        if (insertIndex >= 0) {
-          nextRows.splice(insertIndex, 0, nextRow);
-        } else {
-          nextRows.push(nextRow);
-        }
-      } else {
-        nextRows.push(nextRow);
-      }
-
-      handleLayoutChange({ ...settings.invoiceLayout, layout: nextRows });
-      return;
-    }
-
-    const dropTarget = resolveDropTargetColumn(overId);
-    if (!dropTarget) return;
-
-    const overInstanceId = parseCanvasInstanceDragId(overId);
-    const canvasInstanceId = parseCanvasInstanceDragId(activeId);
-    if (canvasInstanceId) {
-      if (overInstanceId && canvasInstanceId === overInstanceId) return;
-      handleLayoutChange(
-        moveBlockInstanceToColumn(
-          settings.invoiceLayout,
-          canvasInstanceId,
-          dropTarget.rowId,
-          dropTarget.columnId,
-          overInstanceId ?? undefined,
-        ),
-      );
-      return;
-    }
-
-    const libraryKind = parseLibraryBlockDragId(activeId);
-    if (!libraryKind) return;
-
-    handleLayoutChange(
-      dropLibraryKind(settings.invoiceLayout, libraryKind, dropTarget, overInstanceId ?? undefined),
-    );
+    handleLayoutChange(nextLayout);
   };
 
   const client = clients.find((c) => c.id.equals(localInvoice.clientId));
@@ -431,39 +321,9 @@ const nestedDroppableCollision: CollisionDetection = (args) => {
   return closestCorners(args);
 };
 
-function dropLibraryKind(
-  layout: InvoiceTemplateLayoutDto,
-  kind: BlockKind,
-  target: { rowId: string; columnId: string },
-  beforeInstanceId?: string,
-): InvoiceTemplateLayoutDto {
-  if (isSingletonDataKind(kind)) {
-    const existing = findDataBlockInstance(layout, kind);
-    if (existing) {
-      return moveBlockInstanceToColumn(layout, existing.id, target.rowId, target.columnId, beforeInstanceId);
-    }
-  }
-  const instance = createBlockInstance(kind);
-  return insertInstance(layout, instance, target.rowId, target.columnId, beforeInstanceId);
-}
-
 interface SyncStatusPillProps {
   isSaving: boolean;
   isPendingSave: boolean;
-}
-
-function resolveDragLabel(activeId: string): string | null {
-  const rowColumns = parseLibraryRowDragId(activeId);
-  if (rowColumns !== null) return `Eilutė (${rowColumns} st.)`;
-
-  const libraryBlock = parseLibraryBlockDragId(activeId);
-  if (libraryBlock) return blockLabel(libraryBlock);
-
-  if (parseCanvasInstanceDragId(activeId)) return 'Blokas';
-
-  if (parseCanvasRowSortableId(activeId)) return 'Eilutė';
-
-  return null;
 }
 
 function SyncStatusPill({ isSaving, isPendingSave }: SyncStatusPillProps) {
