@@ -7,7 +7,7 @@ import {
   useStorage,
   type Storage,
 } from '@/lib/storage';
-import { Client } from '@/lib/domain';
+import type { Client } from '@/lib/domain';
 import { ClientsFileSchema, clientToDto, clientFromDto } from '@/lib/drive/schemas';
 import { syncQueue } from '@/stores';
 
@@ -21,15 +21,26 @@ async function readClients(storage: Storage): Promise<Client[]> {
 
 export function useClients() {
   const storage = useStorage();
-  const qc = useQueryClient();
 
+  // eslint-disable-next-line @tanstack/query/exhaustive-deps -- storage is provided via a stable context
   const query = useQuery({
     queryKey: queryKeys.clients,
     queryFn: () => readClients(storage),
     staleTime: 30_000,
   });
 
-  const createMutation = useMutation<void, Error, Client, { prev: Client[] | undefined }>({
+  return {
+    clients: query.data || [],
+    isLoading: query.isLoading,
+    error: query.error,
+  };
+}
+
+export function useCreateClient() {
+  const storage = useStorage();
+  const qc = useQueryClient();
+
+  return useMutation<void, Error, Client, { prev: Client[] | undefined }>({
     mutationFn: async (newClient) => {
       // 1. Write the new clients list to clients.json
       await syncQueue.enqueue(async () => {
@@ -66,8 +77,13 @@ export function useClients() {
       void qc.invalidateQueries({ queryKey: queryKeys.clients });
     },
   });
+}
 
-  const updateMutation = useMutation<void, Error, Client, { prev: Client[] | undefined }>({
+export function useUpdateClient() {
+  const storage = useStorage();
+  const qc = useQueryClient();
+
+  return useMutation<void, Error, Client, { prev: Client[] | undefined }>({
     mutationFn: async (updatedClient) => {
       // 1. Update the client in clients.json
       await syncQueue.enqueue(async () => {
@@ -107,8 +123,13 @@ export function useClients() {
       void qc.invalidateQueries({ queryKey: queryKeys.clients });
     },
   });
+}
 
-  const deleteMutation = useMutation<void, Error, Client, { prev: Client[] | undefined }>({
+export function useDeleteClient() {
+  const storage = useStorage();
+  const qc = useQueryClient();
+
+  return useMutation<void, Error, Client, { prev: Client[] | undefined }>({
     mutationFn: async (clientToDelete) => {
       // 1. Remove the client from clients.json
       await syncQueue.enqueue(async () => {
@@ -146,16 +167,4 @@ export function useClients() {
       void qc.invalidateQueries({ queryKey: queryKeys.clients });
     },
   });
-
-  return {
-    clients: query.data || [],
-    isLoading: query.isLoading,
-    error: query.error || createMutation.error || updateMutation.error || deleteMutation.error,
-    createClient: createMutation.mutate,
-    isCreating: createMutation.isPending,
-    updateClient: updateMutation.mutate,
-    isUpdating: updateMutation.isPending,
-    deleteClient: deleteMutation.mutate,
-    isDeleting: deleteMutation.isPending,
-  };
 }
