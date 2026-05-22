@@ -95,4 +95,24 @@ describe('instanceContentRenderers', () => {
 
     expect(onPatch).toHaveBeenCalledWith('inst-text', { kind: 'text', text: 'Laba vakara' });
   });
+
+  it('when rendering amount-in-words block, then it shows calculated amount in words', () => {
+    const context = createContext();
+
+    render(
+      renderBlockInstanceContent(
+        {
+          id: 'inst-amount-words',
+          kind: 'amount-in-words',
+          align: 'left',
+          marginTop: 0,
+          marginBottom: 0,
+        },
+        context,
+      ),
+    );
+
+    expect(screen.getByText('Suma žodžiais:')).toBeInTheDocument();
+    expect(screen.getByText('Nulis eurų nulis centų')).toBeInTheDocument();
+  });
 });

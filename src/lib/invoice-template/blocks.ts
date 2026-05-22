@@ -12,6 +12,7 @@ export const DATA_BLOCK_DEFINITIONS: readonly InvoiceTemplateBlockDefinition[] =
   { kind: 'invoice-meta', label: 'Sąskaitos rekvizitai' },
   { kind: 'line-items', label: 'Prekių lentelė' },
   { kind: 'totals', label: 'Suma' },
+  { kind: 'amount-in-words', label: 'Suma žodžiais' },
   { kind: 'notes', label: 'Pastabos' },
   { kind: 'signature', label: 'Parašas' },
 ] as const;

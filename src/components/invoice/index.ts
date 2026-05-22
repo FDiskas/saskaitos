@@ -11,6 +11,7 @@ export { BuyerBlock, type BuyerBlockProps } from './BuyerBlock';
 export { NotesBlock, type NotesBlockProps } from './NotesBlock';
 export { VatToggle, type VatToggleProps } from './VatToggle';
 export { TotalsBox, type TotalsBoxProps } from './TotalsBox';
+export { AmountInWordsBlock, type AmountInWordsBlockProps } from './AmountInWordsBlock';
 export { InvoiceSignatures } from './InvoiceSignatures';
 export { NewInvoicePicker, type NewInvoicePickerProps } from './NewInvoicePicker';
 export {

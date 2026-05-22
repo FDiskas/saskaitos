@@ -108,6 +108,48 @@ export function InvoiceEditorPage() {
     [updateSettings],
   );
 
+  const handleCompanyLogoChange = useCallback(
+    (nextLogoBase64: string | undefined) => {
+      updateSettings((current) => {
+        const companies = current.companies ?? [];
+        const fallbackActiveId = current.activeCompanyId ?? companies[0]?.id ?? null;
+
+        if (!fallbackActiveId) {
+          if (!current.company) return current;
+          return {
+            ...current,
+            company: {
+              ...current.company,
+              logoBase64: nextLogoBase64,
+            },
+          };
+        }
+
+        const nextCompanies = companies.map((profile) =>
+          profile.id === fallbackActiveId
+            ? {
+                ...profile,
+                company: {
+                  ...profile.company,
+                  logoBase64: nextLogoBase64,
+                },
+              }
+            : profile,
+        );
+
+        const activeCompany = nextCompanies.find((profile) => profile.id === fallbackActiveId)?.company;
+        if (!activeCompany) return current;
+
+        return {
+          ...current,
+          companies: nextCompanies,
+          company: activeCompany,
+        };
+      });
+    },
+    [updateSettings],
+  );
+
   const isPendingSave = useInvoiceAutosave({
     local: localInvoice,
     server: invoice,
@@ -209,6 +251,8 @@ export function InvoiceEditorPage() {
         <TemplateBlockSettingsSidebar
           invoice={localInvoice}
           onInvoiceChange={setLocalInvoice}
+          logoBase64={settings.company?.logoBase64}
+          onLogoBase64Change={handleCompanyLogoChange}
           selectedInstance={selectedInstance ?? null}
           selectedRowId={selectedRowId}
           layout={settings.invoiceLayout}

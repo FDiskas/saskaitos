@@ -158,6 +158,18 @@ describe('invoice template layout', () => {
     expect(image.imageBase64).toBeUndefined();
   });
 
+  it('when creating amount-in-words instance, then it is a plain data block instance', () => {
+    const instance = createBlockInstance('amount-in-words', () => 'inst-words-1');
+
+    expect(instance).toEqual({
+      id: 'inst-words-1',
+      kind: 'amount-in-words',
+      align: 'left',
+      marginTop: 0,
+      marginBottom: 0,
+    });
+  });
+
   it('when allowing multiple dividers per layout, then both coexist', () => {
     const layout: InvoiceTemplateLayoutDto = {
       layout: [

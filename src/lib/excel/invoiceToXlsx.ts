@@ -1,6 +1,7 @@
 import { type Invoice, type Client } from '@/lib/domain';
 import type { SettingsDto } from '@/lib/drive/settings';
 import { formatDate } from '@/lib/format/date';
+import { moneyToWordsLt } from '@/lib/format/moneyWordsLt';
 
 function getSellerRows(settings: SettingsDto): string[][] {
   const comp = settings.company;
@@ -62,6 +63,7 @@ function getSummaryRows(invoice: Invoice): (string | number)[][] {
     rows.push(['PVM suma', '', '', '', '', totals.vatAmount.toNumber()]);
   }
   rows.push(['Iš viso apmokėti', '', '', '', '', totals.total.toNumber()]);
+  rows.push(['Suma žodžiais', '', '', '', '', moneyToWordsLt(totals.total)]);
   return rows;
 }
 

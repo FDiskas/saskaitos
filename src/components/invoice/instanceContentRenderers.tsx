@@ -2,6 +2,7 @@ import { type CSSProperties, type ReactNode } from 'react';
 import { type Invoice } from '@/lib/domain';
 import { type SettingsDto } from '@/lib/drive/settings';
 import { type BlockKind, type BlockInstance } from '@/lib/invoice-template/layout';
+import { AmountInWordsBlock } from './AmountInWordsBlock';
 import { BuyerBlock } from './BuyerBlock';
 import { InvoiceMetaBlock } from './InvoiceMetaBlock';
 import { InvoiceSignatures } from './InvoiceSignatures';
@@ -63,6 +64,16 @@ export const INSTANCE_RENDERERS: Record<BlockKind, InstanceRenderer> = {
         <VatToggle invoice={context.invoice} onChange={context.onChange} isPreview={context.isPreview} />
         <TotalsBox invoice={context.invoice} accentColor={context.palette.accentColor} />
       </div>
+    );
+  },
+  'amount-in-words': (instance, context) => {
+    if (instance.kind !== 'amount-in-words') return null;
+    return (
+      <AmountInWordsBlock
+        invoice={context.invoice}
+        align={instance.align}
+        textColor={context.palette.mutedColor}
+      />
     );
   },
   signature: () => <InvoiceSignatures />,

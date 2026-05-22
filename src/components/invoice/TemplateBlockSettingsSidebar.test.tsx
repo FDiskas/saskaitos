@@ -1,10 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { TemplateBlockSettingsSidebar } from './TemplateBlockSettingsSidebar';
 import type { TextBlockInstance } from '@/lib/invoice-template/layout';
 import { ClientId, Invoice, InvoiceId, InvoiceNumber, LineItems, VatRate } from '@/lib/domain';
 
 const mockUseCreateClient = vi.fn();
+const mockFileToBase64 = vi.fn();
 
 vi.mock('@/components/shared', () => ({
   ClientCombobox: ({ value, placeholder }: { value: string | null; placeholder?: string }) => (
@@ -17,6 +18,10 @@ vi.mock('@/components/shared', () => ({
 
 vi.mock('@/hooks', () => ({
   useCreateClient: () => mockUseCreateClient(),
+}));
+
+vi.mock('@/lib/files', () => ({
+  fileToBase64: (file: File) => mockFileToBase64(file),
 }));
 
 function createTextInstance(text: string): TextBlockInstance {
@@ -57,6 +62,7 @@ describe('TemplateBlockSettingsSidebar', () => {
       mutate: vi.fn(),
       isPending: false,
     });
+    mockFileToBase64.mockResolvedValue('data:image/png;base64,mocked-logo');
   });
 
   it('when editing text control, then commits text change on blur only', () => {
@@ -182,5 +188,42 @@ describe('TemplateBlockSettingsSidebar', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Pridėti klientą' }));
 
     expect(screen.getByText('Pridėti Klientą')).toBeInTheDocument();
+  });
+
+  it('when uploading logo in logo block settings, then updates company logo', async () => {
+    const onLogoBase64Change = vi.fn();
+
+    render(
+      <TemplateBlockSettingsSidebar
+        invoice={createInvoice()}
+        onInvoiceChange={vi.fn()}
+        logoBase64={undefined}
+        onLogoBase64Change={onLogoBase64Change}
+        selectedInstance={{
+          id: 'inst-logo',
+          kind: 'logo',
+          align: 'left',
+          marginTop: 0,
+          marginBottom: 0,
+        }}
+        selectedRowId={null}
+        layout={{ layout: [] }}
+        onInstancePatch={vi.fn()}
+        onRemoveInstance={vi.fn()}
+        onRowColumnsChange={vi.fn()}
+        onMergeColumnRight={vi.fn()}
+        onSplitColumn={vi.fn()}
+        onRemoveRow={vi.fn()}
+      />,
+    );
+
+    const input = screen.getByLabelText('Įkelti logotipą');
+    const file = new File(['logo'], 'logo.png', { type: 'image/png' });
+
+    fireEvent.change(input, { target: { files: [file] } });
+
+    await waitFor(() => {
+      expect(onLogoBase64Change).toHaveBeenCalledWith('data:image/png;base64,mocked-logo');
+    });
   });
 });

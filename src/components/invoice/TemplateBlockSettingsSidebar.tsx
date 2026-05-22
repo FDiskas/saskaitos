@@ -2,6 +2,7 @@ import { useState, type ChangeEvent } from 'react';
 import { Button } from '@/components/ui';
 import { ClientCombobox } from '@/components/shared';
 import { Client, type Invoice, ClientId } from '@/lib/domain';
+import { fileToBase64 } from '@/lib/files';
 import { useCreateClient } from '@/hooks';
 import { ClientFormDialog, type ClientFormValues } from '@/components/clients';
 import { blockLabel } from '@/lib/invoice-template/blocks';
@@ -20,6 +21,8 @@ import { useCommittedValueDraft } from './useCommittedValueDraft';
 export interface TemplateBlockSettingsSidebarProps {
   invoice: Invoice;
   onInvoiceChange: (updated: Invoice) => void;
+  logoBase64?: string;
+  onLogoBase64Change?: (logoBase64: string | undefined) => void;
   selectedInstance: BlockInstance | null;
   selectedRowId: string | null;
   layout: InvoiceTemplateLayoutDto;
@@ -34,6 +37,8 @@ export interface TemplateBlockSettingsSidebarProps {
 export function TemplateBlockSettingsSidebar({
   invoice,
   onInvoiceChange,
+  logoBase64,
+  onLogoBase64Change,
   selectedInstance,
   selectedRowId,
   layout,
@@ -74,6 +79,8 @@ export function TemplateBlockSettingsSidebar({
     <InstanceSettingsPanel
       invoice={invoice}
       onInvoiceChange={onInvoiceChange}
+      logoBase64={logoBase64}
+      onLogoBase64Change={onLogoBase64Change}
       instance={selectedInstance}
       onInstancePatch={onInstancePatch}
       onRemoveInstance={onRemoveInstance}
@@ -223,6 +230,8 @@ function ColumnControls({ column, index, isLast, onMergeRight, onSplit }: Column
 interface InstanceSettingsPanelProps {
   invoice: Invoice;
   onInvoiceChange: (updated: Invoice) => void;
+  logoBase64?: string;
+  onLogoBase64Change?: (logoBase64: string | undefined) => void;
   instance: BlockInstance;
   onInstancePatch: (patch: Partial<BlockInstance>) => void;
   onRemoveInstance: () => void;
@@ -231,6 +240,8 @@ interface InstanceSettingsPanelProps {
 function InstanceSettingsPanel({
   invoice,
   onInvoiceChange,
+  logoBase64,
+  onLogoBase64Change,
   instance,
   onInstancePatch,
   onRemoveInstance,
@@ -296,6 +307,12 @@ function InstanceSettingsPanel({
       {instance.kind === 'custom-image' && (
         <CustomImageControls instance={instance} onInstancePatch={onInstancePatch} />
       )}
+      {instance.kind === 'logo' && (
+        <LogoControls
+          logoBase64={logoBase64}
+          onLogoBase64Change={onLogoBase64Change}
+        />
+      )}
       {instance.kind === 'buyer-info' && (
         <BuyerControls invoice={invoice} onInvoiceChange={onInvoiceChange} />
       )}
@@ -305,6 +322,65 @@ function InstanceSettingsPanel({
         Pašalinti bloką
       </Button>
     </aside>
+  );
+}
+
+interface LogoControlsProps {
+  logoBase64?: string;
+  onLogoBase64Change?: (logoBase64: string | undefined) => void;
+}
+
+function LogoControls({ logoBase64, onLogoBase64Change }: LogoControlsProps) {
+  const handleLogoUpload = async (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    if (!file || !onLogoBase64Change) return;
+
+    const dataUrl = await fileToBase64(file);
+    onLogoBase64Change(dataUrl);
+  };
+
+  return (
+    <div className="border-t border-slate-100 pt-3 mb-4">
+      <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500 mb-2">Logotipas</p>
+
+      <div className="flex items-center gap-3 mb-3">
+        {logoBase64 ? (
+          <img
+            src={logoBase64}
+            alt="Logotipas"
+            className="h-14 w-14 rounded border border-slate-200 object-contain p-1"
+          />
+        ) : (
+          <div className="flex h-14 w-14 items-center justify-center rounded border border-dashed border-slate-300 text-xs text-slate-400">
+            Nėra
+          </div>
+        )}
+
+        <label className="inline-flex cursor-pointer items-center rounded-md bg-white px-3 py-1.5 text-xs font-medium text-slate-700 ring-1 ring-slate-200 hover:bg-slate-50">
+          Įkelti logotipą
+          <input
+            type="file"
+            accept="image/*"
+            className="hidden"
+            aria-label="Įkelti logotipą"
+            onChange={handleLogoUpload}
+          />
+        </label>
+      </div>
+
+      {logoBase64 ? (
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          className="w-full"
+          onClick={() => onLogoBase64Change?.(undefined)}
+        >
+          Pašalinti logotipą
+        </Button>
+      ) : null}
+    </div>
   );
 }
 

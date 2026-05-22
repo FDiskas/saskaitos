@@ -1,7 +1,15 @@
 import { Plus, Trash2 } from 'lucide-react';
 import { Button, Input, Label } from '@/components/ui';
 import { fileToBase64 } from '@/lib/files';
-import type { DesignPresetDto } from '@/lib/drive/settings';
+import {
+  DEFAULT_ACCENT_COLOR,
+  DEFAULT_BORDER_COLOR,
+  DEFAULT_HEADING_COLOR,
+  DEFAULT_MUTED_COLOR,
+  DEFAULT_PRIMARY_COLOR,
+  DEFAULT_TEXT_COLOR,
+  type DesignPresetDto,
+} from '@/lib/drive/settings';
 import { POPULAR_GOOGLE_FONTS } from '@/lib/pdf/googleFonts';
 
 export interface DesignTabProps {
@@ -10,6 +18,23 @@ export interface DesignTabProps {
 }
 
 const FONT_FAMILIES = POPULAR_GOOGLE_FONTS;
+
+interface ColorFieldConfig {
+  key: keyof Pick<
+    DesignPresetDto,
+    'primaryColor' | 'accentColor' | 'textColor' | 'mutedColor' | 'borderColor' | 'headingColor'
+  >;
+  label: string;
+}
+
+const COLOR_FIELDS: readonly ColorFieldConfig[] = [
+  { key: 'primaryColor', label: 'Pirminė spalva' },
+  { key: 'accentColor', label: 'Akcentinė spalva' },
+  { key: 'textColor', label: 'Teksto spalva' },
+  { key: 'mutedColor', label: 'Pilkų detalių spalva' },
+  { key: 'borderColor', label: 'Linijų spalva' },
+  { key: 'headingColor', label: 'Antraščių spalva' },
+];
 
 export function DesignTab({ presets, onChange }: DesignTabProps) {
   function updatePreset(id: string, patch: Partial<DesignPresetDto>): void {
@@ -25,8 +50,12 @@ export function DesignTab({ presets, onChange }: DesignTabProps) {
     const next: DesignPresetDto = {
       id: crypto.randomUUID(),
       name: 'Naujas šablonas',
-      primaryColor: '#0f172a',
-      accentColor: '#2563eb',
+      primaryColor: DEFAULT_PRIMARY_COLOR,
+      accentColor: DEFAULT_ACCENT_COLOR,
+      textColor: DEFAULT_TEXT_COLOR,
+      mutedColor: DEFAULT_MUTED_COLOR,
+      borderColor: DEFAULT_BORDER_COLOR,
+      headingColor: DEFAULT_HEADING_COLOR,
       fontFamily: 'Inter',
     };
     onChange([...presets, next]);
@@ -90,16 +119,14 @@ function DesignCard({ preset, canDelete, onUpdate, onRemove, onBackground }: Des
         </Button>
       </div>
       <div className="grid grid-cols-2 gap-3">
-        <ColorField
-          label="Pirminė spalva"
-          value={preset.primaryColor}
-          onChange={(v) => onUpdate({ primaryColor: v })}
-        />
-        <ColorField
-          label="Akcentinė spalva"
-          value={preset.accentColor}
-          onChange={(v) => onUpdate({ accentColor: v })}
-        />
+        {COLOR_FIELDS.map((colorField) => (
+          <ColorField
+            key={colorField.key}
+            label={colorField.label}
+            value={preset[colorField.key]}
+            onChange={(value) => onUpdate({ [colorField.key]: value })}
+          />
+        ))}
       </div>
       <div className="flex flex-col gap-1.5">
         <Label>Šriftas</Label>

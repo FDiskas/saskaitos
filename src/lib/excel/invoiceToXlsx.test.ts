@@ -112,6 +112,7 @@ describe('exportInvoiceToXlsx', () => {
     expect(flatData).toContain('Test paslauga');
     expect(flatData).toContain('PVM SĄSKAITA-FAKTŪRA');
     expect(flatData).toContain('Serija ir numeris: SF2026-0123');
+    expect(flatData).toContain('Suma žodžiais');
 
     expect(XLSX.writeFile).toHaveBeenCalledWith(
       expect.any(Object),

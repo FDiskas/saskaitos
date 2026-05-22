@@ -181,6 +181,12 @@ export const getPdfStyles = (palette: PdfPalette, fontFamily: string | readonly 
       fontWeight: 'bold',
       color: accentColor,
     },
+    amountInWords: {
+      width: '100%',
+      marginTop: 6,
+      fontSize: 8,
+      color: mutedColor,
+    },
     signatures: {
       flexDirection: 'row',
       justifyContent: 'space-between',

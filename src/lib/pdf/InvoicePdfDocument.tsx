@@ -11,6 +11,7 @@ import {
 } from '@/lib/drive/settings';
 import { rowTotalSpan, type BlockInstance, type InvoiceTemplateRowDto } from '@/lib/invoice-template/layout';
 import { formatDate } from '@/lib/format/date';
+import { moneyToWordsLt } from '@/lib/format/moneyWordsLt';
 import { getPdfStyles, type PdfPalette } from './InvoicePdfStyles';
 import { resolveFontStack } from './googleFonts';
 
@@ -44,6 +45,7 @@ export function InvoicePdfDocument({ invoice, client, settings }: InvoicePdfDocu
   const fontStack = resolveFontStack(activePreset?.fontFamily);
 
   const totals = invoice.totals();
+  const totalInWords = moneyToWordsLt(totals.total);
   const hasVat = invoice.vat.enabled;
   const items = invoice.lineItems.toArray();
   const styles = getPdfStyles(palette, fontStack);
@@ -169,6 +171,10 @@ export function InvoicePdfDocument({ invoice, client, settings }: InvoicePdfDocu
           </View>
         </View>
       );
+    }
+
+    if (instance.kind === 'amount-in-words') {
+      return <Text style={[styles.amountInWords, { textAlign: instance.align }]}>Suma žodžiais: {totalInWords}</Text>;
     }
 
     if (instance.kind === 'signature') {

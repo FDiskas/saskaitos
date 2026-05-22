@@ -7,6 +7,7 @@ export const DataBlockKindSchema = z.enum([
   'invoice-meta',
   'line-items',
   'totals',
+  'amount-in-words',
   'notes',
   'signature',
 ]);
