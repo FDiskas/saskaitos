@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Download, FileDown, Loader2, Mail } from 'lucide-react';
-import { Invoice, Client } from '@/lib/domain';
+import { type Invoice, type Client } from '@/lib/domain';
 import type { SettingsDto } from '@/lib/drive/settings';
 import { useStorage, getInvoicePdfPath } from '@/hooks';
 import { exportInvoiceToXlsx } from '@/lib/excel/invoiceToXlsx';
@@ -109,13 +109,15 @@ export function InvoiceActions({ invoice, client, settings }: InvoiceActionsProp
         </Button>
       </div>
 
-      <EmailDialog
-        open={isEmailOpen}
-        onOpenChange={setIsEmailOpen}
-        invoice={invoice}
-        client={client}
-        settings={settings}
-      />
+      {isEmailOpen && (
+        <EmailDialog
+          open={isEmailOpen}
+          onOpenChange={setIsEmailOpen}
+          invoice={invoice}
+          client={client}
+          settings={settings}
+        />
+      )}
     </div>
   );
 }

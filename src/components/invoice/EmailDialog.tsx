@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { AlertCircle, CheckCircle2, Loader2, Mail } from 'lucide-react';
-import { Invoice, Client } from '@/lib/domain';
+import { type Invoice, type Client } from '@/lib/domain';
 import type { SettingsDto } from '@/lib/drive/settings';
 import {
   Button,
@@ -37,10 +37,14 @@ function resolveTemplate(template: string, invoice: Invoice, client: Client, set
 }
 
 export function EmailDialog({ open, onOpenChange, invoice, client, settings }: EmailDialogProps) {
-  const [to, setTo] = useState('');
+  const [to, setTo] = useState(client.email || '');
   const [cc, setCc] = useState('');
-  const [subject, setSubject] = useState('');
-  const [body, setBody] = useState('');
+  const [subject, setSubject] = useState(
+    resolveTemplate(settings.defaultEmailSubject || 'Sąskaita-faktūra {{invoice.number}}', invoice, client, settings),
+  );
+  const [body, setBody] = useState(
+    resolveTemplate(settings.defaultEmailBody || 'Sveiki, {{client.name}}!\n\nSiunčiu sąskaitą-faktūrą {{invoice.number}}.\n\nPagarbiai,\n{{company.name}}', invoice, client, settings),
+  );
   const [attachPdf, setAttachPdf] = useState(true);
   const [isSending, setIsSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -48,18 +52,6 @@ export function EmailDialog({ open, onOpenChange, invoice, client, settings }: E
 
   const hasApiKey = !!settings.resendApiKey;
   const fromEmail = settings.company?.email || '';
-
-  useEffect(() => {
-    if (open) {
-      setTo(client.email || '');
-      setCc('');
-      setSubject(resolveTemplate(settings.defaultEmailSubject || 'Sąskaita-faktūra {{invoice.number}}', invoice, client, settings));
-      setBody(resolveTemplate(settings.defaultEmailBody || 'Sveiki, {{client.name}}!\n\nSiunčiu sąskaitą-faktūrą {{invoice.number}}.\n\nPagarbiai,\n{{company.name}}', invoice, client, settings));
-      setAttachPdf(true);
-      setError(null);
-      setSentMessage(null);
-    }
-  }, [open, invoice, client, settings]);
 
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();

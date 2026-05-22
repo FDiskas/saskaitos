@@ -28,11 +28,6 @@ export function InlineEditField<T = string>({
   const inputRef = useRef<HTMLInputElement | HTMLTextAreaElement>(null);
 
   useEffect(() => {
-    if (isEditing) return;
-    setLocalValue(format(value));
-  }, [value, format, isEditing]);
-
-  useEffect(() => {
     if (isEditing && inputRef.current) {
       inputRef.current.focus();
       if (type !== 'date') {
@@ -52,12 +47,16 @@ export function InlineEditField<T = string>({
     }
   };
 
+  const beginEditing = () => {
+    setLocalValue(format(value));
+    setIsEditing(true);
+  };
+
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && type !== 'textarea') {
       handleCommit();
     }
     if (e.key === 'Escape') {
-      setLocalValue(format(value));
       setIsEditing(false);
     }
   };
@@ -108,10 +107,10 @@ export function InlineEditField<T = string>({
     <span
       role="button"
       tabIndex={0}
-      onClick={() => setIsEditing(true)}
+      onClick={beginEditing}
       onKeyDown={(e) => {
         if (e.key === 'Enter' || e.key === ' ') {
-          setIsEditing(true);
+          beginEditing();
         }
       }}
       className={`cursor-pointer rounded px-1 py-0.5 hover:bg-slate-100 focus:bg-slate-100 focus:outline-none inline-block ${

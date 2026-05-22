@@ -14,8 +14,8 @@ import {
   LineItems,
   VatRate,
   Series,
-  ClientId,
-  Client,
+  type ClientId,
+  type Client,
 } from '@/lib/domain';
 import {
   invoiceToDto,

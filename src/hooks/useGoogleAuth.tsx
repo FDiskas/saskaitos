@@ -59,11 +59,14 @@ export function GoogleAuthProvider({
 }
 
 function InnerAuthProvider({ children }: { children: ReactNode }) {
-  const [accessToken, setAccessToken] = useState<string | null>(null);
+  const [storedSession] = useState(() => loadStoredSession());
+  const validStoredSession = storedSession && isSessionValid(storedSession) ? storedSession : null;
+
+  const [accessToken, setAccessToken] = useState<string | null>(validStoredSession?.accessToken ?? null);
   const [user, setUser] = useState<GoogleUser | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [isRestoring, setIsRestoring] = useState(true);
-  const [expiresAt, setExpiresAt] = useState<number | null>(null);
+  const [isRestoring, setIsRestoring] = useState(validStoredSession !== null);
+  const [expiresAt, setExpiresAt] = useState<number | null>(validStoredSession?.expiresAt ?? null);
   const [error, setError] = useState<string | null>(null);
   const tokenRef = useRef<string | null>(null);
   const refreshResolverRef = useRef<((token: string | null) => void) | null>(null);
@@ -131,19 +134,16 @@ function InnerAuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
-    const stored = loadStoredSession();
-    if (!stored) {
-      setIsRestoring(false);
-      return;
-    }
-    if (!isSessionValid(stored)) {
+    if (storedSession && !validStoredSession) {
       clearSession();
-      setIsRestoring(false);
+    }
+  }, [storedSession, validStoredSession]);
+
+  useEffect(() => {
+    if (!validStoredSession) {
       return;
     }
-    setAccessToken(stored.accessToken);
-    setExpiresAt(stored.expiresAt);
-    fetchUserInfo(stored.accessToken)
+    fetchUserInfo(validStoredSession.accessToken)
       .then((fetched) => setUser(fetched))
       .catch(() => {
         clearSession();
@@ -152,7 +152,7 @@ function InnerAuthProvider({ children }: { children: ReactNode }) {
         setExpiresAt(null);
       })
       .finally(() => setIsRestoring(false));
-  }, []);
+  }, [validStoredSession]);
 
   useEffect(() => {
     if (!accessToken) return;
@@ -166,8 +166,8 @@ function InnerAuthProvider({ children }: { children: ReactNode }) {
     if (expiresAt === null) return;
     const delay = expiresAt - Date.now();
     if (delay <= 0) {
-      logout();
-      return;
+      const timer = setTimeout(() => logout(), 0);
+      return () => clearTimeout(timer);
     }
     const timer = setTimeout(() => logout(), delay);
     return () => clearTimeout(timer);

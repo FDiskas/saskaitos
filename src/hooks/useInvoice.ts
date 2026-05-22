@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { queryKeys } from '@/query-keys';
 import { useStorage } from '@/lib/storage';
 import { useClients } from './useClients';
-import { Invoice, Client, InvoiceNumber } from '@/lib/domain';
+import { type Invoice, type Client, type InvoiceNumber } from '@/lib/domain';
 import { InvoiceDtoSchema, invoiceFromDto, InvoicesIndexFileSchema, type InvoiceIndexEntry } from '@/lib/drive/schemas';
 import { StoragePath } from '@/lib/storage';
 import { formatDate } from '@/lib/format/date';
@@ -29,9 +29,11 @@ export function getInvoicePdfPath(client: Client, number: InvoiceNumber, date: D
 export function useInvoice(invoiceId: string) {
   const storage = useStorage();
   const { clients, isLoading: isClientsLoading } = useClients();
+  const clientsKey = clients.map((client) => client.id.toString()).join(',');
 
+  // eslint-disable-next-line @tanstack/query/exhaustive-deps -- storage is stable via context
   const query = useQuery({
-    queryKey: queryKeys.invoice(invoiceId),
+    queryKey: [...queryKeys.invoice(invoiceId), clientsKey],
     queryFn: async (): Promise<Invoice | null> => {
       if (invoiceId === 'new') return null;
 

@@ -46,7 +46,7 @@ export const INSTANCE_RENDERERS: Record<BlockKind, InstanceRenderer> = {
     />
   ),
   'buyer-info': (_instance, context) => (
-    <BuyerBlock invoice={context.invoice} onChange={context.onChange} isPreview={context.isPreview} />
+    <BuyerBlock invoice={context.invoice} />
   ),
   'line-items': (_instance, context) => (
     <LineItemsTable invoice={context.invoice} onChange={context.onChange} isPreview={context.isPreview} />

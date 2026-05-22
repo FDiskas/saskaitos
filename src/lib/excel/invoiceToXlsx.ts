@@ -1,4 +1,4 @@
-import { Invoice, Client } from '@/lib/domain';
+import { type Invoice, type Client } from '@/lib/domain';
 import type { SettingsDto } from '@/lib/drive/settings';
 import { formatDate } from '@/lib/format/date';
 

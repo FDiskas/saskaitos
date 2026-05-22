@@ -1,4 +1,4 @@
-import { Invoice, InvoiceNumber } from '@/lib/domain';
+import { type Invoice, InvoiceNumber } from '@/lib/domain';
 import { InlineEditField } from './InlineEditField';
 import { formatDate } from '@/lib/format/date';
 

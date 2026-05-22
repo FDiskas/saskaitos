@@ -1,7 +1,7 @@
 import { ArrowLeft, Loader2 } from 'lucide-react';
 import { Link } from '@tanstack/react-router';
 import { ClientCombobox } from '@/components/shared';
-import { ClientId } from '@/lib/domain';
+import { type ClientId } from '@/lib/domain';
 import { useClients } from '@/hooks';
 
 export interface NewInvoicePickerProps {

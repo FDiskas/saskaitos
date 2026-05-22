@@ -1,6 +1,16 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { sendInvoiceEmail } from './sendInvoiceEmail';
 
+function getJsonRequestBody(fetchMock: ReturnType<typeof vi.fn>, callIndex = 0): Record<string, unknown> {
+  const call = fetchMock.mock.calls[callIndex];
+  if (!call) throw new Error('Fetch nebuvo iškviestas laukiamu indeksu');
+  const requestInit = call[1] as RequestInit | undefined;
+  if (!requestInit || typeof requestInit.body !== 'string') {
+    throw new Error('Nerastas JSON request body');
+  }
+  return JSON.parse(requestInit.body) as Record<string, unknown>;
+}
+
 describe('sendInvoiceEmail', () => {
   beforeEach(() => {
     vi.stubGlobal('fetch', vi.fn());
@@ -52,7 +62,7 @@ describe('sendInvoiceEmail', () => {
       fromEmail: 'f@b.lt',
     });
 
-    const bodyObj = JSON.parse((fetchMock.mock.calls[0] as any)[1].body);
+    const bodyObj = getJsonRequestBody(fetchMock);
     expect(bodyObj.html).toBe('&lt;script&gt;alert(1)&lt;/script&gt;<br />Atviras &amp; geras');
   });
 
@@ -97,8 +107,7 @@ describe('sendInvoiceEmail', () => {
     });
 
     expect(fetchMock).toHaveBeenCalled();
-    const calls = fetchMock.mock.calls;
-    const bodyObj = JSON.parse((calls[0] as any)[1].body);
+    const bodyObj = getJsonRequestBody(fetchMock);
 
     expect(bodyObj.attachments).toHaveLength(1);
     expect(bodyObj.attachments[0].filename).toBe('invoice.pdf');

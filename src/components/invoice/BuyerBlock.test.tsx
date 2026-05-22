@@ -1,5 +1,5 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest';
-import { fireEvent, render, screen } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { BuyerBlock } from './BuyerBlock';
 import { Client, ClientId, Invoice, InvoiceId, InvoiceNumber, LineItems, VatRate } from '@/lib/domain';
 
@@ -50,7 +50,7 @@ describe('BuyerBlock', () => {
 
   it('when buyer is rendered, then shows client info without inline change action', () => {
     render(
-      <BuyerBlock invoice={createInvoice(firstClient.id)} onChange={vi.fn()} />,
+      <BuyerBlock invoice={createInvoice(firstClient.id)} />,
     );
 
     expect(screen.getByText('UAB Bandymai')).toBeInTheDocument();

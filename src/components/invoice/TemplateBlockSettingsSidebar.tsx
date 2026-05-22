@@ -1,7 +1,7 @@
 import { useState, type ChangeEvent } from 'react';
 import { Button } from '@/components/ui';
 import { ClientCombobox } from '@/components/shared';
-import { Client, Invoice, ClientId } from '@/lib/domain';
+import { Client, type Invoice, ClientId } from '@/lib/domain';
 import { useCreateClient } from '@/hooks';
 import { ClientFormDialog, type ClientFormValues } from '@/components/clients';
 import { blockLabel } from '@/lib/invoice-template/blocks';

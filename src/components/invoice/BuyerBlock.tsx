@@ -1,14 +1,12 @@
 import { useMemo } from 'react';
-import { Invoice } from '@/lib/domain';
+import { type Invoice } from '@/lib/domain';
 import { useClients } from '@/hooks';
 
 export interface BuyerBlockProps {
   invoice: Invoice;
-  onChange: (updated: Invoice) => void;
-  isPreview?: boolean;
 }
 
-export function BuyerBlock({ invoice, onChange, isPreview = false }: BuyerBlockProps) {
+export function BuyerBlock({ invoice }: BuyerBlockProps) {
   const { clients } = useClients();
   const client = useMemo(
     () => clients.find((c) => c.id.equals(invoice.clientId)) || null,

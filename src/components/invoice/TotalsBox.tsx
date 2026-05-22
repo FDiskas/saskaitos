@@ -1,4 +1,4 @@
-import { Invoice } from '@/lib/domain';
+import { type Invoice } from '@/lib/domain';
 
 export interface TotalsBoxProps {
   invoice: Invoice;

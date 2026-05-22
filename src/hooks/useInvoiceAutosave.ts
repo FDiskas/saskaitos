@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { Invoice } from '@/lib/domain';
+import { useEffect } from 'react';
+import { type Invoice } from '@/lib/domain';
 
 const DEBOUNCE_MS = 500;
 
@@ -11,25 +11,20 @@ export interface AutosaveOptions {
 }
 
 export function useInvoiceAutosave({ local, server, enabled, onSave }: AutosaveOptions): boolean {
-  const [isPendingSave, setIsPendingSave] = useState(false);
+  const isPendingSave =
+    enabled &&
+    local !== null &&
+    server !== null &&
+    local.updatedAt.getTime() > server.updatedAt.getTime();
 
   useEffect(() => {
-    if (!enabled || !local || !server) {
-      setIsPendingSave(false);
-      return;
-    }
-    if (local.updatedAt.getTime() <= server.updatedAt.getTime()) {
-      setIsPendingSave(false);
-      return;
-    }
-
-    setIsPendingSave(true);
+    if (!isPendingSave || !local || !server) return;
     const timer = setTimeout(() => {
       onSave({ updated: local, previous: server });
     }, DEBOUNCE_MS);
 
     return () => clearTimeout(timer);
-  }, [local, server, enabled, onSave]);
+  }, [isPendingSave, local, server, onSave]);
 
   return isPendingSave;
 }

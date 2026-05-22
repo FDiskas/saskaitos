@@ -4,8 +4,10 @@ import { exportInvoiceToXlsx } from './invoiceToXlsx';
 import { Invoice, Client, InvoiceId, ClientId, InvoiceNumber, LineItem, LineItems, Money, VatRate } from '../domain';
 import type { SettingsDto } from '../drive/settings';
 
+type XlsxModule = typeof XLSX;
+
 vi.mock('xlsx', async (importOriginal) => {
-  const original = await importOriginal<typeof import('xlsx')>();
+  const original = await importOriginal<XlsxModule>();
   return {
     ...original,
     writeFile: vi.fn(),
@@ -84,7 +86,7 @@ describe('exportInvoiceToXlsx', () => {
     await exportInvoiceToXlsx(invoice, client, mockSettings);
 
     expect(XLSX.utils.aoa_to_sheet).toHaveBeenCalled();
-    const dataCall = vi.mocked(XLSX.utils.aoa_to_sheet).mock.calls[0]?.[0] as any[][];
+    const dataCall = vi.mocked(XLSX.utils.aoa_to_sheet).mock.calls[0]?.[0] as unknown[][];
     expect(dataCall).toBeDefined();
 
     // Check presence of key seller, buyer and item data in the spreadsheet rows

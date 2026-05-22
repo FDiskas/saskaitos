@@ -1,4 +1,4 @@
-import { Invoice, VatRate, type VatPercent } from '@/lib/domain';
+import { type Invoice, VatRate, type VatPercent } from '@/lib/domain';
 
 export interface VatToggleProps {
   invoice: Invoice;
