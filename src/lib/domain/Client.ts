@@ -1,4 +1,4 @@
-import { ClientId } from './ClientId';
+import { type ClientId } from './ClientId';
 
 export interface ClientProps {
   id: ClientId;

@@ -5,3 +5,20 @@ export { Label, type LabelProps } from './label';
 export { Card, CardHeader, CardTitle, CardBody } from './card';
 export { Tabs, TabsList, TabsTrigger, TabsContent, type TabsProps } from './tabs';
 export { Switch, type SwitchProps } from './switch';
+export {
+  Dialog,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+  DialogCloseButton,
+  type DialogProps,
+} from './dialog';
+export {
+  AlertDialog,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  type AlertDialogProps,
+} from './alert-dialog';

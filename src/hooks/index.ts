@@ -6,3 +6,5 @@ export {
 } from './useGoogleAuth';
 export { useBootstrap } from './useBootstrap';
 export { useSettings, type UseSettingsResult } from './useSettings';
+export { useClients } from './useClients';
+

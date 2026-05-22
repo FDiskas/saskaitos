@@ -81,6 +81,12 @@ export const ClientDtoSchema = z.object({
 });
 export type ClientDto = z.infer<typeof ClientDtoSchema>;
 
+export const ClientsFileSchema = z.object({
+  clients: z.array(ClientDtoSchema),
+});
+export type ClientsFileDto = z.infer<typeof ClientsFileSchema>;
+
+
 export const SeriesDtoSchema = z.object({
   id: z.string(),
   prefix: z.string(),

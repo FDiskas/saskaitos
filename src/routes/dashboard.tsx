@@ -27,6 +27,12 @@ export function DashboardPage() {
         <div className="flex items-center gap-3">
           <SyncStatusBadge />
           <Link
+            to="/clients"
+            className="rounded-md bg-white px-3 py-1.5 text-sm text-slate-700 ring-1 ring-slate-200 hover:bg-slate-50"
+          >
+            Klientai
+          </Link>
+          <Link
             to="/settings"
             className="rounded-md bg-white px-3 py-1.5 text-sm text-slate-700 ring-1 ring-slate-200 hover:bg-slate-50"
           >

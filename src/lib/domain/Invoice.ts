@@ -1,10 +1,10 @@
-import { ClientId } from './ClientId';
-import { InvoiceId } from './InvoiceId';
-import { InvoiceNumber } from './InvoiceNumber';
-import { LineItem } from './LineItem';
-import { LineItems } from './LineItems';
+import { type ClientId } from './ClientId';
+import { type InvoiceId } from './InvoiceId';
+import { type InvoiceNumber } from './InvoiceNumber';
+import { type LineItem } from './LineItem';
+import { type LineItems } from './LineItems';
 import { Money } from './Money';
-import { VatRate } from './VatRate';
+import { type VatRate } from './VatRate';
 
 export type InvoiceStatus = 'draft' | 'sent' | 'paid' | 'overdue';
 

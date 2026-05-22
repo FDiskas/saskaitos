@@ -49,7 +49,14 @@ export class InMemoryStorage implements Storage {
   }
 
   async delete(path: StoragePath): Promise<void> {
-    this.files.delete(path.toString());
+    const key = path.toString();
+    this.files.delete(key);
+    const prefix = `${key}/`;
+    for (const fileKey of this.files.keys()) {
+      if (fileKey.startsWith(prefix)) {
+        this.files.delete(fileKey);
+      }
+    }
   }
 
   clear(): void {

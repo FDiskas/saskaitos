@@ -1,4 +1,4 @@
-import { Money } from './Money';
+import { type Money } from './Money';
 
 export interface LineItemProps {
   id: string;

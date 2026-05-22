@@ -1,4 +1,4 @@
-import { Money } from './Money';
+import { type Money } from './Money';
 
 export type VatPercent = 0 | 5 | 9 | 21;
 

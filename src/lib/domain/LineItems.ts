@@ -1,4 +1,4 @@
-import { LineItem, type LineItemPatch } from './LineItem';
+import { type LineItem, type LineItemPatch } from './LineItem';
 import { Money } from './Money';
 
 export class LineItems implements Iterable<LineItem> {

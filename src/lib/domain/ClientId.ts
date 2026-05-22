@@ -1,9 +1,9 @@
 import { uuidV7, isUuidV7 } from './_uuid';
 
-declare const ClientIdBrand: unique symbol;
+declare const _ClientIdBrand: unique symbol;
 
 export class ClientId {
-  declare private readonly _brand: typeof ClientIdBrand;
+  declare private readonly _brand: typeof _ClientIdBrand;
   private readonly value: string;
 
   private constructor(value: string) {

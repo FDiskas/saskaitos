@@ -8,6 +8,7 @@ import {
 import { LoginPage } from '@/routes/login';
 import { DashboardPage } from '@/routes/dashboard';
 import { SettingsPage } from '@/routes/settings';
+import { ClientsPage } from '@/routes/clients';
 
 const rootRoute = createRootRoute({
   component: () => <Outlet />,
@@ -39,7 +40,19 @@ const settingsRoute = createRoute({
   component: SettingsPage,
 });
 
-const routeTree = rootRoute.addChildren([indexRoute, loginRoute, dashboardRoute, settingsRoute]);
+const clientsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/clients',
+  component: ClientsPage,
+});
+
+const routeTree = rootRoute.addChildren([
+  indexRoute,
+  loginRoute,
+  dashboardRoute,
+  settingsRoute,
+  clientsRoute,
+]);
 
 export const router = createRouter({
   routeTree,

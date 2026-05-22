@@ -29,8 +29,8 @@ export function useSettings(): UseSettingsResult {
   const storage = useStorage();
   const qc = useQueryClient();
 
+  // eslint-disable-next-line @tanstack/query/exhaustive-deps -- storage is provided via a stable context
   const query = useQuery({
-    // eslint-disable-next-line @tanstack/query/exhaustive-deps -- storage is provided via a stable context
     queryKey: queryKeys.settings,
     queryFn: () => readSettings(storage),
     staleTime: 30_000,
