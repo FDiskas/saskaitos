@@ -203,6 +203,8 @@ function LibraryDraggableCard({ dragId, label, blockId }: LibraryDraggableCardPr
 
   const style = {
     transform: CSS.Translate.toString(transform),
+    transition: isDragging ? undefined : 'transform 120ms ease-out, box-shadow 120ms ease-out',
+    zIndex: isDragging ? 40 : undefined,
   };
 
   return (
@@ -210,7 +212,7 @@ function LibraryDraggableCard({ dragId, label, blockId }: LibraryDraggableCardPr
       ref={setNodeRef}
       type="button"
       style={style}
-      className="rounded-md border border-slate-200 bg-white px-3 py-2 text-left text-xs font-medium text-slate-700 hover:border-slate-300 hover:bg-slate-50 cursor-grab active:cursor-grabbing shadow-xs"
+      className={`rounded-md border border-slate-200 bg-white px-3 py-2 text-left text-xs font-medium text-slate-700 hover:border-slate-300 hover:bg-slate-50 cursor-grab active:cursor-grabbing shadow-xs ${isDragging ? 'shadow-lg opacity-95' : ''}`}
       data-dragging={isDragging}
       {...listeners}
       {...attributes}

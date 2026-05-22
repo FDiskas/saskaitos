@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { LineItems } from './LineItems';
 import { LineItem } from './LineItem';
 import { Money } from './Money';
+import { VatRate } from './VatRate';
 
 function item(id: string, qty: number, price: number): LineItem {
   return LineItem.of({
@@ -10,6 +11,7 @@ function item(id: string, qty: number, price: number): LineItem {
     quantity: qty,
     unit: 'vnt.',
     unitPrice: new Money(price),
+    vatRate: VatRate.of(21),
   });
 }
 

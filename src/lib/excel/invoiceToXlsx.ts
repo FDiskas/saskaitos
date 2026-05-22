@@ -59,7 +59,7 @@ function getSummaryRows(invoice: Invoice): (string | number)[][] {
     ['Tarpinė suma', '', '', '', '', totals.subtotal.toNumber()],
   ];
   if (invoice.vat.enabled) {
-    rows.push([`PVM (${invoice.vat.rate.percent}%)`, '', '', '', '', totals.vatAmount.toNumber()]);
+    rows.push(['PVM suma', '', '', '', '', totals.vatAmount.toNumber()]);
   }
   rows.push(['Iš viso apmokėti', '', '', '', '', totals.total.toNumber()]);
   return rows;

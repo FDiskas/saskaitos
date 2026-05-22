@@ -185,7 +185,7 @@ export function InvoicePdfDocument({ invoice, client, settings }: InvoicePdfDocu
           </View>
           {hasVat && (
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', width: '100%' }}>
-              <Text style={{ fontSize: 9, color: '#64748b' }}>PVM ({invoice.vat.rate.percent}%):</Text>
+              <Text style={{ fontSize: 9, color: '#64748b' }}>PVM suma:</Text>
               <Text style={{ fontSize: 9, fontWeight: 'bold' }}>{totals.vatAmount.format()}</Text>
             </View>
           )}

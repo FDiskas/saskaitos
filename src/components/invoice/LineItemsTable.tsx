@@ -1,19 +1,20 @@
 import { Plus } from 'lucide-react';
 import {
   DndContext,
-  closestCenter,
+  closestCorners,
   PointerSensor,
   KeyboardSensor,
   useSensor,
   useSensors,
   type DragEndEvent,
 } from '@dnd-kit/core';
+import { restrictToVerticalAxis } from '@dnd-kit/modifiers';
 import {
   SortableContext,
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
-import { Invoice, LineItem, Money } from '@/lib/domain';
+import { type Invoice, LineItem, Money } from '@/lib/domain';
 import { LineItemRow } from './LineItemRow';
 
 export interface LineItemsTableProps {
@@ -25,6 +26,7 @@ export interface LineItemsTableProps {
 export function LineItemsTable({ invoice, onChange, isPreview = false }: LineItemsTableProps) {
   const items = invoice.lineItems.toArray();
   const currency = invoice.totals().subtotal.currency;
+  const hasVat = invoice.vat.enabled;
   const showActions = !isPreview;
 
   const sensors = useSensors(
@@ -32,12 +34,15 @@ export function LineItemsTable({ invoice, onChange, isPreview = false }: LineIte
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
   );
 
+  const columnCount = countColumns({ showActions, hasVat });
+
   const handleAddItem = () => {
     const newItem = LineItem.create({
       description: '',
       quantity: 1,
       unit: 'vnt.',
       unitPrice: Money.zero(currency),
+      vatRate: invoice.vat.rate,
     });
     onChange(invoice.withLineItem(newItem));
   };
@@ -59,52 +64,74 @@ export function LineItemsTable({ invoice, onChange, isPreview = false }: LineIte
     onChange(invoice.withLineItems(invoice.lineItems.reorder(from, to)));
   };
 
-  return (
-    <div className="w-full overflow-x-auto">
-      <table className="w-full border-collapse text-left text-sm text-slate-700">
-        <thead>
-          <tr className="border-b border-slate-200 text-xs font-semibold uppercase tracking-wider text-slate-500">
-            {showActions && <th className="py-3 pl-1 pr-2 w-8 no-print"></th>}
-            <th className="py-3 pl-1 pr-4 text-center w-10">Nr.</th>
-            <th className="py-3 px-4 min-w-50">Paslaugos / prekės aprašymas</th>
-            <th className="py-3 px-4 text-center w-24">Kiekis</th>
-            <th className="py-3 px-4 text-center w-24">Mato vnt.</th>
-            <th className="py-3 px-4 text-right w-32">Kaina (vnt.)</th>
-            <th className="py-3 px-4 text-right w-32">Suma</th>
-            {showActions && <th className="py-3 pl-2 pr-1 w-12 no-print"></th>}
+  const table = (
+    <table className="w-full border-collapse text-left text-sm text-slate-700">
+      <thead>
+        <tr className="border-b border-slate-200 text-xs font-semibold uppercase tracking-wider text-slate-500">
+          {showActions && <th className="py-3 pl-1 pr-2 w-8 no-print"></th>}
+          <th className="py-3 pl-1 text-center w-1">Nr.</th>
+          <th className="py-3 pl-4 min-w-auto">Paslaugos / prekės aprašymas</th>
+          <th className="py-3 pl-4 text-center w-1">Kiekis</th>
+          <th className="py-3 pl-4 text-center w-1">Mato&nbsp;vnt.</th>
+          <th className="py-3 pl-4 text-right w-1">Kaina</th>
+          {hasVat && <th className="py-3 px-4 text-center w-1">PVM&nbsp;%</th>}
+          <th className="py-3 pl-4 text-right w-1">Suma</th>
+          {showActions && <th className="py-3 pl-2 pr-1 w-12 no-print"></th>}
+        </tr>
+      </thead>
+      <tbody>
+        {items.length === 0 ? (
+          <tr>
+            <td colSpan={columnCount} className="py-8 text-center text-slate-400 italic">
+              Nėra pridėtų prekių ar paslaugų. Spustelkite mygtuką žemiau, kad pridėtumėte.
+            </td>
           </tr>
-        </thead>
-        <tbody>
-          {items.length === 0 ? (
-            <tr>
-              <td colSpan={showActions ? 8 : 6} className="py-8 text-center text-slate-400 italic">
-                Nėra pridėtų prekių ar paslaugų. Spustelkite mygtuką žemiau, kad pridėtumėte.
-              </td>
-            </tr>
-          ) : showActions ? (
-            <DndContextRows
-              items={items}
-              currency={currency}
-              sensors={sensors}
-              onDragEnd={handleDragEnd}
-              onUpdate={handleUpdateItem}
-              onRemove={handleRemoveItem}
-            />
-          ) : (
-            items.map((item, index) => (
+        ) : showActions ? (
+          <SortableContext items={items.map((i) => i.id)} strategy={verticalListSortingStrategy}>
+            {items.map((item, index) => (
               <LineItemRow
                 key={item.id}
                 item={item}
                 index={index}
                 currency={currency}
+                hasVat={hasVat}
                 onUpdate={handleUpdateItem}
                 onRemove={handleRemoveItem}
-                isPreview
               />
-            ))
-          )}
-        </tbody>
-      </table>
+            ))}
+          </SortableContext>
+        ) : (
+          items.map((item, index) => (
+            <LineItemRow
+              key={item.id}
+              item={item}
+              index={index}
+              currency={currency}
+              hasVat={hasVat}
+              onUpdate={handleUpdateItem}
+              onRemove={handleRemoveItem}
+              isPreview
+            />
+          ))
+        )}
+      </tbody>
+    </table>
+  );
+
+  return (
+    <div className="w-full overflow-x-auto">
+      {showActions && items.length > 0 ? (
+        <DndContext
+          sensors={sensors}
+          modifiers={[restrictToVerticalAxis]}
+          collisionDetection={closestCorners}
+          onDragEnd={handleDragEnd}
+        >
+          {table}
+        </DndContext>
+      ) : (
+        table
+      )}
 
       {showActions && (
         <div className="mt-4 flex justify-start no-print">
@@ -122,30 +149,8 @@ export function LineItemsTable({ invoice, onChange, isPreview = false }: LineIte
   );
 }
 
-interface DndContextRowsProps {
-  items: readonly LineItem[];
-  currency: string;
-  sensors: ReturnType<typeof useSensors>;
-  onDragEnd: (event: DragEndEvent) => void;
-  onUpdate: (id: string, patch: Parameters<typeof LineItem.prototype.withPatch>[0]) => void;
-  onRemove: (id: string) => void;
-}
+const BASE_COLUMNS = 6;
 
-function DndContextRows({ items, currency, sensors, onDragEnd, onUpdate, onRemove }: DndContextRowsProps) {
-  return (
-    <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
-      <SortableContext items={items.map((i) => i.id)} strategy={verticalListSortingStrategy}>
-        {items.map((item, index) => (
-          <LineItemRow
-            key={item.id}
-            item={item}
-            index={index}
-            currency={currency}
-            onUpdate={onUpdate}
-            onRemove={onRemove}
-          />
-        ))}
-      </SortableContext>
-    </DndContext>
-  );
+function countColumns({ showActions, hasVat }: { showActions: boolean; hasVat: boolean }): number {
+  return BASE_COLUMNS + (hasVat ? 1 : 0) + (showActions ? 2 : 0);
 }

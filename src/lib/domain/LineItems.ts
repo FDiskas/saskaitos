@@ -1,5 +1,6 @@
 import { type LineItem, type LineItemPatch } from './LineItem';
 import { Money } from './Money';
+import { type VatRate } from './VatRate';
 
 export class LineItems implements Iterable<LineItem> {
   private readonly items: ReadonlyArray<LineItem>;
@@ -61,6 +62,17 @@ export class LineItems implements Iterable<LineItem> {
       (acc, item) => acc.add(item.total()),
       Money.zero(currency),
     );
+  }
+
+  vatAmount(currency: string = 'EUR'): Money {
+    return this.items.reduce(
+      (acc, item) => acc.add(item.vatAmount()),
+      Money.zero(currency),
+    );
+  }
+
+  withVatRateAll(rate: VatRate): LineItems {
+    return new LineItems(this.items.map((item) => item.withVatRate(rate)));
   }
 
   toArray(): ReadonlyArray<LineItem> {

@@ -14,6 +14,7 @@
 - [auth-redirect-flow](decisions/auth-redirect-flow.md) — RequireAuth wrapper + expiry watchdog; /login?from=<href>, validated by resolveRedirectTarget. keywords: auth, redirect, from, require-auth, login, session-expiry
 - [runtime-google-fonts](decisions/runtime-google-fonts.md) — invoice PDF/preview fonts served locally from public/fonts TTF files for stable rendering. keywords: fonts, pdf, preview, local-fonts, public, ttf
 - [row-selection-without-minheight](decisions/row-selection-without-minheight.md) — row selected in canvas configures right sidebar; minHeight removed due to preview/PDF instability. keywords: row, sidebar, minheight, layout, preview, pdf
+- [per-line-vat-on-invoice-lines](decisions/per-line-vat-on-invoice-lines.md) — VAT lives on line items; totals sum per-line VAT; global VAT action applies one rate to all lines. keywords: vat, pvm, line-item, totals, bulk-update
 
 ## developer/
 

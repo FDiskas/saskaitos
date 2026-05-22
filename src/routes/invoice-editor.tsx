@@ -3,11 +3,11 @@ import {
   DndContext,
   DragOverlay,
   PointerSensor,
-  closestCenter,
+  closestCorners,
   useSensor,
   useSensors,
-  type DragEndEvent,
   type DragStartEvent,
+  type DragEndEvent,
 } from '@dnd-kit/core';
 import { useParams, Link, useSearch } from '@tanstack/react-router';
 import { ArrowLeft, Loader2, CloudLightning, CheckCircle2 } from 'lucide-react';
@@ -63,8 +63,13 @@ export function InvoiceEditorPage() {
   const [selectedBlockId, setSelectedBlockId] = useState<TemplateBlockId | null>(null);
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
   const [isPreview, setIsPreview] = useState(false);
-  const [activeDragLabel, setActiveDragLabel] = useState<string | null>(null);
+  const [activeLibraryDragLabel, setActiveLibraryDragLabel] = useState<string | null>(null);
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 4 } }));
+
+  const handleDragStart = (event: DragStartEvent) => {
+    if (isPreview) return;
+    setActiveLibraryDragLabel(resolveDragLabel(String(event.active.id)));
+  };
 
   useEffect(() => {
     if (
@@ -85,7 +90,11 @@ export function InvoiceEditorPage() {
   }, [isNew, clientId, isClientsLoading, createMutation]);
 
   useEffect(() => {
+    // Sync server snapshot into local editing buffer when no save is in flight.
+    // Why: localInvoice is a mutable working copy for optimistic UI; we can't derive
+    // it inline because the user's pending edits would be clobbered on every server poll.
     if (invoice && !updateMutation.isPending) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setLocalInvoice(invoice);
     }
   }, [invoice, updateMutation.isPending]);
@@ -152,6 +161,17 @@ export function InvoiceEditorPage() {
     const directColumn = parseCanvasColumnDropId(overId);
     if (directColumn) return directColumn;
 
+    const overBlockId = parseCanvasPlacedBlockDragId(overId);
+    if (overBlockId) {
+      for (const row of settings.invoiceLayout.layout) {
+        for (const column of row.columns) {
+          if (column.content.includes(overBlockId)) {
+            return { rowId: row.id, columnId: column.id };
+          }
+        }
+      }
+    }
+
     const overRowId = parseCanvasRowSortableId(overId);
     if (!overRowId) return null;
 
@@ -161,41 +181,40 @@ export function InvoiceEditorPage() {
     return { rowId: overRowId, columnId: firstColumn.id };
   };
 
-  const handleDragStart = (event: DragStartEvent) => {
-    const activeId = String(event.active.id);
-    const rowColumns = parseLibraryRowDragId(activeId);
-    if (rowColumns !== null) {
-      setActiveDragLabel(`Eilutė (${rowColumns} st.)`);
-      return;
+  const resolveDropTargetRow = (overId: string): string | null => {
+    if (overId === 'canvas:root') {
+      const rows = settings.invoiceLayout.layout;
+      const lastRow = rows[rows.length - 1];
+      return lastRow?.id ?? null;
     }
 
-    const libraryBlock = parseLibraryBlockDragId(activeId);
-    if (libraryBlock) {
-      setActiveDragLabel(blockLabel(libraryBlock));
-      return;
-    }
+    const directRowId = parseCanvasRowSortableId(overId);
+    if (directRowId) return directRowId;
 
-    const placedBlock = parseCanvasPlacedBlockDragId(activeId);
-    if (placedBlock) {
-      setActiveDragLabel(blockLabel(placedBlock));
-      return;
-    }
+    const overColumn = parseCanvasColumnDropId(overId);
+    if (overColumn) return overColumn.rowId;
 
-    const sortableRowId = parseCanvasRowSortableId(activeId);
-    if (sortableRowId) {
-      setActiveDragLabel('Eilutė');
-    }
+    const overBlockId = parseCanvasPlacedBlockDragId(overId);
+    if (!overBlockId) return null;
+
+    const rowWithBlock = settings.invoiceLayout.layout.find((row) =>
+      row.columns.some((column) => column.content.includes(overBlockId)),
+    );
+
+    return rowWithBlock?.id ?? null;
   };
 
   const handleDragEnd = (event: DragEndEvent) => {
-    setActiveDragLabel(null);
+    if (isPreview) return;
+
+    setActiveLibraryDragLabel(null);
     const overId = event.over ? String(event.over.id) : null;
     if (!overId) return;
 
     const activeId = String(event.active.id);
 
     const activeRowId = parseCanvasRowSortableId(activeId);
-    const overRowId = parseCanvasRowSortableId(overId);
+    const overRowId = resolveDropTargetRow(overId);
     if (activeRowId && overRowId && activeRowId !== overRowId) {
       handleLayoutChange(reorderTemplateRows(settings.invoiceLayout, activeRowId, overRowId));
       return;
@@ -226,11 +245,21 @@ export function InvoiceEditorPage() {
     const blockId = blockFromLibrary ?? blockFromCanvas;
     if (!blockId) return;
 
+    const overBlockId = parseCanvasPlacedBlockDragId(overId);
+    // Drop on self = no-op (closestCorners can resolve a block to itself mid-drag).
+    if (blockFromCanvas && overBlockId && blockFromCanvas === overBlockId) return;
+
     const dropTarget = resolveDropTargetColumn(overId);
     if (!dropTarget) return;
 
     handleLayoutChange(
-      moveBlockToColumn(settings.invoiceLayout, blockId, dropTarget.rowId, dropTarget.columnId),
+      moveBlockToColumn(
+        settings.invoiceLayout,
+        blockId,
+        dropTarget.rowId,
+        dropTarget.columnId,
+        overBlockId ?? undefined,
+      ),
     );
   };
 
@@ -253,7 +282,6 @@ export function InvoiceEditorPage() {
           onChange={setLocalInvoice}
           settings={settings}
           layout={settings.invoiceLayout}
-          onLayoutChange={handleLayoutChange}
           isPreview={isPreview}
           selectedBlockId={selectedBlockId}
           selectedRowId={selectedRowId}
@@ -341,21 +369,20 @@ export function InvoiceEditorPage() {
       </header>
 
       <DndContext
-        sensors={isPreview ? undefined : sensors}
-        collisionDetection={closestCenter}
-        onDragStart={isPreview ? undefined : handleDragStart}
-        onDragEnd={isPreview ? undefined : handleDragEnd}
+        sensors={sensors}
+        collisionDetection={closestCorners}
+        onDragStart={handleDragStart}
+        onDragCancel={() => setActiveLibraryDragLabel(null)}
+        onDragEnd={handleDragEnd}
       >
         {content}
-        {!isPreview && (
-          <DragOverlay>
-            {activeDragLabel ? (
-              <div className="rounded-md border border-sky-300 bg-sky-50 px-3 py-2 text-xs font-semibold text-sky-900 shadow-lg">
-                {activeDragLabel}
-              </div>
-            ) : null}
+        {!isPreview && activeLibraryDragLabel ? (
+          <DragOverlay dropAnimation={null}>
+            <div className="rounded-md border border-sky-300 bg-sky-50 px-3 py-2 text-xs font-semibold text-sky-900 shadow-xl">
+              {activeLibraryDragLabel}
+            </div>
           </DragOverlay>
-        )}
+        ) : null}
       </DndContext>
     </div>
   );
@@ -364,6 +391,21 @@ export function InvoiceEditorPage() {
 interface SyncStatusPillProps {
   isSaving: boolean;
   isPendingSave: boolean;
+}
+
+function resolveDragLabel(activeId: string): string | null {
+  const rowColumns = parseLibraryRowDragId(activeId);
+  if (rowColumns !== null) return `Eilutė (${rowColumns} st.)`;
+
+  const libraryBlock = parseLibraryBlockDragId(activeId);
+  if (libraryBlock) return blockLabel(libraryBlock);
+
+  const canvasBlock = parseCanvasPlacedBlockDragId(activeId);
+  if (canvasBlock) return blockLabel(canvasBlock);
+
+  if (parseCanvasRowSortableId(activeId)) return 'Eilutė';
+
+  return null;
 }
 
 function SyncStatusPill({ isSaving, isPendingSave }: SyncStatusPillProps) {

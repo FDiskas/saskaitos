@@ -122,8 +122,8 @@ export class Invoice {
     if (!this.props.vat.enabled) {
       return { subtotal, vatAmount: Money.zero(), total: subtotal };
     }
-    const { vat, gross } = this.props.vat.rate.apply(subtotal);
-    return { subtotal, vatAmount: vat, total: gross };
+    const vatAmount = this.props.lineItems.vatAmount(subtotal.currency);
+    return { subtotal, vatAmount, total: subtotal.add(vatAmount) };
   }
 
   withLineItem(item: LineItem): Invoice {
@@ -139,7 +139,10 @@ export class Invoice {
   }
 
   withVat(rate: VatRate): Invoice {
-    return this.touch({ vat: { enabled: true, rate } });
+    return this.touch({
+      vat: { enabled: true, rate },
+      lineItems: this.props.lineItems.withVatRateAll(rate),
+    });
   }
 
   withVatDisabled(): Invoice {

@@ -2,7 +2,13 @@ import { type Money } from './Money';
 
 export type VatPercent = 0 | 5 | 9 | 21;
 
-const ALLOWED: ReadonlySet<number> = new Set([0, 5, 9, 21]);
+export const VAT_PERCENTS: ReadonlyArray<VatPercent> = [21, 9, 5, 0];
+
+const ALLOWED: ReadonlySet<number> = new Set<number>(VAT_PERCENTS);
+
+function isVatPercent(value: number): value is VatPercent {
+  return ALLOWED.has(value);
+}
 
 export interface VatBreakdown {
   net: Money;
@@ -22,6 +28,14 @@ export class VatRate {
       throw new Error(`Invalid VAT percent: ${String(percent)}`);
     }
     return new VatRate(percent);
+  }
+
+  static fromInput(value: string | number): VatRate {
+    const num = typeof value === 'number' ? value : Number.parseInt(value, 10);
+    if (!Number.isFinite(num) || !isVatPercent(num)) {
+      throw new Error(`Invalid VAT percent: ${String(value)}`);
+    }
+    return new VatRate(num);
   }
 
   apply(net: Money): VatBreakdown {

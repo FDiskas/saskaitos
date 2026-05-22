@@ -17,6 +17,7 @@ function makeItems(): LineItems {
         quantity: 2,
         unit: 'val.',
         unitPrice: new Money(50),
+        vatRate: VatRate.of(21),
       }),
     )
     .add(
@@ -26,6 +27,7 @@ function makeItems(): LineItems {
         quantity: 1,
         unit: 'vnt.',
         unitPrice: new Money(123.45),
+        vatRate: VatRate.of(21),
       }),
     );
 }
@@ -64,6 +66,44 @@ describe('Invoice', () => {
       const t = inv.totals();
       expect(t.vatAmount.isZero()).toBe(true);
       expect(t.total.equals(t.subtotal)).toBe(true);
+    });
+
+    it('when line items have different VAT rates, then vat total is sum of each line VAT', () => {
+      const inv = Invoice.create({
+        id: InvoiceId.create(),
+        number: InvoiceNumber.of('SF-', 2),
+        seriesId: 's',
+        clientId: ClientId.create(),
+        issueDate: new Date('2026-05-22'),
+        dueDate: new Date('2026-06-22'),
+        lineItems: LineItems.of([
+          LineItem.of({
+            id: 'a',
+            description: 'A',
+            quantity: 1,
+            unit: 'vnt.',
+            unitPrice: new Money(100),
+            vatRate: VatRate.of(21),
+          }),
+          LineItem.of({
+            id: 'b',
+            description: 'B',
+            quantity: 1,
+            unit: 'vnt.',
+            unitPrice: new Money(100),
+            vatRate: VatRate.of(5),
+          }),
+        ]),
+        vat: { enabled: true, rate: VatRate.of(21) },
+        designPresetId: 'd',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+
+      const totals = inv.totals();
+      expect(totals.subtotal.toCents()).toBe(20000);
+      expect(totals.vatAmount.toCents()).toBe(2600);
+      expect(totals.total.toCents()).toBe(22600);
     });
 
     it('when empty line items, then all totals zero', () => {
@@ -118,6 +158,7 @@ describe('Invoice', () => {
         quantity: 1,
         unit: 'vnt.',
         unitPrice: new Money(10),
+        vatRate: VatRate.of(21),
       });
       const modified = inv.withLineItem(newItem);
       expect(modified.lineItems.count()).toBe(3);
@@ -136,6 +177,18 @@ describe('Invoice', () => {
       const at9 = inv.withVat(VatRate.of(9));
       expect(at9.totals().vatAmount.toCents()).not.toBe(inv.totals().vatAmount.toCents());
       expect(inv.totals().vatAmount.toCents()).toBe(4692);
+    });
+
+    it('when withVat applied, then every line item adopts the new rate', () => {
+      const mixed = baseInvoice().withLineItems(
+        baseInvoice().lineItems.update('a', { vatRate: VatRate.of(5) }),
+      );
+      expect(mixed.lineItems.get('a')?.vatRate.percent).toBe(5);
+
+      const unified = mixed.withVat(VatRate.of(9));
+      const rates = unified.lineItems.toArray().map((item) => item.vatRate.percent);
+      expect(rates.every((p) => p === 9)).toBe(true);
+      expect(unified.vat.rate.percent).toBe(9);
     });
   });
 

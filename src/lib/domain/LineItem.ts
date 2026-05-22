@@ -1,4 +1,5 @@
 import { type Money } from './Money';
+import { type VatRate } from './VatRate';
 import { uuidV7 } from './_uuid';
 
 export interface LineItemProps {
@@ -7,6 +8,7 @@ export interface LineItemProps {
   quantity: number;
   unit: string;
   unitPrice: Money;
+  vatRate: VatRate;
 }
 
 export type LineItemPatch = Partial<Omit<LineItemProps, 'id'>>;
@@ -24,6 +26,10 @@ export class LineItem {
 
   static create(props: Omit<LineItemProps, 'id'>): LineItem {
     return new LineItem({ ...props, id: uuidV7() });
+  }
+
+  withVatRate(rate: VatRate): LineItem {
+    return new LineItem({ ...this.props, vatRate: rate });
   }
 
   get id(): string {
@@ -46,8 +52,16 @@ export class LineItem {
     return this.props.unitPrice;
   }
 
+  get vatRate(): VatRate {
+    return this.props.vatRate;
+  }
+
   total(): Money {
     return this.props.unitPrice.multiply(this.props.quantity);
+  }
+
+  vatAmount(): Money {
+    return this.props.vatRate.apply(this.total()).vat;
   }
 
   withPatch(patch: LineItemPatch): LineItem {

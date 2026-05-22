@@ -33,6 +33,7 @@ function makeTestInvoice(): Invoice {
         quantity: 5,
         unit: 'val.',
         unitPrice: new Money(100),
+        vatRate: VatRate.of(21),
       })
     ),
     vat: { enabled: true, rate: VatRate.of(21) },

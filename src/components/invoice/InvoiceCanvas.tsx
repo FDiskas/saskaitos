@@ -1,6 +1,5 @@
 import { Children, type ReactNode, useMemo } from 'react';
 import {
-  useDraggable,
   useDroppable,
 } from '@dnd-kit/core';
 import {
@@ -9,7 +8,7 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { Invoice } from '@/lib/domain';
+import { type Invoice } from '@/lib/domain';
 import type { SettingsDto } from '@/lib/drive/settings';
 import {
   blockLabel,
@@ -43,7 +42,6 @@ export interface InvoiceCanvasProps {
   onChange: (updatedInvoice: Invoice) => void;
   settings: SettingsDto;
   layout: InvoiceTemplateLayoutDto;
-  onLayoutChange: (layout: InvoiceTemplateLayoutDto) => void;
   isPreview?: boolean;
   selectedBlockId?: TemplateBlockId | null;
   selectedRowId?: string | null;
@@ -61,7 +59,6 @@ export function InvoiceCanvas({
   onChange,
   settings,
   layout,
-  onLayoutChange,
   isPreview = false,
   selectedBlockId = null,
   selectedRowId = null,
@@ -160,26 +157,31 @@ export function InvoiceCanvas({
                       columnId={column.id}
                       isPreview={isPreview}
                     >
-                      {column.content.map((blockId) => (
-                        <PlacedBlockShell
-                          key={blockId}
-                          blockId={blockId}
-                          isPreview={isPreview}
-                          isSelected={selectedBlockId === blockId}
-                          onSelect={() => onSelectBlock?.(blockId)}
-                        >
-                          {renderTemplateBlock(
-                            blockId,
-                            invoice,
-                            onChange,
-                            settings,
-                            effectivePrimary,
-                            effectiveAccent,
-                            layout,
-                            isPreview,
-                          )}
-                        </PlacedBlockShell>
-                      ))}
+                      <SortableContext
+                        items={column.content.map((blockId) => canvasPlacedBlockDragId(blockId))}
+                        strategy={verticalListSortingStrategy}
+                      >
+                        {column.content.map((blockId) => (
+                          <PlacedBlockShell
+                            key={blockId}
+                            blockId={blockId}
+                            isPreview={isPreview}
+                            isSelected={selectedBlockId === blockId}
+                            onSelect={() => onSelectBlock?.(blockId)}
+                          >
+                            {renderTemplateBlock(
+                              blockId,
+                              invoice,
+                              onChange,
+                              settings,
+                              effectivePrimary,
+                              effectiveAccent,
+                              layout,
+                              isPreview,
+                            )}
+                          </PlacedBlockShell>
+                        ))}
+                      </SortableContext>
                     </DroppableColumn>
                   ))}
                 </SortableRow>
@@ -228,9 +230,17 @@ function SortableRow({
   } = useSortable({ id: sortableId });
 
   const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
+    transform: CSS.Transform.toString(
+      transform
+        ? {
+            ...transform,
+            x: 0,
+          }
+        : null,
+    ),
+    transition: isDragging ? undefined : transition,
     gridTemplateColumns: `repeat(${row.columns.length}, minmax(0, 1fr))`,
+    zIndex: isDragging ? 20 : undefined,
   };
 
   const selectedClass = isSelected && !isPreview ? 'ring-2 ring-sky-400 bg-sky-50/20' : '';
@@ -242,7 +252,7 @@ function SortableRow({
       className={
         isPreview
           ? 'relative grid items-stretch gap-3 rounded-none border-none bg-transparent p-0'
-          : `relative grid items-stretch gap-3 rounded-lg border border-slate-200 bg-white/85 p-3 ${selectedClass}`
+          : `relative grid items-stretch gap-3 rounded-lg border border-slate-200 bg-white/85 ${selectedClass} ${isDragging ? 'shadow-lg' : ''}`
       }
       data-dragging={isDragging}
       onClick={isPreview ? undefined : onSelect}
@@ -298,6 +308,7 @@ function DroppableColumn({ rowId, columnId, isPreview, children }: DroppableColu
         outline: isPreview ? 'none' : '1px dashed #cbd5e1',
         outlineOffset: '-1px',
         backgroundColor: isOver ? '#e0f2fe' : undefined,
+        boxShadow: isOver ? 'inset 0 0 0 2px #38bdf8' : undefined,
       }}
     >
       {children}
@@ -317,8 +328,9 @@ interface PlacedBlockShellProps {
 }
 
 function PlacedBlockShell({ blockId, isPreview, isSelected, onSelect, children }: PlacedBlockShellProps) {
-  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: canvasPlacedBlockDragId(blockId),
+    disabled: isPreview,
   });
 
   const selectedClass = isSelected ? 'ring-2 ring-sky-400 bg-sky-50/40' : '';
@@ -326,11 +338,15 @@ function PlacedBlockShell({ blockId, isPreview, isSelected, onSelect, children }
   return (
     <article
       ref={setNodeRef}
-      style={{ transform: CSS.Translate.toString(transform) }}
+      style={{
+        transform: CSS.Transform.toString(transform),
+        transition: isDragging ? undefined : transition,
+        zIndex: isDragging ? 30 : undefined,
+      }}
       className={
         isPreview
           ? 'relative mb-2 w-full rounded-md bg-transparent p-0'
-          : `relative mb-2 w-full rounded-md border border-slate-100 bg-white p-2 shadow-xs ${selectedClass}`
+          : `relative mb-2 w-full rounded-md border border-slate-100 bg-white p-2 shadow-xs ${selectedClass} ${isDragging ? 'shadow-lg opacity-95' : ''}`
       }
       data-dragging={isDragging}
       onClick={

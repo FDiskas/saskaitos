@@ -30,6 +30,7 @@ export const LineItemDtoSchema = z.object({
   quantity: z.number(),
   unit: z.string(),
   unitPrice: MoneyDtoSchema,
+  vatRate: z.union([z.literal(0), z.literal(5), z.literal(9), z.literal(21)]).optional(),
 });
 export type LineItemDto = z.infer<typeof LineItemDtoSchema>;
 
@@ -133,16 +134,18 @@ function lineItemToDto(item: LineItem): LineItemDto {
     quantity: item.quantity,
     unit: item.unit,
     unitPrice: moneyToDto(item.unitPrice),
+    vatRate: item.vatRate.percent,
   };
 }
 
-function lineItemFromDto(dto: LineItemDto): LineItem {
+function lineItemFromDto(dto: LineItemDto, fallbackVatRate: VatPercent): LineItem {
   return LineItem.of({
     id: dto.id,
     description: dto.description,
     quantity: dto.quantity,
     unit: dto.unit,
     unitPrice: moneyFromDto(dto.unitPrice),
+    vatRate: VatRate.of(dto.vatRate ?? fallbackVatRate),
   });
 }
 
@@ -166,6 +169,7 @@ export function invoiceToDto(invoice: Invoice): InvoiceDto {
 }
 
 export function invoiceFromDto(dto: InvoiceDto): Invoice {
+  const invoiceVatRate = dto.vat.rate;
   return Invoice.create({
     id: InvoiceId.fromString(dto.id),
     number: InvoiceNumber.of(dto.number.prefix, dto.number.sequence),
@@ -173,8 +177,8 @@ export function invoiceFromDto(dto: InvoiceDto): Invoice {
     clientId: ClientId.fromString(dto.clientId),
     issueDate: new Date(dto.issueDate),
     dueDate: new Date(dto.dueDate),
-    lineItems: LineItems.of(dto.lineItems.map(lineItemFromDto)),
-    vat: { enabled: dto.vat.enabled, rate: VatRate.of(dto.vat.rate as VatPercent) },
+    lineItems: LineItems.of(dto.lineItems.map((item) => lineItemFromDto(item, invoiceVatRate))),
+    vat: { enabled: dto.vat.enabled, rate: VatRate.of(invoiceVatRate) },
     status: dto.status,
     notes: dto.notes,
     designPresetId: dto.designPresetId,

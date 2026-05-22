@@ -56,6 +56,29 @@ describe('invoice template layout', () => {
     expect(moved.layout[1]?.columns[0]?.content).toEqual(['buyer-info', 'seller-info']);
   });
 
+  it('when moving block before another in target column, then inserts before hovered block', () => {
+    const moved = moveBlockToColumn(baseLayout(), 'seller-info', 'row-2', 'col-2-1', 'buyer-info');
+
+    expect(moved.layout[1]?.columns[0]?.content).toEqual(['seller-info', 'buyer-info']);
+  });
+
+  it('when reordering within same column, then updates block order', () => {
+    const layout: InvoiceTemplateLayoutDto = {
+      layout: [
+        {
+          id: 'row-1',
+          type: 'row',
+          columns: [{ id: 'col-1-1', content: ['logo', 'seller-info', 'invoice-meta'] }],
+        },
+      ],
+      blockSettings: {},
+    };
+
+    const moved = moveBlockToColumn(layout, 'invoice-meta', 'row-1', 'col-1-1', 'seller-info');
+
+    expect(moved.layout[0]?.columns[0]?.content).toEqual(['logo', 'invoice-meta', 'seller-info']);
+  });
+
   it('when increasing row columns, then keeps existing content and appends empty columns', () => {
     const resized = resizeTemplateRowColumns(baseLayout(), 'row-2', 3);
 

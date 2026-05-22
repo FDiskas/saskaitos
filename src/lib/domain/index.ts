@@ -1,5 +1,5 @@
 export { Money, CurrencyMismatchError } from './Money';
-export { VatRate, type VatPercent, type VatBreakdown } from './VatRate';
+export { VatRate, VAT_PERCENTS, type VatPercent, type VatBreakdown } from './VatRate';
 export { ClientId } from './ClientId';
 export { InvoiceId } from './InvoiceId';
 export { InvoiceNumber } from './InvoiceNumber';

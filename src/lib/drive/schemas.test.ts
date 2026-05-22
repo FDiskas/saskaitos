@@ -38,6 +38,7 @@ function sampleInvoice(): Invoice {
         quantity: 2,
         unit: 'val.',
         unitPrice: new Money(99.99),
+        vatRate: VatRate.of(21),
       }),
     ),
     vat: { enabled: true, rate: VatRate.of(21) },

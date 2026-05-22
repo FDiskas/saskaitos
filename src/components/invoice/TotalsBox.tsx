@@ -17,7 +17,7 @@ export function TotalsBox({ invoice, accentColor }: TotalsBoxProps) {
       </div>
       {hasVat && (
         <div className="flex justify-between text-xs text-slate-500">
-          <span>PVM ({invoice.vat.rate.percent}%):</span>
+          <span>PVM suma:</span>
           <span className="font-mono">{totals.vatAmount.format()}</span>
         </div>
       )}
