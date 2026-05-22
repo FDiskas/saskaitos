@@ -19,6 +19,12 @@ export interface InvoiceTotals {
   total: Money;
 }
 
+export interface DesignOverride {
+  primaryColor?: string;
+  accentColor?: string;
+  backgroundImageBase64?: string;
+}
+
 export interface InvoiceProps {
   id: InvoiceId;
   number: InvoiceNumber;
@@ -31,11 +37,15 @@ export interface InvoiceProps {
   status?: InvoiceStatus;
   notes?: string;
   designPresetId: string;
+  designOverride?: DesignOverride;
   createdAt: Date;
   updatedAt: Date;
 }
 
-type FullInvoiceProps = Required<Omit<InvoiceProps, 'notes'>> & { notes?: string };
+type FullInvoiceProps = Required<Omit<InvoiceProps, 'notes' | 'designOverride'>> & {
+  notes?: string;
+  designOverride?: DesignOverride;
+};
 
 export class Invoice {
   private readonly props: FullInvoiceProps;
@@ -95,6 +105,10 @@ export class Invoice {
     return this.props.designPresetId;
   }
 
+  get designOverride(): DesignOverride | undefined {
+    return this.props.designOverride;
+  }
+
   get createdAt(): Date {
     return this.props.createdAt;
   }
@@ -138,6 +152,12 @@ export class Invoice {
 
   withDesignPreset(designPresetId: string): Invoice {
     return this.touch({ designPresetId });
+  }
+
+  withDesignOverride(patch: Partial<DesignOverride>): Invoice {
+    const merged: DesignOverride = { ...this.props.designOverride, ...patch };
+    const hasAny = merged.primaryColor !== undefined || merged.accentColor !== undefined || merged.backgroundImageBase64 !== undefined;
+    return this.touch({ designOverride: hasAny ? merged : undefined });
   }
 
   withNumber(number: InvoiceNumber): Invoice {

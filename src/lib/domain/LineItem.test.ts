@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { LineItem } from './LineItem';
 import { Money } from './Money';
+import { isUuidV7 } from './_uuid';
 
 describe('LineItem', () => {
   it('when created, then exposes fields', () => {
@@ -38,6 +39,22 @@ describe('LineItem', () => {
       unitPrice: new Money(10),
     });
     expect(item.total().isZero()).toBe(true);
+  });
+
+  it('when create with quantity/unit/unitPrice, then generates v7 id', () => {
+    const item = LineItem.create({
+      description: 'X',
+      quantity: 1,
+      unit: 'vnt.',
+      unitPrice: new Money(10),
+    });
+    expect(isUuidV7(item.id)).toBe(true);
+  });
+
+  it('when create called twice, then ids differ', () => {
+    const a = LineItem.create({ description: '', quantity: 1, unit: 'vnt.', unitPrice: Money.zero() });
+    const b = LineItem.create({ description: '', quantity: 1, unit: 'vnt.', unitPrice: Money.zero() });
+    expect(a.id).not.toBe(b.id);
   });
 
   it('when withPatch applied, then returns new instance', () => {

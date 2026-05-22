@@ -12,5 +12,6 @@ export {
   type InvoiceStatus,
   type InvoiceVat,
   type InvoiceTotals,
+  type DesignOverride,
 } from './Invoice';
 export { Client, type ClientProps, type ClientPatch } from './Client';

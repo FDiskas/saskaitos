@@ -6,6 +6,7 @@ import {
   SETTINGS_FILE,
   StoragePath,
   useStorage,
+  type Storage,
 } from '@/lib/storage';
 import {
   Invoice,
@@ -14,19 +15,43 @@ import {
   VatRate,
   Series,
   ClientId,
+  Client,
 } from '@/lib/domain';
 import {
   invoiceToDto,
   InvoicesIndexFileSchema,
   seriesToDto,
   type InvoiceIndexEntry,
+  type InvoicesIndexFileDto,
 } from '@/lib/drive/schemas';
-import { SettingsDtoSchema, defaultSettings } from '@/lib/drive/settings';
+import { SettingsDtoSchema, defaultSettings, type SettingsDto } from '@/lib/drive/settings';
 import { syncQueue } from '@/stores';
 import { useClients } from './useClients';
 import { getClientFolder, getInvoicePath } from './useInvoice';
 
 const SETTINGS_PATH = StoragePath.of(APP_ROOT, SETTINGS_FILE);
+
+function indexPathFor(client: Client): StoragePath {
+  return StoragePath.of(getClientFolder(client), 'invoices_index.json');
+}
+
+function buildIndexEntry(invoice: Invoice): InvoiceIndexEntry {
+  return {
+    id: invoice.id.toString(),
+    number: invoice.number.toString(),
+    date: invoice.issueDate.toISOString(),
+    amountCents: invoice.totals().total.toCents(),
+    currency: invoice.totals().total.currency,
+    status: invoice.status,
+  };
+}
+
+function applySeriesIncrement(settings: SettingsDto, updated: Series): SettingsDto {
+  return {
+    ...settings,
+    series: settings.series.map((s) => (s.id === updated.id ? seriesToDto(updated) : s)),
+  };
+}
 
 export function useCreateInvoice() {
   const storage = useStorage();
@@ -39,30 +64,27 @@ export function useCreateInvoice() {
       let createdInvoice: Invoice | null = null;
 
       await syncQueue.enqueue(async () => {
-        // 1. Read settings to increment the default series number
-        const latestSettings = await storage.read(SETTINGS_PATH, SettingsDtoSchema) || defaultSettings();
+        const latestSettings = (await storage.read(SETTINGS_PATH, SettingsDtoSchema)) || defaultSettings();
         const defaultSeriesDto = latestSettings.series.find((s) => s.isDefault) || latestSettings.series[0];
         if (!defaultSeriesDto) {
           throw new Error('Nėra sukonfigūruotų sąskaitų serijų nustatymuose.');
         }
 
-        const series = Series.of(defaultSeriesDto);
-        const { number, updatedSeries } = series.next();
-
-        // 2. Find client
         const client = clients.find((c) => c.id.equals(clientId));
         if (!client) {
           throw new Error(`Klientas nerastas: ${clientId.toString()}`);
         }
 
-        // 3. Create the Invoice entity
+        const series = Series.of(defaultSeriesDto);
+        const { number, updatedSeries } = series.next();
+
         const invoice = Invoice.create({
           id: InvoiceId.create(),
           number,
           seriesId: defaultSeriesDto.id,
           clientId,
           issueDate: new Date(),
-          dueDate: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000), // 14 days default
+          dueDate: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000),
           lineItems: LineItems.empty(),
           vat: { enabled: false, rate: VatRate.of(21) },
           status: 'draft',
@@ -71,34 +93,23 @@ export function useCreateInvoice() {
           updatedAt: new Date(),
         });
 
-        // 4. Update settings with incremented series number
-        const updatedSettings = {
-          ...latestSettings,
-          series: latestSettings.series.map((s) =>
-            s.id === updatedSeries.id ? seriesToDto(updatedSeries) : s,
-          ),
-        };
-        await storage.write(SETTINGS_PATH, updatedSettings);
-
-        // 5. Write the invoice file
         const invoicePath = getInvoicePath(client, number, invoice.issueDate);
-        await storage.write(invoicePath, invoiceToDto(invoice));
+        const indexPath = indexPathFor(client);
+        const previousIndex = (await storage.read(indexPath, InvoicesIndexFileSchema)) || [];
+        const updatedSettings = applySeriesIncrement(latestSettings, updatedSeries);
+        const updatedIndex = [...previousIndex, buildIndexEntry(invoice)];
 
-        // 6. Update client's invoices_index.json
-        const clientFolder = getClientFolder(client);
-        const indexPath = StoragePath.of(clientFolder, 'invoices_index.json');
-        const latestIndex = await storage.read(indexPath, InvoicesIndexFileSchema) || [];
-        const indexEntry: InvoiceIndexEntry = {
-          id: invoice.id.toString(),
-          number: number.toString(),
-          date: invoice.issueDate.toISOString(),
-          amountCents: invoice.totals().total.toCents(),
-          currency: invoice.totals().total.currency,
-          status: invoice.status,
-        };
-        await storage.write(indexPath, [...latestIndex, indexEntry]);
-
-        createdInvoice = invoice;
+        createdInvoice = await persistNewInvoiceAtomic({
+          storage,
+          settingsPath: SETTINGS_PATH,
+          settingsPrev: latestSettings,
+          settingsNext: updatedSettings,
+          invoicePath,
+          invoice,
+          indexPath,
+          indexPrev: previousIndex,
+          indexNext: updatedIndex,
+        });
       });
 
       if (!createdInvoice) {
@@ -108,13 +119,93 @@ export function useCreateInvoice() {
       return createdInvoice;
     },
     onSuccess: (newInvoice) => {
-      // Invalidate queries
       void qc.invalidateQueries({ queryKey: queryKeys.settings });
       void qc.invalidateQueries({ queryKey: queryKeys.invoiceList });
-      // Redirect to the newly created invoice editor
       void navigate({ to: `/invoice-editor/${newInvoice.id.toString()}` });
     },
   });
+}
+
+interface AtomicCreateParams {
+  storage: Storage;
+  settingsPath: StoragePath;
+  settingsPrev: SettingsDto;
+  settingsNext: SettingsDto;
+  invoicePath: StoragePath;
+  invoice: Invoice;
+  indexPath: StoragePath;
+  indexPrev: InvoicesIndexFileDto;
+  indexNext: InvoicesIndexFileDto;
+}
+
+async function persistNewInvoiceAtomic(p: AtomicCreateParams): Promise<Invoice> {
+  await p.storage.write(p.settingsPath, p.settingsNext);
+
+  try {
+    await p.storage.write(p.invoicePath, invoiceToDto(p.invoice));
+  } catch (err) {
+    await p.storage.write(p.settingsPath, p.settingsPrev).catch(() => undefined);
+    throw err;
+  }
+
+  try {
+    await p.storage.write(p.indexPath, p.indexNext);
+  } catch (err) {
+    await p.storage.delete(p.invoicePath).catch(() => undefined);
+    await p.storage.write(p.settingsPath, p.settingsPrev).catch(() => undefined);
+    throw err;
+  }
+
+  return p.invoice;
+}
+
+interface UpdateContext {
+  storage: Storage;
+  prevClient: Client;
+  nextClient: Client;
+  previous: Invoice;
+  updated: Invoice;
+}
+
+async function writeInvoiceFile(ctx: UpdateContext): Promise<void> {
+  const prevPath = getInvoicePath(ctx.prevClient, ctx.previous.number, ctx.previous.issueDate);
+  const nextPath = getInvoicePath(ctx.nextClient, ctx.updated.number, ctx.updated.issueDate);
+
+  await ctx.storage.write(nextPath, invoiceToDto(ctx.updated));
+
+  if (prevPath.equals(nextPath)) return;
+  try {
+    await ctx.storage.delete(prevPath);
+  } catch (err) {
+    console.warn(`Nepavyko ištrinti seno sąskaitos failo: ${prevPath.toString()}`, err);
+  }
+}
+
+async function syncIndexAcrossClients(ctx: UpdateContext): Promise<void> {
+  const prevIndexPath = indexPathFor(ctx.prevClient);
+  const prevIndex = (await ctx.storage.read(prevIndexPath, InvoicesIndexFileSchema)) || [];
+  await ctx.storage.write(
+    prevIndexPath,
+    prevIndex.filter((e) => e.id !== ctx.updated.id.toString()),
+  );
+
+  const nextIndexPath = indexPathFor(ctx.nextClient);
+  const nextIndex = (await ctx.storage.read(nextIndexPath, InvoicesIndexFileSchema)) || [];
+  await ctx.storage.write(nextIndexPath, [
+    ...nextIndex.filter((e) => e.id !== ctx.updated.id.toString()),
+    buildIndexEntry(ctx.updated),
+  ]);
+}
+
+async function syncIndexSameClient(ctx: UpdateContext): Promise<void> {
+  const indexPath = indexPathFor(ctx.nextClient);
+  const index = (await ctx.storage.read(indexPath, InvoicesIndexFileSchema)) || [];
+  const entry = buildIndexEntry(ctx.updated);
+  const hasEntry = index.some((e) => e.id === ctx.updated.id.toString());
+  const next = hasEntry
+    ? index.map((e) => (e.id === ctx.updated.id.toString() ? entry : e))
+    : [...index, entry];
+  await ctx.storage.write(indexPath, next);
 }
 
 export function useUpdateInvoice() {
@@ -136,61 +227,13 @@ export function useUpdateInvoice() {
           throw new Error('Klientas nerastas.');
         }
 
-        const prevPath = getInvoicePath(prevClient, previous.number, previous.issueDate);
-        const nextPath = getInvoicePath(nextClient, updated.number, updated.issueDate);
-
-        // 1. Write the new/updated file
-        await storage.write(nextPath, invoiceToDto(updated));
-
-        // 2. If path has changed (e.g. date, number, or client changed), delete old file
-        if (!prevPath.equals(nextPath)) {
-          try {
-            await storage.delete(prevPath);
-          } catch (err) {
-            console.warn(`Nepavyko ištrinti seno sąskaitos failo: ${prevPath.toString()}`, err);
-          }
+        const ctx: UpdateContext = { storage, prevClient, nextClient, previous, updated };
+        await writeInvoiceFile(ctx);
+        if (previous.clientId.equals(updated.clientId)) {
+          await syncIndexSameClient(ctx);
+          return;
         }
-
-        // 3. Update invoices_index.json
-        if (!previous.clientId.equals(updated.clientId)) {
-          // Client changed - remove from old index, add to new index
-          const prevIndexPath = StoragePath.of(getClientFolder(prevClient), 'invoices_index.json');
-          const prevIndex = await storage.read(prevIndexPath, InvoicesIndexFileSchema) || [];
-          const updatedPrevIndex = prevIndex.filter((e) => e.id !== updated.id.toString());
-          await storage.write(prevIndexPath, updatedPrevIndex);
-
-          const nextIndexPath = StoragePath.of(getClientFolder(nextClient), 'invoices_index.json');
-          const nextIndex = await storage.read(nextIndexPath, InvoicesIndexFileSchema) || [];
-          const indexEntry: InvoiceIndexEntry = {
-            id: updated.id.toString(),
-            number: updated.number.toString(),
-            date: updated.issueDate.toISOString(),
-            amountCents: updated.totals().total.toCents(),
-            currency: updated.totals().total.currency,
-            status: updated.status,
-          };
-          await storage.write(nextIndexPath, [
-            ...nextIndex.filter((e) => e.id !== updated.id.toString()),
-            indexEntry,
-          ]);
-        } else {
-          // Same client - update entry in index
-          const indexPath = StoragePath.of(getClientFolder(nextClient), 'invoices_index.json');
-          const index = await storage.read(indexPath, InvoicesIndexFileSchema) || [];
-          const indexEntry: InvoiceIndexEntry = {
-            id: updated.id.toString(),
-            number: updated.number.toString(),
-            date: updated.issueDate.toISOString(),
-            amountCents: updated.totals().total.toCents(),
-            currency: updated.totals().total.currency,
-            status: updated.status,
-          };
-          const updatedIndex = index.map((e) => (e.id === updated.id.toString() ? indexEntry : e));
-          if (!index.some((e) => e.id === updated.id.toString())) {
-            updatedIndex.push(indexEntry);
-          }
-          await storage.write(indexPath, updatedIndex);
-        }
+        await syncIndexAcrossClients(ctx);
       });
     },
     onMutate: async ({ updated }) => {
@@ -232,10 +275,12 @@ export function useDeleteInvoice() {
           console.warn(`Nepavyko ištrinti sąskaitos failo: ${path.toString()}`, err);
         }
 
-        const indexPath = StoragePath.of(getClientFolder(client), 'invoices_index.json');
-        const index = await storage.read(indexPath, InvoicesIndexFileSchema) || [];
-        const updatedIndex = index.filter((e) => e.id !== invoice.id.toString());
-        await storage.write(indexPath, updatedIndex);
+        const indexPath = indexPathFor(client);
+        const index = (await storage.read(indexPath, InvoicesIndexFileSchema)) || [];
+        await storage.write(
+          indexPath,
+          index.filter((e) => e.id !== invoice.id.toString()),
+        );
       });
     },
     onSuccess: () => {

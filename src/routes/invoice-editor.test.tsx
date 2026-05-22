@@ -45,6 +45,7 @@ vi.mock('@/hooks', () => ({
   useStorage: () => ({
     uploadBinary: mockUploadBinary,
   }),
+  useInvoiceAutosave: () => false,
   getInvoicePdfPath: vi.fn().mockReturnValue('mocked-pdf-path.pdf'),
 }));
 

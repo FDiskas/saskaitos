@@ -139,6 +139,30 @@ describe('Invoice', () => {
     });
   });
 
+  describe('designOverride', () => {
+    it('when withDesignOverride applied, then returns new instance with override', () => {
+      const inv = baseInvoice();
+      const modified = inv.withDesignOverride({ primaryColor: '#ff0000' });
+      expect(inv.designOverride).toBeUndefined();
+      expect(modified.designOverride?.primaryColor).toBe('#ff0000');
+      expect(modified).not.toBe(inv);
+    });
+
+    it('when withDesignOverride called twice, then merges partial patches', () => {
+      const inv = baseInvoice().withDesignOverride({ primaryColor: '#ff0000' });
+      const merged = inv.withDesignOverride({ accentColor: '#00ff00' });
+      expect(merged.designOverride?.primaryColor).toBe('#ff0000');
+      expect(merged.designOverride?.accentColor).toBe('#00ff00');
+    });
+
+    it('when withDesignOverride passes undefined value, then clears that field', () => {
+      const inv = baseInvoice().withDesignOverride({ primaryColor: '#ff0000', accentColor: '#00ff00' });
+      const cleared = inv.withDesignOverride({ primaryColor: undefined });
+      expect(cleared.designOverride?.primaryColor).toBeUndefined();
+      expect(cleared.designOverride?.accentColor).toBe('#00ff00');
+    });
+  });
+
   describe('isOverdue', () => {
     it('when today < dueDate, then false', () => {
       const inv = baseInvoice().markSent();

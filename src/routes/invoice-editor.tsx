@@ -1,9 +1,15 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, Link } from '@tanstack/react-router';
 import { ArrowLeft, Loader2, CloudLightning, CheckCircle2 } from 'lucide-react';
-import { useInvoice, useCreateInvoice, useUpdateInvoice, useSettings, useClients } from '@/hooks';
-import { DesignSidebar, InvoiceCanvas, InvoiceActions } from '@/components/invoice';
-import { ClientCombobox } from '@/components/shared';
+import {
+  useInvoice,
+  useCreateInvoice,
+  useUpdateInvoice,
+  useSettings,
+  useClients,
+  useInvoiceAutosave,
+} from '@/hooks';
+import { DesignSidebar, InvoiceCanvas, InvoiceActions, NewInvoicePicker } from '@/components/invoice';
 import { Invoice } from '@/lib/domain';
 
 export function InvoiceEditorPage() {
@@ -11,38 +17,31 @@ export function InvoiceEditorPage() {
   const isNew = id === 'new';
 
   const { invoice, isLoading: isInvoiceLoading, error: invoiceError } = useInvoice(id);
-  const { settings, isLoading: isSettingsLoading, update: updateSettings } = useSettings();
+  const { settings, isLoading: isSettingsLoading } = useSettings();
   const { clients, isLoading: isClientsLoading } = useClients();
 
   const createMutation = useCreateInvoice();
   const updateMutation = useUpdateInvoice();
 
   const [localInvoice, setLocalInvoice] = useState<Invoice | null>(null);
-  const [isPendingSave, setIsPendingSave] = useState(false);
 
-  // Sync server state to local state
   useEffect(() => {
     if (invoice && !updateMutation.isPending) {
       setLocalInvoice(invoice);
-      setIsPendingSave(false);
     }
   }, [invoice, updateMutation.isPending]);
 
-  // Debounced autosave
-  useEffect(() => {
-    if (!localInvoice || !invoice || isNew) return;
-    if (localInvoice.updatedAt.getTime() <= invoice.updatedAt.getTime()) {
-      setIsPendingSave(false);
-      return;
-    }
+  const handleSave = useCallback(
+    (payload: { updated: Invoice; previous: Invoice }) => updateMutation.mutate(payload),
+    [updateMutation],
+  );
 
-    setIsPendingSave(true);
-    const timer = setTimeout(() => {
-      updateMutation.mutate({ updated: localInvoice, previous: invoice });
-    }, 500);
-
-    return () => clearTimeout(timer);
-  }, [localInvoice, invoice, isNew, updateMutation]);
+  const isPendingSave = useInvoiceAutosave({
+    local: localInvoice,
+    server: invoice,
+    enabled: !isNew,
+    onSave: handleSave,
+  });
 
   if (isInvoiceLoading || isSettingsLoading || isClientsLoading) {
     return (
@@ -65,44 +64,12 @@ export function InvoiceEditorPage() {
     );
   }
 
-  // State: New Invoice (select client first)
   if (isNew) {
     return (
-      <div className="flex h-screen w-screen flex-col bg-slate-50 items-center justify-center p-6">
-        <div className="w-full max-w-md bg-white rounded-xl shadow-md border border-slate-200 p-8 flex flex-col gap-6">
-          <div className="flex flex-col gap-1.5 text-center">
-            <h2 className="text-xl font-bold text-slate-900">Nauja sąskaita-faktūra</h2>
-            <p className="text-sm text-slate-500">Pasirinkite klientą, kuriam norite išrašyti naują sąskaitą.</p>
-          </div>
-
-          <div className="flex flex-col gap-2">
-            <label className="text-xs font-semibold text-slate-500 uppercase">Klientas</label>
-            <ClientCombobox
-              value={null}
-              onChange={(val) => {
-                if (val) {
-                  const client = clients.find((c) => c.id.toString() === val);
-                  if (client) createMutation.mutate(client.id);
-                }
-              }}
-              placeholder="Pasirinkite iš sąrašo..."
-            />
-          </div>
-
-          {createMutation.isPending && (
-            <div className="flex items-center justify-center gap-2 text-xs font-medium text-slate-600 bg-slate-50 py-2 rounded-md border border-slate-150">
-              <Loader2 className="h-3.5 w-3.5 animate-spin text-slate-500" />
-              Generuojamas sąskaitos numeris ir failai...
-            </div>
-          )}
-
-          <div className="border-t border-slate-100 pt-4 flex justify-between items-center text-xs">
-            <Link to="/dashboard" className="text-slate-500 hover:text-slate-800 font-medium flex items-center gap-1">
-              <ArrowLeft className="h-3.5 w-3.5" /> Atšaukti
-            </Link>
-          </div>
-        </div>
-      </div>
+      <NewInvoicePicker
+        onClientSelected={(clientId) => createMutation.mutate(clientId)}
+        isPending={createMutation.isPending}
+      />
     );
   }
 
@@ -112,7 +79,6 @@ export function InvoiceEditorPage() {
 
   return (
     <div className="min-h-screen flex flex-col bg-slate-100">
-      {/* Redaktoriaus Header (ekrane tik) */}
       <header className="bg-white border-b border-slate-200 px-6 py-3 flex items-center justify-between no-print shadow-sm z-10">
         <div className="flex items-center gap-4">
           <Link
@@ -128,32 +94,10 @@ export function InvoiceEditorPage() {
           </span>
         </div>
 
-        {/* Išsaugojimo būsena */}
-        <div className="flex items-center gap-2">
-          {updateMutation.isPending ? (
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-600/20">
-              <Loader2 className="h-3 w-3 animate-spin" />
-              Išsaugoma...
-            </span>
-          ) : isPendingSave ? (
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-2 py-1 text-xs font-medium text-amber-700 ring-1 ring-inset ring-amber-600/20">
-              <CloudLightning className="h-3 w-3" />
-              Laukiama išsaugojimo...
-            </span>
-          ) : (
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-green-50 px-2 py-1 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20">
-              <CheckCircle2 className="h-3 w-3" />
-              Išsaugota Drive
-            </span>
-          )}
-        </div>
+        <SyncStatusPill isSaving={updateMutation.isPending} isPendingSave={isPendingSave} />
 
         {client ? (
-          <InvoiceActions
-            invoice={localInvoice}
-            client={client}
-            settings={settings}
-          />
+          <InvoiceActions invoice={localInvoice} client={client} settings={settings} />
         ) : (
           <div className="text-xs text-amber-600 bg-amber-50 px-3 py-1.5 rounded-md border border-amber-100 font-medium">
             Pasirinkite klientą, kad galėtumėte eksportuoti
@@ -161,25 +105,43 @@ export function InvoiceEditorPage() {
         )}
       </header>
 
-      {/* Redaktoriaus pagrindinis vaizdas */}
       <div className="flex flex-row flex-grow h-[calc(100vh-57px)] overflow-hidden print:h-auto print:overflow-visible">
-        {/* Kairysis dizaino skydelis */}
-        <DesignSidebar
-          invoice={localInvoice}
-          onChange={setLocalInvoice}
-          settings={settings}
-          onUpdateSettings={updateSettings}
-        />
+        <DesignSidebar invoice={localInvoice} onChange={setLocalInvoice} settings={settings} />
 
-        {/* Centrinė sąskaitos drobė */}
         <main className="flex-grow overflow-y-auto p-8 flex justify-center bg-slate-50/50 print:p-0 print:bg-white print:overflow-visible">
-          <InvoiceCanvas
-            invoice={localInvoice}
-            onChange={setLocalInvoice}
-            settings={settings}
-          />
+          <InvoiceCanvas invoice={localInvoice} onChange={setLocalInvoice} settings={settings} />
         </main>
       </div>
     </div>
+  );
+}
+
+interface SyncStatusPillProps {
+  isSaving: boolean;
+  isPendingSave: boolean;
+}
+
+function SyncStatusPill({ isSaving, isPendingSave }: SyncStatusPillProps) {
+  if (isSaving) {
+    return (
+      <span className="inline-flex items-center gap-1.5 rounded-full bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-600/20">
+        <Loader2 className="h-3 w-3 animate-spin" />
+        Išsaugoma...
+      </span>
+    );
+  }
+  if (isPendingSave) {
+    return (
+      <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-2 py-1 text-xs font-medium text-amber-700 ring-1 ring-inset ring-amber-600/20">
+        <CloudLightning className="h-3 w-3" />
+        Laukiama išsaugojimo...
+      </span>
+    );
+  }
+  return (
+    <span className="inline-flex items-center gap-1.5 rounded-full bg-green-50 px-2 py-1 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20">
+      <CheckCircle2 className="h-3 w-3" />
+      Išsaugota Drive
+    </span>
   );
 }

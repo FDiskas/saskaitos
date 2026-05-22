@@ -1,4 +1,5 @@
 import { type Money } from './Money';
+import { uuidV7 } from './_uuid';
 
 export interface LineItemProps {
   id: string;
@@ -19,6 +20,10 @@ export class LineItem {
 
   static of(props: LineItemProps): LineItem {
     return new LineItem({ ...props });
+  }
+
+  static create(props: Omit<LineItemProps, 'id'>): LineItem {
+    return new LineItem({ ...props, id: uuidV7() });
   }
 
   get id(): string {

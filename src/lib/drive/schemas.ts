@@ -49,6 +49,13 @@ export type InvoiceNumberDto = z.infer<typeof InvoiceNumberDtoSchema>;
 
 export const InvoiceStatusSchema = z.enum(['draft', 'sent', 'paid', 'overdue']);
 
+export const DesignOverrideDtoSchema = z.object({
+  primaryColor: z.string().optional(),
+  accentColor: z.string().optional(),
+  backgroundImageBase64: z.string().optional(),
+});
+export type DesignOverrideDto = z.infer<typeof DesignOverrideDtoSchema>;
+
 export const InvoiceDtoSchema = z.object({
   id: uuidV7,
   number: InvoiceNumberDtoSchema,
@@ -61,6 +68,7 @@ export const InvoiceDtoSchema = z.object({
   status: InvoiceStatusSchema,
   notes: z.string().optional(),
   designPresetId: z.string(),
+  designOverride: DesignOverrideDtoSchema.optional(),
   createdAt: isoDate,
   updatedAt: isoDate,
 });
@@ -150,6 +158,7 @@ export function invoiceToDto(invoice: Invoice): InvoiceDto {
     status: invoice.status,
     notes: invoice.notes,
     designPresetId: invoice.designPresetId,
+    designOverride: invoice.designOverride,
     createdAt: invoice.createdAt.toISOString(),
     updatedAt: invoice.updatedAt.toISOString(),
   };
@@ -168,6 +177,7 @@ export function invoiceFromDto(dto: InvoiceDto): Invoice {
     status: dto.status,
     notes: dto.notes,
     designPresetId: dto.designPresetId,
+    designOverride: dto.designOverride,
     createdAt: new Date(dto.createdAt),
     updatedAt: new Date(dto.updatedAt),
   });
