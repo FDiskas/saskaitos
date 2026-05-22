@@ -1,14 +1,30 @@
-import { useCallback, useEffect } from 'react';
+import { useCallback, useEffect, useMemo } from 'react';
 import { Link, useNavigate } from '@tanstack/react-router';
 import { useGoogleAuth, useSettings } from '@/hooks';
 import { useStorageOrNull } from '@/lib/storage';
 import { env } from '@/env';
 import { Card, CardBody, CardHeader, CardTitle, Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui';
-import { SyncStatusBadge } from '@/components/shared';
-import { CompanyTab, DesignTab, EmailTab, SeriesTab } from '@/components/settings';
+import { CompanyProfileSwitcher, SyncStatusBadge } from '@/components/shared';
+import { CompanyProfilesList, CompanyTab, DesignTab, EmailTab, SeriesTab } from '@/components/settings';
 import type { CompanyDto } from '@/lib/drive/settings';
 import type { SeriesDto } from '@/lib/drive/schemas';
 import type { DesignPresetDto } from '@/lib/drive/settings';
+
+const EMPTY_COMPANY: CompanyDto = {
+  name: '',
+  code: '',
+  vatCode: '',
+  address: '',
+  iban: '',
+  bankName: '',
+  email: '',
+  phone: '',
+};
+
+function createCompanyProfileId(): string {
+  if (globalThis.crypto?.randomUUID) return globalThis.crypto.randomUUID();
+  return `company-${Date.now().toString(36)}`;
+}
 
 export function SettingsPage() {
   const { isAuthenticated, user, logout } = useGoogleAuth();
@@ -31,6 +47,7 @@ export function SettingsPage() {
           </p>
         </div>
         <div className="flex items-center gap-3">
+          <CompanyProfileSwitcher />
           <SyncStatusBadge />
           <Link
             to="/clients"
@@ -72,10 +89,100 @@ export function SettingsPage() {
 function SettingsContent() {
   const { settings, isLoading, error, update } = useSettings();
 
+  const activeCompanyId = useMemo(() => {
+    if (!settings) return null;
+    return settings.activeCompanyId ?? settings.companies?.[0]?.id ?? null;
+  }, [settings]);
+
+  const activeCompany = useMemo(() => {
+    if (!settings) return null;
+    if (!activeCompanyId) return settings.company;
+    return (settings.companies ?? []).find((profile) => profile.id === activeCompanyId)?.company ?? settings.company;
+  }, [settings, activeCompanyId]);
+
   const setCompany = useCallback(
-    (company: CompanyDto) => update((s) => ({ ...s, company })),
+    (company: CompanyDto) =>
+      update((s) => {
+        const companies = s.companies ?? [];
+        const fallbackActiveId = s.activeCompanyId ?? companies[0]?.id ?? null;
+        if (!fallbackActiveId) {
+          const createdId = createCompanyProfileId();
+          return {
+            ...s,
+            company,
+            companies: [...companies, { id: createdId, company }],
+            activeCompanyId: createdId,
+          };
+        }
+
+        return {
+          ...s,
+          company,
+          companies: companies.map((profile) =>
+            profile.id === fallbackActiveId ? { ...profile, company } : profile,
+          ),
+          activeCompanyId: fallbackActiveId,
+        };
+      }),
     [update],
   );
+
+  const setActiveCompanyId = useCallback(
+    (nextId: string) =>
+      update((s) => {
+        const profile = (s.companies ?? []).find((candidate) => candidate.id === nextId);
+        if (!profile) return s;
+        return {
+          ...s,
+          activeCompanyId: nextId,
+          company: profile.company,
+        };
+      }),
+    [update],
+  );
+
+  const addCompany = useCallback(
+    () =>
+      update((s) => {
+        const companies = s.companies ?? [];
+        const createdId = createCompanyProfileId();
+        return {
+          ...s,
+          company: EMPTY_COMPANY,
+          activeCompanyId: createdId,
+          companies: [...companies, { id: createdId, company: EMPTY_COMPANY }],
+        };
+      }),
+    [update],
+  );
+
+  const removeCompany = useCallback(
+    (profileId: string) =>
+      update((s) => {
+        const nextProfiles = (s.companies ?? []).filter((profile) => profile.id !== profileId);
+        if (nextProfiles.length === 0) {
+          return {
+            ...s,
+            companies: [],
+            activeCompanyId: null,
+            company: null,
+          };
+        }
+
+        const activeCompanyId = s.activeCompanyId === profileId
+          ? nextProfiles[0]?.id ?? null
+          : s.activeCompanyId ?? nextProfiles[0]?.id ?? null;
+        const company = nextProfiles.find((profile) => profile.id === activeCompanyId)?.company ?? null;
+        return {
+          ...s,
+          companies: nextProfiles,
+          activeCompanyId,
+          company,
+        };
+      }),
+    [update],
+  );
+
   const setSeries = useCallback(
     (series: SeriesDto[]) => update((s) => ({ ...s, series })),
     [update],
@@ -129,7 +236,22 @@ function SettingsContent() {
             <TabsTrigger value="design">Dizainas</TabsTrigger>
           </TabsList>
           <TabsContent value="company">
-            <CompanyTab value={settings.company} onChange={setCompany} />
+            <div className="space-y-4">
+              <CompanyProfilesList
+                profiles={settings.companies ?? []}
+                activeId={activeCompanyId}
+                onSelect={setActiveCompanyId}
+                onDelete={removeCompany}
+                onAdd={addCompany}
+              />
+              {activeCompany ? (
+                <CompanyTab value={activeCompany} onChange={setCompany} />
+              ) : (
+                <div className="rounded-lg border border-dashed border-slate-300 bg-slate-50 p-4 text-sm text-slate-500">
+                  Pasirinkite juridinį vienetą redagavimui arba sukurkite naują.
+                </div>
+              )}
+            </div>
           </TabsContent>
           <TabsContent value="series">
             <SeriesTab series={settings.series} onChange={setSeries} />

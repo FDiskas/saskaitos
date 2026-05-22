@@ -12,7 +12,7 @@ import {
 import { env } from '@/env';
 import { useStorageOrNull } from '@/lib/storage';
 import { Client, ClientId } from '@/lib/domain';
-import { SyncStatusBadge } from '@/components/shared';
+import { CompanyProfileSwitcher, SyncStatusBadge } from '@/components/shared';
 import { Card, CardBody } from '@/components/ui';
 import {
   ClientDeleteDialog,
@@ -63,6 +63,7 @@ export function ClientsPage() {
           </p>
         </div>
         <div className="flex items-center gap-3">
+          <CompanyProfileSwitcher />
           <SyncStatusBadge />
           <Link
             to="/dashboard"

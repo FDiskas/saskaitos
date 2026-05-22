@@ -30,8 +30,13 @@ export function CompanyTab({ value, onChange }: CompanyTabProps) {
     resolver: zodResolver(CompanyDtoSchema),
     mode: 'onChange',
   });
-  const { register, watch, setValue, formState } = form;
+  const { register, watch, setValue, formState, reset } = form;
   const lastSnapshotRef = useRef<string>(JSON.stringify(defaults));
+
+  useEffect(() => {
+    reset(defaults);
+    lastSnapshotRef.current = JSON.stringify(defaults);
+  }, [defaults, reset]);
 
   useEffect(() => {
     let timer: ReturnType<typeof setTimeout> | undefined;

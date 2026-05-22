@@ -70,6 +70,22 @@ const mockSettings: SettingsDto = {
     email: 'info@pardavejas.lt',
     phone: '+37062222222',
   },
+  companies: [
+    {
+      id: 'company-1',
+      company: {
+        name: 'UAB Pardavėjas',
+        code: '987654321',
+        vatCode: 'LT987654321',
+        address: 'Kauno g. 20, Kaunas',
+        iban: 'LT123456789012345678',
+        bankName: 'Swedbank',
+        email: 'info@pardavejas.lt',
+        phone: '+37062222222',
+      },
+    },
+  ],
+  activeCompanyId: 'company-1',
   series: [],
   designPresets: [],
   invoiceLayout: {

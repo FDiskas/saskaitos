@@ -38,6 +38,63 @@ describe('SettingsDto schema', () => {
     expect(parsed.company?.email).toBe('info@test.lt');
   });
 
+  it('when multiple companies exist and active id is set, then company points to active profile', () => {
+    const value = {
+      ...defaultSettings(),
+      companies: [
+        {
+          id: 'company-1',
+          company: {
+            name: 'UAB Pirmas',
+            code: '111111111',
+            address: 'Vilnius',
+            iban: 'LT111111111111111111',
+            bankName: 'Swedbank',
+            email: 'pirmas@example.lt',
+            phone: '+37060000001',
+          },
+        },
+        {
+          id: 'company-2',
+          company: {
+            name: 'UAB Antras',
+            code: '222222222',
+            address: 'Kaunas',
+            iban: 'LT222222222222222222',
+            bankName: 'SEB',
+            email: 'antras@example.lt',
+            phone: '+37060000002',
+          },
+        },
+      ],
+      activeCompanyId: 'company-2',
+    };
+
+    const parsed = SettingsDtoSchema.parse(value);
+    expect(parsed.company?.name).toBe('UAB Antras');
+    expect(parsed.activeCompanyId).toBe('company-2');
+  });
+
+  it('when legacy settings has single company only, then parser seeds company profiles automatically', () => {
+    const legacy = {
+      ...defaultSettings(),
+      company: {
+        name: 'UAB Istorinis',
+        code: '333333333',
+        address: 'Klaipėda',
+        iban: 'LT333333333333333333',
+        bankName: 'Luminor',
+        email: 'istorinis@example.lt',
+        phone: '+37060000003',
+      },
+    };
+
+    const parsed = SettingsDtoSchema.parse(legacy);
+    expect(parsed.companies).toHaveLength(1);
+    expect(parsed.activeCompanyId).toBe(parsed.companies[0]?.id);
+    expect(parsed.company?.name).toBe('UAB Istorinis');
+  });
+
   it('when company email is empty string, then schema accepts it', () => {
     const value = {
       ...defaultSettings(),

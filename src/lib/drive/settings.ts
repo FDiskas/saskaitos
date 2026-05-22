@@ -27,6 +27,12 @@ export const CompanyDtoSchema = z.object({
 });
 export type CompanyDto = z.infer<typeof CompanyDtoSchema>;
 
+export const CompanyProfileDtoSchema = z.object({
+  id: z.string().min(1),
+  company: CompanyDtoSchema,
+});
+export type CompanyProfileDto = z.infer<typeof CompanyProfileDtoSchema>;
+
 export const DEFAULT_TEXT_COLOR = '#0f172a';
 export const DEFAULT_MUTED_COLOR = '#64748b';
 export const DEFAULT_BORDER_COLOR = '#cbd5e1';
@@ -50,6 +56,8 @@ export type DesignPresetDto = z.infer<typeof DesignPresetDtoSchema>;
 
 export interface SettingsDto {
   company: CompanyDto | null;
+  companies: CompanyProfileDto[];
+  activeCompanyId: string | null;
   series: SeriesDto[];
   resendApiKey?: string;
   defaultEmailSubject?: string;
@@ -62,6 +70,8 @@ const MigratedInvoiceLayoutSchema = z.preprocess(migrateLegacyLayoutInput, Invoi
 
 const RawSettingsSchema = z.object({
   company: CompanyDtoSchema.nullable().default(null),
+  companies: z.array(CompanyProfileDtoSchema).default([]),
+  activeCompanyId: z.string().nullable().default(null),
   series: z.array(SeriesDtoSchema).default([]),
   resendApiKey: z.string().optional(),
   defaultEmailSubject: z.string().optional(),
@@ -70,7 +80,30 @@ const RawSettingsSchema = z.object({
   invoiceLayout: MigratedInvoiceLayoutSchema.default(defaultInvoiceTemplateLayout()),
 });
 
-export const SettingsDtoSchema: z.ZodType<SettingsDto> = RawSettingsSchema as unknown as z.ZodType<SettingsDto>;
+function normalizeCompanySelection(raw: z.infer<typeof RawSettingsSchema>): SettingsDto {
+  const fallbackId = 'default-company';
+  const companies = raw.companies.length > 0
+    ? raw.companies
+    : raw.company
+      ? [{ id: fallbackId, company: raw.company }]
+      : [];
+  const activeCompanyId = raw.activeCompanyId ?? companies[0]?.id ?? null;
+  const activeCompany = companies.find((profile) => profile.id === activeCompanyId)?.company ?? null;
+
+  return {
+    company: activeCompany,
+    companies,
+    activeCompanyId,
+    series: raw.series,
+    resendApiKey: raw.resendApiKey,
+    defaultEmailSubject: raw.defaultEmailSubject,
+    defaultEmailBody: raw.defaultEmailBody,
+    designPresets: raw.designPresets,
+    invoiceLayout: raw.invoiceLayout,
+  };
+}
+
+export const SettingsDtoSchema: z.ZodType<SettingsDto> = RawSettingsSchema.transform(normalizeCompanySelection);
 
 export function defaultSettings(): SettingsDto {
   const initialSeries: SeriesDto = {
@@ -92,6 +125,8 @@ export function defaultSettings(): SettingsDto {
   };
   return {
     company: null,
+    companies: [],
+    activeCompanyId: null,
     series: [initialSeries],
     designPresets: [initialPreset],
     invoiceLayout: defaultInvoiceTemplateLayout(),

@@ -29,6 +29,7 @@ import {
   NewInvoicePicker,
   TemplateBlockSettingsSidebar,
 } from '@/components/invoice';
+import { CompanyProfileSwitcher } from '@/components/shared';
 import { type Invoice, ClientId } from '@/lib/domain';
 import {
   findBlockInstance,
@@ -257,6 +258,7 @@ export function InvoiceEditorPage() {
           <span className="text-sm font-bold text-slate-900 font-mono">
             Redaguojama: {localInvoice.number.toString()}
           </span>
+          <CompanyProfileSwitcher />
         </div>
 
         <SyncStatusPill isSaving={updateMutation.isPending} isPendingSave={isPendingSave} />

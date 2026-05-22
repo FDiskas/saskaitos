@@ -7,7 +7,7 @@ import {
   useInvoiceStatus,
 } from '@/hooks';
 import { env } from '@/env';
-import { SyncStatusBadge } from '@/components/shared';
+import { CompanyProfileSwitcher, SyncStatusBadge } from '@/components/shared';
 import { Card, CardBody } from '@/components/ui';
 import {
   DashboardFilters,
@@ -48,6 +48,7 @@ export function DashboardPage() {
           </p>
         </div>
         <div className="flex items-center gap-3">
+          <CompanyProfileSwitcher />
           <SyncStatusBadge />
           <Link
             to="/invoice-editor/$id"
