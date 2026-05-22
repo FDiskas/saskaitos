@@ -5,11 +5,13 @@ import {
   Outlet,
   redirect,
 } from '@tanstack/react-router';
+import { z } from 'zod';
 import { LoginPage } from '@/routes/login';
 import { DashboardPage } from '@/routes/dashboard';
 import { SettingsPage } from '@/routes/settings';
 import { ClientsPage } from '@/routes/clients';
 import { InvoiceEditorPage } from '@/routes/invoice-editor';
+import { RequireAuth } from '@/components/RequireAuth';
 
 const rootRoute = createRootRoute({
   component: () => <Outlet />,
@@ -23,31 +25,46 @@ const indexRoute = createRoute({
   },
 });
 
+const loginSearchSchema = z.object({
+  from: z.string().optional(),
+});
+
 const loginRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/login',
   component: LoginPage,
+  validateSearch: (search) => loginSearchSchema.parse(search),
 });
 
 const dashboardRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/dashboard',
-  component: DashboardPage,
+  component: () => (
+    <RequireAuth>
+      <DashboardPage />
+    </RequireAuth>
+  ),
 });
 
 const settingsRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/settings',
-  component: SettingsPage,
+  component: () => (
+    <RequireAuth>
+      <SettingsPage />
+    </RequireAuth>
+  ),
 });
 
 const clientsRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/clients',
-  component: ClientsPage,
+  component: () => (
+    <RequireAuth>
+      <ClientsPage />
+    </RequireAuth>
+  ),
 });
-
-import { z } from 'zod';
 
 const invoiceEditorSearchSchema = z.object({
   clientId: z.string().optional(),
@@ -56,7 +73,11 @@ const invoiceEditorSearchSchema = z.object({
 const invoiceEditorRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/invoice-editor/$id',
-  component: InvoiceEditorPage,
+  component: () => (
+    <RequireAuth>
+      <InvoiceEditorPage />
+    </RequireAuth>
+  ),
   validateSearch: (search) => invoiceEditorSearchSchema.parse(search),
 });
 

@@ -3,7 +3,7 @@ import { Invoice, Client } from '@/lib/domain';
 import type { SettingsDto } from '@/lib/drive/settings';
 import { formatDate } from '@/lib/format/date';
 import { getPdfStyles } from './InvoicePdfStyles';
-import { resolveFontFamily } from './googleFonts';
+import { resolveFontStack } from './googleFonts';
 
 export interface InvoicePdfDocumentProps {
   invoice: Invoice;
@@ -15,12 +15,12 @@ export function InvoicePdfDocument({ invoice, client, settings }: InvoicePdfDocu
   const activePreset = settings.designPresets.find((p) => p.id === invoice.designPresetId) || settings.designPresets[0];
   const primaryColor = activePreset?.primaryColor || '#0f172a';
   const accentColor = activePreset?.accentColor || '#0284c7';
-  const fontFamily = resolveFontFamily(activePreset?.fontFamily);
+  const fontStack = resolveFontStack(activePreset?.fontFamily);
 
   const totals = invoice.totals();
   const hasVat = invoice.vat.enabled;
   const items = invoice.lineItems.toArray();
-  const styles = getPdfStyles(primaryColor, accentColor, fontFamily);
+  const styles = getPdfStyles(primaryColor, accentColor, fontStack);
 
   return (
     <Document>

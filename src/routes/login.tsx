@@ -1,17 +1,20 @@
 import { useEffect } from 'react';
-import { useNavigate } from '@tanstack/react-router';
+import { useNavigate, useSearch } from '@tanstack/react-router';
 import { useGoogleAuth } from '@/hooks';
 import { env } from '@/env';
+import { resolveRedirectTarget } from '@/lib/auth/redirectTarget';
 
 export function LoginPage() {
   const { login, isAuthenticated, isLoading, error } = useGoogleAuth();
   const navigate = useNavigate();
+  const search = useSearch({ strict: false }) as { from?: string };
+  const redirectTo = resolveRedirectTarget(search.from);
 
   useEffect(() => {
     if (isAuthenticated || env.useInMemory) {
-      void navigate({ to: '/dashboard' });
+      void navigate({ to: redirectTo });
     }
-  }, [isAuthenticated, navigate]);
+  }, [isAuthenticated, navigate, redirectTo]);
 
   const isInvalidClientId =
     !env.useInMemory &&

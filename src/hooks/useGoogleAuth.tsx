@@ -35,6 +35,7 @@ export interface GoogleAuthValue {
   accessToken: string | null;
   isAuthenticated: boolean;
   isLoading: boolean;
+  isRestoring: boolean;
   error: string | null;
   login: () => void;
   logout: () => void;
@@ -61,6 +62,8 @@ function InnerAuthProvider({ children }: { children: ReactNode }) {
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const [user, setUser] = useState<GoogleUser | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isRestoring, setIsRestoring] = useState(true);
+  const [expiresAt, setExpiresAt] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
   const tokenRef = useRef<string | null>(null);
   const refreshResolverRef = useRef<((token: string | null) => void) | null>(null);
@@ -71,8 +74,10 @@ function InnerAuthProvider({ children }: { children: ReactNode }) {
 
   const finalizeLogin = useCallback(
     async (token: string, expiresInSeconds: number): Promise<void> => {
-      saveSession(sessionFromTokenResponse(token, expiresInSeconds));
+      const session = sessionFromTokenResponse(token, expiresInSeconds);
+      saveSession(session);
       setAccessToken(token);
+      setExpiresAt(session.expiresAt);
       try {
         const fetchedUser = await fetchUserInfo(token);
         setUser(fetchedUser);
@@ -120,25 +125,33 @@ function InnerAuthProvider({ children }: { children: ReactNode }) {
     clearSession();
     setAccessToken(null);
     setUser(null);
+    setExpiresAt(null);
     setError(null);
     tokenRef.current = null;
   }, []);
 
   useEffect(() => {
     const stored = loadStoredSession();
-    if (!stored) return;
+    if (!stored) {
+      setIsRestoring(false);
+      return;
+    }
     if (!isSessionValid(stored)) {
       clearSession();
+      setIsRestoring(false);
       return;
     }
     setAccessToken(stored.accessToken);
+    setExpiresAt(stored.expiresAt);
     fetchUserInfo(stored.accessToken)
       .then((fetched) => setUser(fetched))
       .catch(() => {
         clearSession();
         setAccessToken(null);
         setUser(null);
-      });
+        setExpiresAt(null);
+      })
+      .finally(() => setIsRestoring(false));
   }, []);
 
   useEffect(() => {
@@ -148,6 +161,17 @@ function InnerAuthProvider({ children }: { children: ReactNode }) {
     }, REFRESH_INTERVAL_MS);
     return () => clearInterval(interval);
   }, [accessToken, refreshAccessToken]);
+
+  useEffect(() => {
+    if (expiresAt === null) return;
+    const delay = expiresAt - Date.now();
+    if (delay <= 0) {
+      logout();
+      return;
+    }
+    const timer = setTimeout(() => logout(), delay);
+    return () => clearTimeout(timer);
+  }, [expiresAt, logout]);
 
   const tokenSource = useMemo<TokenSource>(
     () => ({
@@ -163,12 +187,13 @@ function InnerAuthProvider({ children }: { children: ReactNode }) {
       accessToken,
       isAuthenticated: accessToken !== null && user !== null,
       isLoading,
+      isRestoring,
       error,
       login,
       logout,
       tokenSource,
     }),
-    [user, accessToken, isLoading, error, login, logout, tokenSource],
+    [user, accessToken, isLoading, isRestoring, error, login, logout, tokenSource],
   );
 
   return <GoogleAuthContext.Provider value={value}>{children}</GoogleAuthContext.Provider>;
@@ -184,6 +209,7 @@ const detachedAuth: GoogleAuthValue = {
   accessToken: null,
   isAuthenticated: false,
   isLoading: false,
+  isRestoring: false,
   error: null,
   login: () => undefined,
   logout: () => undefined,

@@ -12,81 +12,150 @@ export const POPULAR_GOOGLE_FONTS = [
 ] as const;
 
 export type GoogleFontFamily = (typeof POPULAR_GOOGLE_FONTS)[number];
+export type FontStack = readonly [string, string];
+type FontWeight = 400 | 700;
+type FontFileMap = Record<FontWeight, string>;
 
 const FALLBACK_FAMILY: GoogleFontFamily = 'Roboto';
+const BUILTIN_FALLBACK = 'Helvetica';
 const FONT_WEIGHTS = [400, 700] as const;
-const registered = new Set<string>();
-const inflight = new Map<string, Promise<string>>();
+const inflight = new Map<string, Promise<FontStack>>();
 
-interface FontFace {
-  src: string;
+const LOCAL_FONT_FILES: Record<GoogleFontFamily, FontFileMap> = {
+  Roboto: {
+    400: '/fonts/roboto-400.ttf',
+    700: '/fonts/roboto-700.ttf',
+  },
+  'Open Sans': {
+    400: '/fonts/open-sans-400.ttf',
+    700: '/fonts/open-sans-700.ttf',
+  },
+  Lato: {
+    400: '/fonts/lato-400.ttf',
+    700: '/fonts/lato-700.ttf',
+  },
+  Montserrat: {
+    400: '/fonts/montserrat-400.ttf',
+    700: '/fonts/montserrat-700.ttf',
+  },
+  Inter: {
+    400: '/fonts/inter-400.ttf',
+    700: '/fonts/inter-700.ttf',
+  },
+  Poppins: {
+    400: '/fonts/poppins-400.ttf',
+    700: '/fonts/poppins-700.ttf',
+  },
+  'Source Sans 3': {
+    400: '/fonts/source-sans-3-400.ttf',
+    700: '/fonts/source-sans-3-700.ttf',
+  },
+  'Noto Sans': {
+    400: '/fonts/noto-sans-400.ttf',
+    700: '/fonts/noto-sans-700.ttf',
+  },
+  Raleway: {
+    400: '/fonts/raleway-400.ttf',
+    700: '/fonts/raleway-700.ttf',
+  },
+  Nunito: {
+    400: '/fonts/nunito-400.ttf',
+    700: '/fonts/nunito-700.ttf',
+  },
+};
+
+interface RegisteredSource {
   fontWeight: number;
+  data: unknown;
+}
+interface RegisteredFamily {
+  sources: RegisteredSource[];
+}
+
+interface FontFaceEntry {
+  fontWeight: number;
+  src: string;
 }
 
 function isSupported(family: string): family is GoogleFontFamily {
   return (POPULAR_GOOGLE_FONTS as readonly string[]).includes(family);
 }
 
-export function resolveFontFamily(family: string | undefined): GoogleFontFamily {
+function resolveBaseFamily(family: string | undefined): GoogleFontFamily {
   if (family && isSupported(family)) return family;
   return FALLBACK_FAMILY;
 }
 
-function buildCssUrl(family: GoogleFontFamily): string {
-  const familyParam = family.replace(/ /g, '+');
-  const weights = FONT_WEIGHTS.join(',');
-  return `https://fonts.googleapis.com/css?family=${familyParam}:${weights}&subset=latin,latin-ext`;
+export function resolveFontStack(family: string | undefined): FontStack {
+  const base = resolveBaseFamily(family);
+  return [base, BUILTIN_FALLBACK];
 }
 
-function parseFontFaces(css: string): FontFace[] {
-  const faces: FontFace[] = [];
-  const blocks = css.split('@font-face').slice(1);
-  for (const block of blocks) {
-    const weightMatch = block.match(/font-weight:\s*(\d+)/);
-    const urlMatch = block.match(/url\(([^)]+)\)/);
-    if (!weightMatch || !urlMatch) continue;
-    const weight = Number(weightMatch[1]);
-    const src = urlMatch[1]?.replace(/['"]/g, '').trim();
-    if (!src) continue;
-    if (!FONT_WEIGHTS.includes(weight as (typeof FONT_WEIGHTS)[number])) continue;
-    faces.push({ src, fontWeight: weight });
-  }
-  return faces;
+function toAbsoluteFontUrl(path: string): string {
+  if (/^https?:\/\//.test(path)) return path;
+  if (typeof window === 'undefined') return path;
+  return new URL(path, window.location.origin).toString();
 }
 
-async function fetchFontFaces(family: GoogleFontFamily): Promise<FontFace[]> {
-  const response = await fetch(buildCssUrl(family));
-  if (!response.ok) {
-    throw new Error(`Google Fonts CSS fetch failed: ${response.status}`);
-  }
-  const css = await response.text();
-  const faces = parseFontFaces(css);
-  if (faces.length === 0) {
-    throw new Error(`No usable @font-face entries for ${family}`);
-  }
-  return faces;
+function loadAllFaces(family: GoogleFontFamily): FontFaceEntry[] {
+  const files = LOCAL_FONT_FILES[family];
+  return FONT_WEIGHTS.map((weight) => ({
+    fontWeight: weight,
+    src: toAbsoluteFontUrl(files[weight]),
+  }));
 }
 
-export async function ensureGoogleFontRegistered(family: string | undefined): Promise<GoogleFontFamily> {
-  const resolved = resolveFontFamily(family);
-  if (registered.has(resolved)) return resolved;
-  const existing = inflight.get(resolved);
-  if (existing) return existing as Promise<GoogleFontFamily>;
+function isFamilyLoaded(store: Record<string, RegisteredFamily>, family: string): boolean {
+  const fam = store[family];
+  if (!fam) return false;
+  for (const weight of FONT_WEIGHTS) {
+    const hit = fam.sources.find((s) => s.fontWeight === weight && s.data !== null);
+    if (!hit) return false;
+  }
+  return true;
+}
 
-  const task = (async (): Promise<GoogleFontFamily> => {
-    const [{ Font }, faces] = await Promise.all([
-      import('@react-pdf/renderer'),
-      fetchFontFaces(resolved),
-    ]);
-    Font.register({ family: resolved, fonts: faces });
-    registered.add(resolved);
-    return resolved;
+function stackIsLoaded(store: Record<string, RegisteredFamily>, stack: FontStack): boolean {
+  return isFamilyLoaded(store, stack[0]);
+}
+
+export async function ensureGoogleFontRegistered(family: string | undefined): Promise<FontStack> {
+  const base = resolveBaseFamily(family);
+  const stack = resolveFontStack(family);
+  const cacheKey = base;
+  const existing = inflight.get(cacheKey);
+  if (existing) return existing;
+
+  const task = (async (): Promise<FontStack> => {
+    const { Font } = await import('@react-pdf/renderer');
+    const store = Font.getRegisteredFonts() as Record<string, RegisteredFamily>;
+    if (stackIsLoaded(store, stack)) return stack;
+
+    // Drop any stale, partially-loaded sources from a previous HMR cycle.
+    // FontFamily.register pushes to .sources without deduplication, so leftover
+    // null-data sources accumulate across reloads and starve later renders.
+    const familyName = stack[0];
+    if (store[familyName]) {
+      delete store[familyName];
+    }
+
+    const faces = loadAllFaces(base);
+
+    Font.register({
+      family: familyName,
+      fonts: faces.map((f) => ({ src: f.src, fontWeight: f.fontWeight })),
+    });
+    await Promise.all(
+      faces.map((f) => Font.load({ fontFamily: familyName, fontWeight: f.fontWeight })),
+    );
+
+    return stack;
   })();
 
-  inflight.set(resolved, task);
+  inflight.set(cacheKey, task);
   try {
     return await task;
   } finally {
-    inflight.delete(resolved);
+    inflight.delete(cacheKey);
   }
 }

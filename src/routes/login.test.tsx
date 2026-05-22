@@ -12,10 +12,12 @@ const { mockEnv } = vi.hoisted(() => {
   };
 });
 
-// Mock the router navigate
+// Mock the router navigate + search
 const mockNavigate = vi.fn();
+const mockUseSearch = vi.fn<() => { from?: string }>(() => ({}));
 vi.mock('@tanstack/react-router', () => ({
   useNavigate: () => mockNavigate,
+  useSearch: () => mockUseSearch(),
 }));
 
 // Mock hooks
@@ -32,6 +34,7 @@ vi.mock('@/env', () => ({
 describe('LoginPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockUseSearch.mockReturnValue({});
     mockUseGoogleAuth.mockReturnValue({
       login: vi.fn(),
       isAuthenticated: false,
@@ -40,8 +43,65 @@ describe('LoginPage', () => {
     });
   });
 
-  it('redirects to dashboard when useInMemory is true', () => {
+  it('when useInMemory true, redirects to dashboard', () => {
     mockEnv.useInMemory = true;
+    render(<LoginPage />);
+    expect(mockNavigate).toHaveBeenCalledWith({ to: '/dashboard' });
+  });
+
+  it('when authenticated and no from param, redirects to dashboard', () => {
+    mockEnv.useInMemory = false;
+    mockEnv.googleClientId = '12345.apps.googleusercontent.com';
+    mockUseGoogleAuth.mockReturnValue({
+      login: vi.fn(),
+      isAuthenticated: true,
+      isLoading: false,
+      error: null,
+    });
+    render(<LoginPage />);
+    expect(mockNavigate).toHaveBeenCalledWith({ to: '/dashboard' });
+  });
+
+  it('when authenticated and from is local path, redirects to from', () => {
+    mockEnv.useInMemory = false;
+    mockEnv.googleClientId = '12345.apps.googleusercontent.com';
+    mockUseSearch.mockReturnValue({ from: '/invoice-editor/abc?clientId=x' });
+    mockUseGoogleAuth.mockReturnValue({
+      login: vi.fn(),
+      isAuthenticated: true,
+      isLoading: false,
+      error: null,
+    });
+    render(<LoginPage />);
+    expect(mockNavigate).toHaveBeenCalledWith({
+      to: '/invoice-editor/abc?clientId=x',
+    });
+  });
+
+  it('when from looks like absolute url, ignores it and goes to dashboard', () => {
+    mockEnv.useInMemory = false;
+    mockEnv.googleClientId = '12345.apps.googleusercontent.com';
+    mockUseSearch.mockReturnValue({ from: 'https://evil.example.com/' });
+    mockUseGoogleAuth.mockReturnValue({
+      login: vi.fn(),
+      isAuthenticated: true,
+      isLoading: false,
+      error: null,
+    });
+    render(<LoginPage />);
+    expect(mockNavigate).toHaveBeenCalledWith({ to: '/dashboard' });
+  });
+
+  it('when from is protocol-relative //evil.com, ignores it', () => {
+    mockEnv.useInMemory = false;
+    mockEnv.googleClientId = '12345.apps.googleusercontent.com';
+    mockUseSearch.mockReturnValue({ from: '//evil.example.com/path' });
+    mockUseGoogleAuth.mockReturnValue({
+      login: vi.fn(),
+      isAuthenticated: true,
+      isLoading: false,
+      error: null,
+    });
     render(<LoginPage />);
     expect(mockNavigate).toHaveBeenCalledWith({ to: '/dashboard' });
   });

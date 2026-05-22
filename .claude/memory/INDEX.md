@@ -9,7 +9,8 @@
 - [overdue-display-inference](decisions/overdue-display-inference.md) — Dashboard infers Overdue via InvoiceSummary.effectiveStatus(today); no auto Drive write. keywords: overdue, status, dashboard, inference, invoice-summary
 - [zod-settings-type-bridge](decisions/zod-settings-type-bridge.md) — SettingsDto interface + cast bridges Zod `.default()` inference gap. keywords: zod, settings, dto, type, default
 - [auth-session-persistence](decisions/auth-session-persistence.md) — OAuth access_token + expiresAt cached in localStorage, restored on mount; survives reload until token expires. keywords: auth, oauth, session, localStorage, token, persistence
-- [runtime-google-fonts](decisions/runtime-google-fonts.md) — PDF fonts fetched at runtime from Google Fonts CSS2 API; no bundled font files. keywords: fonts, google-fonts, pdf, react-pdf, runtime, no-bundle
+- [auth-redirect-flow](decisions/auth-redirect-flow.md) — RequireAuth wrapper + expiry watchdog; /login?from=<href>, validated by resolveRedirectTarget. keywords: auth, redirect, from, require-auth, login, session-expiry
+- [runtime-google-fonts](decisions/runtime-google-fonts.md) — invoice PDF/preview fonts served locally from public/fonts TTF files for stable rendering. keywords: fonts, pdf, preview, local-fonts, public, ttf
 
 ## developer/
 - [workflow-style](developer/workflow-style.md) — stage-by-stage vibe-coding prompts with acceptance criteria; replies in Lithuanian. keywords: workflow, vibe-coding, lithuanian, prompts

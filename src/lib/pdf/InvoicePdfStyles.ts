@@ -1,9 +1,13 @@
 import { StyleSheet } from '@react-pdf/renderer';
 
-export const getPdfStyles = (primaryColor: string, accentColor: string, fontFamily: string) =>
+export const getPdfStyles = (
+  primaryColor: string,
+  accentColor: string,
+  fontFamily: string | readonly string[],
+) =>
   StyleSheet.create({
     page: {
-      fontFamily,
+      fontFamily: fontFamily as string | string[],
       fontSize: 10,
       lineHeight: 1.5,
       color: '#334155',
