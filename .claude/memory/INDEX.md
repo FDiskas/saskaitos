@@ -15,6 +15,8 @@
 - [runtime-google-fonts](decisions/runtime-google-fonts.md) — invoice PDF/preview fonts served locally from public/fonts TTF files for stable rendering. keywords: fonts, pdf, preview, local-fonts, public, ttf
 - [row-selection-without-minheight](decisions/row-selection-without-minheight.md) — row selected in canvas configures right sidebar; minHeight removed due to preview/PDF instability. keywords: row, sidebar, minheight, layout, preview, pdf
 - [per-line-vat-on-invoice-lines](decisions/per-line-vat-on-invoice-lines.md) — VAT lives on line items; totals sum per-line VAT; global VAT action applies one rate to all lines. keywords: vat, pvm, line-item, totals, bulk-update
+- [block-instance-model](decisions/block-instance-model.md) — column.content is BlockInstance[] with per-instance settings; decor kinds (divider, custom-image) allowed multiple per layout; legacy auto-migrated. keywords: layout, block-instance, divider, image, decor, migration
+- [pdf-palette-colors](decisions/pdf-palette-colors.md) — preset/override expose 6 colors (primary/accent/text/muted/border/heading); PDF uses PdfPalette, no hardcoded grays. keywords: palette, colors, design-preset, override, pdf
 
 ## developer/
 

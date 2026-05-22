@@ -5,6 +5,7 @@ import {
   defaultInvoiceTemplateLayout,
   type InvoiceTemplateLayoutDto,
 } from '@/lib/invoice-template/layout';
+import { migrateLegacyLayoutInput } from '@/lib/invoice-template/legacy';
 
 export const DEFAULT_SERIES_ID = 'default';
 export const DEFAULT_DESIGN_PRESET_ID = 'default';
@@ -26,11 +27,22 @@ export const CompanyDtoSchema = z.object({
 });
 export type CompanyDto = z.infer<typeof CompanyDtoSchema>;
 
+export const DEFAULT_TEXT_COLOR = '#0f172a';
+export const DEFAULT_MUTED_COLOR = '#64748b';
+export const DEFAULT_BORDER_COLOR = '#cbd5e1';
+export const DEFAULT_HEADING_COLOR = '#94a3b8';
+export const DEFAULT_PRIMARY_COLOR = '#0f172a';
+export const DEFAULT_ACCENT_COLOR = '#2563eb';
+
 export const DesignPresetDtoSchema = z.object({
   id: z.string().min(1),
   name: z.string().min(1),
   primaryColor: HexColorSchema,
   accentColor: HexColorSchema,
+  textColor: HexColorSchema.default(DEFAULT_TEXT_COLOR),
+  mutedColor: HexColorSchema.default(DEFAULT_MUTED_COLOR),
+  borderColor: HexColorSchema.default(DEFAULT_BORDER_COLOR),
+  headingColor: HexColorSchema.default(DEFAULT_HEADING_COLOR),
   fontFamily: z.string().min(1),
   backgroundImageBase64: z.string().optional(),
 });
@@ -46,6 +58,8 @@ export interface SettingsDto {
   invoiceLayout: InvoiceTemplateLayoutDto;
 }
 
+const MigratedInvoiceLayoutSchema = z.preprocess(migrateLegacyLayoutInput, InvoiceTemplateLayoutSchema);
+
 const RawSettingsSchema = z.object({
   company: CompanyDtoSchema.nullable().default(null),
   series: z.array(SeriesDtoSchema).default([]),
@@ -53,7 +67,7 @@ const RawSettingsSchema = z.object({
   defaultEmailSubject: z.string().optional(),
   defaultEmailBody: z.string().optional(),
   designPresets: z.array(DesignPresetDtoSchema).default([]),
-  invoiceLayout: InvoiceTemplateLayoutSchema.default(defaultInvoiceTemplateLayout()),
+  invoiceLayout: MigratedInvoiceLayoutSchema.default(defaultInvoiceTemplateLayout()),
 });
 
 export const SettingsDtoSchema: z.ZodType<SettingsDto> = RawSettingsSchema as unknown as z.ZodType<SettingsDto>;
@@ -68,8 +82,12 @@ export function defaultSettings(): SettingsDto {
   const initialPreset: DesignPresetDto = {
     id: DEFAULT_DESIGN_PRESET_ID,
     name: 'Numatytasis',
-    primaryColor: '#0f172a',
-    accentColor: '#2563eb',
+    primaryColor: DEFAULT_PRIMARY_COLOR,
+    accentColor: DEFAULT_ACCENT_COLOR,
+    textColor: DEFAULT_TEXT_COLOR,
+    mutedColor: DEFAULT_MUTED_COLOR,
+    borderColor: DEFAULT_BORDER_COLOR,
+    headingColor: DEFAULT_HEADING_COLOR,
     fontFamily: 'Inter',
   };
   return {

@@ -1,7 +1,5 @@
-import { Children, type ReactNode, useMemo } from 'react';
-import {
-  useDroppable,
-} from '@dnd-kit/core';
+import { type ReactNode, useMemo } from 'react';
+import { useDroppable } from '@dnd-kit/core';
 import {
   SortableContext,
   useSortable,
@@ -9,22 +7,26 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { type Invoice } from '@/lib/domain';
-import type { SettingsDto } from '@/lib/drive/settings';
 import {
-  blockLabel,
-  INVOICE_TEMPLATE_BLOCKS,
-  type InvoiceTemplateBlockDefinition,
-} from '@/lib/invoice-template/blocks';
+  DEFAULT_ACCENT_COLOR,
+  DEFAULT_BORDER_COLOR,
+  DEFAULT_HEADING_COLOR,
+  DEFAULT_MUTED_COLOR,
+  DEFAULT_PRIMARY_COLOR,
+  DEFAULT_TEXT_COLOR,
+  type SettingsDto,
+} from '@/lib/drive/settings';
+import { blockLabel } from '@/lib/invoice-template/blocks';
 import {
   canvasColumnDropId,
-  canvasPlacedBlockDragId,
+  canvasInstanceDragId,
   canvasRowSortableId,
 } from '@/lib/invoice-template/dnd';
 import {
-  readTemplateBlockSettings,
+  rowTotalSpan,
+  type BlockInstance,
   type InvoiceTemplateLayoutDto,
   type InvoiceTemplateRowDto,
-  type TemplateBlockId,
 } from '@/lib/invoice-template/layout';
 import { GripVertical } from 'lucide-react';
 import { SellerBlock } from './SellerBlock';
@@ -36,6 +38,16 @@ import { VatToggle } from './VatToggle';
 import { TotalsBox } from './TotalsBox';
 import { InvoiceSignatures } from './InvoiceSignatures';
 import { LogoBlock } from './LogoBlock';
+import { useTextDraft } from './useTextDraft';
+
+export interface CanvasPalette {
+  primaryColor: string;
+  accentColor: string;
+  textColor: string;
+  mutedColor: string;
+  borderColor: string;
+  headingColor: string;
+}
 
 export interface InvoiceCanvasProps {
   invoice: Invoice;
@@ -43,10 +55,11 @@ export interface InvoiceCanvasProps {
   settings: SettingsDto;
   layout: InvoiceTemplateLayoutDto;
   isPreview?: boolean;
-  selectedBlockId?: TemplateBlockId | null;
+  selectedInstanceId?: string | null;
   selectedRowId?: string | null;
-  onSelectBlock?: (blockId: TemplateBlockId | null) => void;
+  onSelectInstance?: (instanceId: string | null) => void;
   onSelectRow?: (rowId: string | null) => void;
+  onInstancePatch?: (instanceId: string, patch: Partial<BlockInstance>) => void;
 }
 
 const CANVAS_DROP_ID = 'canvas:root';
@@ -60,16 +73,23 @@ export function InvoiceCanvas({
   settings,
   layout,
   isPreview = false,
-  selectedBlockId = null,
+  selectedInstanceId = null,
   selectedRowId = null,
-  onSelectBlock,
+  onSelectInstance,
   onSelectRow,
+  onInstancePatch,
 }: InvoiceCanvasProps) {
   const activePreset =
     settings.designPresets.find((p) => p.id === invoice.designPresetId) || settings.designPresets[0];
   const override = invoice.designOverride;
-  const effectivePrimary = override?.primaryColor ?? activePreset?.primaryColor;
-  const effectiveAccent = override?.accentColor ?? activePreset?.accentColor;
+  const palette: CanvasPalette = {
+    primaryColor: override?.primaryColor ?? activePreset?.primaryColor ?? DEFAULT_PRIMARY_COLOR,
+    accentColor: override?.accentColor ?? activePreset?.accentColor ?? DEFAULT_ACCENT_COLOR,
+    textColor: override?.textColor ?? activePreset?.textColor ?? DEFAULT_TEXT_COLOR,
+    mutedColor: override?.mutedColor ?? activePreset?.mutedColor ?? DEFAULT_MUTED_COLOR,
+    borderColor: override?.borderColor ?? activePreset?.borderColor ?? DEFAULT_BORDER_COLOR,
+    headingColor: override?.headingColor ?? activePreset?.headingColor ?? DEFAULT_HEADING_COLOR,
+  };
   const effectiveBg = override?.backgroundImageBase64 ?? activePreset?.backgroundImageBase64;
 
   const rowSortableIds = useMemo(
@@ -79,120 +99,104 @@ export function InvoiceCanvas({
 
   const paginatedRows = useMemo(() => {
     if (!isPreview) return [layout.layout];
-
-    const pages: InvoiceTemplateRowDto[][] = [];
-    let currentPage: InvoiceTemplateRowDto[] = [];
-    let currentHeight = 0;
-
-    for (const row of layout.layout) {
-      const maxMargins = row.columns.reduce((maxValue, column) => {
-        const margins = column.content.reduce((sum, blockId) => {
-          const blockSettings = readTemplateBlockSettings(layout, blockId);
-          return sum + blockSettings.marginTop + blockSettings.marginBottom;
-        }, 0);
-        return Math.max(maxValue, margins);
-      }, 0);
-
-      const densestColumnBlocks = row.columns.reduce((maxValue, column) => {
-        return Math.max(maxValue, column.content.length);
-      }, 0);
-
-      const estimatedContentHeight = Math.max(
-        DEFAULT_ROW_HEIGHT,
-        densestColumnBlocks * BLOCK_HEIGHT_ESTIMATE,
-      );
-
-      const estimatedRowHeight = estimatedContentHeight + maxMargins + 16;
-
-      if (currentPage.length > 0 && currentHeight + estimatedRowHeight > PREVIEW_PAGE_CONTENT_HEIGHT) {
-        pages.push(currentPage);
-        currentPage = [row];
-        currentHeight = estimatedRowHeight;
-        continue;
-      }
-
-      currentPage.push(row);
-      currentHeight += estimatedRowHeight;
-    }
-
-    if (currentPage.length > 0) {
-      pages.push(currentPage);
-    }
-
-    return pages.length > 0 ? pages : [[]];
+    return paginateRows(layout.layout);
   }, [isPreview, layout]);
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-6" style={{ color: palette.textColor }}>
       {paginatedRows.map((rows, pageIndex) => (
         <CanvasDropZone key={`page-${pageIndex}`}>
           {(isCanvasOver) => (
-          <div
-            id="invoice-page-canvas"
-            className="relative aspect-[1/1.414] w-198.5 min-h-280.75 bg-white shadow-xl border border-slate-100 p-12 flex flex-col gap-4 select-text print:shadow-none print:border-none print:p-0 print:w-full print:aspect-auto"
-            style={{
-              fontFamily: activePreset?.fontFamily || 'Inter',
-              backgroundImage: effectiveBg ? `url(${effectiveBg})` : undefined,
-              backgroundSize: 'cover',
-              backgroundPosition: 'center',
-            }}
-            data-over={!isPreview && isCanvasOver}
-          >
-            <SortableContext items={rowSortableIds} strategy={verticalListSortingStrategy}>
-              {rows.map((row) => (
-                <SortableRow
-                  key={row.id}
-                  row={row}
-                  isPreview={isPreview}
-                  isSelected={selectedRowId === row.id}
-                  onSelect={() => {
-                    onSelectBlock?.(null);
-                    onSelectRow?.(row.id);
-                  }}
-                >
-                  {row.columns.map((column) => (
-                    <DroppableColumn
-                      key={column.id}
-                      rowId={row.id}
-                      columnId={column.id}
-                      isPreview={isPreview}
-                    >
-                      <SortableContext
-                        items={column.content.map((blockId) => canvasPlacedBlockDragId(blockId))}
-                        strategy={verticalListSortingStrategy}
+            <div
+              id="invoice-page-canvas"
+              className="relative aspect-[1/1.414] w-198.5 min-h-280.75 bg-white shadow-xl border border-slate-100 p-12 flex flex-col gap-4 select-text print:shadow-none print:border-none print:p-0 print:w-full print:aspect-auto"
+              style={{
+                fontFamily: activePreset?.fontFamily || 'Inter',
+                backgroundImage: effectiveBg ? `url(${effectiveBg})` : undefined,
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+                color: palette.textColor,
+              }}
+              data-over={!isPreview && isCanvasOver}
+            >
+              <SortableContext items={rowSortableIds} strategy={verticalListSortingStrategy}>
+                {rows.map((row) => (
+                  <SortableRow
+                    key={row.id}
+                    row={row}
+                    isPreview={isPreview}
+                    isSelected={selectedRowId === row.id}
+                    onSelect={() => {
+                      onSelectInstance?.(null);
+                      onSelectRow?.(row.id);
+                    }}
+                  >
+                    {row.columns.map((column) => (
+                      <DroppableColumn
+                        key={column.id}
+                        rowId={row.id}
+                        columnId={column.id}
+                        span={column.span}
+                        isPreview={isPreview}
+                        isEmpty={column.content.length === 0}
                       >
-                        {column.content.map((blockId) => (
-                          <PlacedBlockShell
-                            key={blockId}
-                            blockId={blockId}
-                            isPreview={isPreview}
-                            isSelected={selectedBlockId === blockId}
-                            onSelect={() => onSelectBlock?.(blockId)}
-                          >
-                            {renderTemplateBlock(
-                              blockId,
-                              invoice,
-                              onChange,
-                              settings,
-                              effectivePrimary,
-                              effectiveAccent,
-                              layout,
-                              isPreview,
-                            )}
-                          </PlacedBlockShell>
-                        ))}
-                      </SortableContext>
-                    </DroppableColumn>
-                  ))}
-                </SortableRow>
-              ))}
-            </SortableContext>
-          </div>
+                        <SortableContext
+                          items={column.content.map((instance) => canvasInstanceDragId(instance.id))}
+                          strategy={verticalListSortingStrategy}
+                        >
+                          {column.content.map((instance) => (
+                            <PlacedInstanceShell
+                              key={instance.id}
+                              instance={instance}
+                              isPreview={isPreview}
+                              isSelected={selectedInstanceId === instance.id}
+                              onSelect={() => onSelectInstance?.(instance.id)}
+                            >
+                              {renderInstance(instance, invoice, onChange, settings, palette, isPreview, onInstancePatch)}
+                            </PlacedInstanceShell>
+                          ))}
+                        </SortableContext>
+                      </DroppableColumn>
+                    ))}
+                  </SortableRow>
+                ))}
+              </SortableContext>
+            </div>
           )}
         </CanvasDropZone>
       ))}
     </div>
   );
+}
+
+function paginateRows(rows: InvoiceTemplateRowDto[]): InvoiceTemplateRowDto[][] {
+  const pages: InvoiceTemplateRowDto[][] = [];
+  let currentPage: InvoiceTemplateRowDto[] = [];
+  let currentHeight = 0;
+
+  for (const row of rows) {
+    const maxMargins = row.columns.reduce((maxValue, column) => {
+      const margins = column.content.reduce((sum, instance) => sum + instance.marginTop + instance.marginBottom, 0);
+      return Math.max(maxValue, margins);
+    }, 0);
+
+    const densestColumnBlocks = row.columns.reduce((maxValue, column) => Math.max(maxValue, column.content.length), 0);
+    const estimatedContentHeight = Math.max(DEFAULT_ROW_HEIGHT, densestColumnBlocks * BLOCK_HEIGHT_ESTIMATE);
+    const estimatedRowHeight = estimatedContentHeight + maxMargins + 16;
+
+    if (currentPage.length > 0 && currentHeight + estimatedRowHeight > PREVIEW_PAGE_CONTENT_HEIGHT) {
+      pages.push(currentPage);
+      currentPage = [row];
+      currentHeight = estimatedRowHeight;
+      continue;
+    }
+
+    currentPage.push(row);
+    currentHeight += estimatedRowHeight;
+  }
+
+  if (currentPage.length > 0) pages.push(currentPage);
+  return pages.length > 0 ? pages : [[]];
 }
 
 interface CanvasDropZoneProps {
@@ -212,23 +216,11 @@ interface SortableRowProps {
   children: ReactNode;
 }
 
-function SortableRow({
-  row,
-  isPreview,
-  isSelected,
-  onSelect,
-  children,
-}: SortableRowProps) {
+function SortableRow({ row, isPreview, isSelected, onSelect, children }: SortableRowProps) {
   const sortableId = canvasRowSortableId(row.id);
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({ id: sortableId });
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: sortableId });
 
+  const totalSpan = rowTotalSpan(row);
   const style = {
     transform: CSS.Transform.toString(
       transform
@@ -239,7 +231,7 @@ function SortableRow({
         : null,
     ),
     transition: isDragging ? undefined : transition,
-    gridTemplateColumns: `repeat(${row.columns.length}, minmax(0, 1fr))`,
+    gridTemplateColumns: `repeat(${totalSpan}, minmax(0, 1fr))`,
     zIndex: isDragging ? 20 : undefined,
   };
 
@@ -255,11 +247,19 @@ function SortableRow({
           : `relative grid items-stretch gap-3 rounded-lg border border-slate-200 bg-white/85 ${selectedClass} ${isDragging ? 'shadow-lg' : ''}`
       }
       data-dragging={isDragging}
-      onClick={isPreview ? undefined : onSelect}
+      onClick={
+        isPreview
+          ? undefined
+          : (event) => {
+              if (event.target !== event.currentTarget) return;
+              onSelect();
+            }
+      }
       role="button"
       tabIndex={isPreview ? -1 : 0}
       onKeyDown={(event) => {
         if (isPreview) return;
+        if (event.target !== event.currentTarget) return;
         if (event.key === 'Enter' || event.key === ' ') {
           event.preventDefault();
           onSelect();
@@ -286,14 +286,15 @@ function SortableRow({
 interface DroppableColumnProps {
   rowId: string;
   columnId: string;
+  span: number;
   isPreview: boolean;
+  isEmpty: boolean;
   children: ReactNode;
 }
 
-function DroppableColumn({ rowId, columnId, isPreview, children }: DroppableColumnProps) {
+function DroppableColumn({ rowId, columnId, span, isPreview, isEmpty, children }: DroppableColumnProps) {
   const dropId = canvasColumnDropId(rowId, columnId);
   const { setNodeRef, isOver } = useDroppable({ id: dropId });
-  const isEmpty = Children.count(children) === 0;
 
   return (
     <div
@@ -305,6 +306,7 @@ function DroppableColumn({ rowId, columnId, isPreview, children }: DroppableColu
       }
       data-over={isOver}
       style={{
+        gridColumn: `span ${span} / span ${span}`,
         outline: isPreview ? 'none' : '1px dashed #cbd5e1',
         outlineOffset: '-1px',
         backgroundColor: isOver ? '#e0f2fe' : undefined,
@@ -319,17 +321,17 @@ function DroppableColumn({ rowId, columnId, isPreview, children }: DroppableColu
   );
 }
 
-interface PlacedBlockShellProps {
-  blockId: TemplateBlockId;
+interface PlacedInstanceShellProps {
+  instance: BlockInstance;
   isPreview: boolean;
   isSelected: boolean;
   onSelect: () => void;
   children: ReactNode;
 }
 
-function PlacedBlockShell({ blockId, isPreview, isSelected, onSelect, children }: PlacedBlockShellProps) {
+function PlacedInstanceShell({ instance, isPreview, isSelected, onSelect, children }: PlacedInstanceShellProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
-    id: canvasPlacedBlockDragId(blockId),
+    id: canvasInstanceDragId(instance.id),
     disabled: isPreview,
   });
 
@@ -361,6 +363,7 @@ function PlacedBlockShell({ blockId, isPreview, isSelected, onSelect, children }
       tabIndex={isPreview ? -1 : 0}
       onKeyDown={(event) => {
         if (isPreview) return;
+        if (event.target !== event.currentTarget) return;
         if (event.key === 'Enter' || event.key === ' ') {
           event.preventDefault();
           onSelect();
@@ -369,7 +372,7 @@ function PlacedBlockShell({ blockId, isPreview, isSelected, onSelect, children }
     >
       {!isPreview && (
         <div className="mb-2 flex items-center justify-between">
-          <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-400">{blockLabel(blockId)}</p>
+          <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-400">{blockLabel(instance.kind)}</p>
           <button
             type="button"
             className="rounded border border-slate-200 bg-slate-50 px-1.5 py-0.5 text-[10px] text-slate-500 cursor-grab active:cursor-grabbing"
@@ -385,86 +388,180 @@ function PlacedBlockShell({ blockId, isPreview, isSelected, onSelect, children }
   );
 }
 
-function renderTemplateBlock(
-  blockId: TemplateBlockId,
+function renderInstance(
+  instance: BlockInstance,
   invoice: Invoice,
   onChange: (updatedInvoice: Invoice) => void,
   settings: SettingsDto,
-  effectivePrimary: string | undefined,
-  effectiveAccent: string | undefined,
-  layout: InvoiceTemplateLayoutDto,
+  palette: CanvasPalette,
   isPreview: boolean,
+  onInstancePatch: ((instanceId: string, patch: Partial<BlockInstance>) => void) | undefined,
 ): React.ReactNode {
-  const blockSettings = readTemplateBlockSettings(layout, blockId);
   const alignClass =
-    blockSettings.align === 'center'
+    instance.align === 'center'
       ? 'items-center text-center'
-      : blockSettings.align === 'right'
+      : instance.align === 'right'
         ? 'items-end text-right'
         : 'items-start text-left';
 
   const shellClass = isPreview ? 'rounded-none p-0 bg-transparent' : 'rounded-md p-2';
 
-  const content = (() => {
-    if (blockId === 'logo') {
-      return <LogoBlock settings={settings} />;
-    }
-  if (blockId === 'seller-info') {
-      return <SellerBlock settings={settings} />;
-  }
-  if (blockId === 'invoice-meta') {
-      return (
-        <InvoiceMetaBlock
-          invoice={invoice}
-          onChange={onChange}
-          hasVat={invoice.vat.enabled}
-          primaryColor={effectivePrimary}
-          isPreview={isPreview}
-        />
-      );
-  }
-  if (blockId === 'buyer-info') {
-      return <BuyerBlock invoice={invoice} onChange={onChange} isPreview={isPreview} />;
-  }
-  if (blockId === 'line-items') {
-      return <LineItemsTable invoice={invoice} onChange={onChange} isPreview={isPreview} />;
-  }
-  if (blockId === 'notes') {
-      return <NotesBlock invoice={invoice} onChange={onChange} isPreview={isPreview} />;
-  }
-  if (blockId === 'totals') {
-      const totalsAlignClass =
-        blockSettings.align === 'center'
-          ? 'items-center'
-          : blockSettings.align === 'left'
-            ? 'items-start'
-            : 'items-end';
-
-      return (
-        <div className={`flex w-full min-w-0 flex-col gap-3 ${totalsAlignClass}`}>
-          <VatToggle invoice={invoice} onChange={onChange} isPreview={isPreview} />
-          <TotalsBox invoice={invoice} accentColor={effectiveAccent} />
-        </div>
-      );
-    }
-    if (blockId === 'signature') {
-      return <InvoiceSignatures />;
-    }
-    const fallback: InvoiceTemplateBlockDefinition | undefined = INVOICE_TEMPLATE_BLOCKS.find(
-      (item) => item.id === blockId,
-    );
-    return <p className="text-xs text-slate-500">{fallback?.label ?? blockId}</p>;
-  })();
-
   return (
     <div
       className={`flex w-full flex-col ${alignClass} ${shellClass}`}
       style={{
-        paddingTop: `${blockSettings.marginTop}px`,
-        paddingBottom: `${blockSettings.marginBottom}px`,
+        paddingTop: `${instance.marginTop}px`,
+        paddingBottom: `${instance.marginBottom}px`,
       }}
     >
-      {content}
+      {renderInstanceContent(instance, invoice, onChange, settings, palette, isPreview, onInstancePatch)}
     </div>
   );
+}
+
+function renderInstanceContent(
+  instance: BlockInstance,
+  invoice: Invoice,
+  onChange: (updatedInvoice: Invoice) => void,
+  settings: SettingsDto,
+  palette: CanvasPalette,
+  isPreview: boolean,
+  onInstancePatch: ((instanceId: string, patch: Partial<BlockInstance>) => void) | undefined,
+): React.ReactNode {
+  if (instance.kind === 'logo') {
+    return <LogoBlock settings={settings} />;
+  }
+  if (instance.kind === 'seller-info') {
+    return <SellerBlock settings={settings} />;
+  }
+  if (instance.kind === 'invoice-meta') {
+    return (
+      <InvoiceMetaBlock
+        invoice={invoice}
+        onChange={onChange}
+        hasVat={invoice.vat.enabled}
+        primaryColor={palette.primaryColor}
+        isPreview={isPreview}
+      />
+    );
+  }
+  if (instance.kind === 'buyer-info') {
+    return <BuyerBlock invoice={invoice} onChange={onChange} isPreview={isPreview} />;
+  }
+  if (instance.kind === 'line-items') {
+    return <LineItemsTable invoice={invoice} onChange={onChange} isPreview={isPreview} />;
+  }
+  if (instance.kind === 'notes') {
+    return <NotesBlock invoice={invoice} onChange={onChange} isPreview={isPreview} />;
+  }
+  if (instance.kind === 'totals') {
+    const totalsAlignClass =
+      instance.align === 'center' ? 'items-center' : instance.align === 'left' ? 'items-start' : 'items-end';
+    return (
+      <div className={`flex w-full min-w-0 flex-col gap-3 ${totalsAlignClass}`}>
+        <VatToggle invoice={invoice} onChange={onChange} isPreview={isPreview} />
+        <TotalsBox invoice={invoice} accentColor={palette.accentColor} />
+      </div>
+    );
+  }
+  if (instance.kind === 'signature') {
+    return <InvoiceSignatures />;
+  }
+  if (instance.kind === 'divider') {
+    return renderDivider(instance.dividerStyle, instance.dividerThickness, instance.dividerColor ?? palette.borderColor);
+  }
+  if (instance.kind === 'custom-image') {
+    return renderCustomImage(instance.imageBase64, instance.imageMaxWidthPct);
+  }
+  if (instance.kind === 'text') {
+    return (
+      <TextBlockView
+        instanceId={instance.id}
+        text={instance.text}
+        fontSize={instance.fontSize}
+        fontWeight={instance.fontWeight}
+        color={instance.textColor ?? palette.textColor}
+        align={instance.align}
+        isPreview={isPreview}
+        onPatch={onInstancePatch}
+      />
+    );
+  }
+  return null;
+}
+
+interface TextBlockViewProps {
+  instanceId: string;
+  text: string;
+  fontSize: number;
+  fontWeight: 'normal' | 'bold';
+  color: string;
+  align: 'left' | 'center' | 'right';
+  isPreview: boolean;
+  onPatch: ((instanceId: string, patch: Partial<BlockInstance>) => void) | undefined;
+}
+
+function TextBlockView({ instanceId, text, fontSize, fontWeight, color, align, isPreview, onPatch }: TextBlockViewProps) {
+  const textDraft = useTextDraft(text, (nextText) => {
+    if (!onPatch) return;
+    onPatch(instanceId, { kind: 'text', text: nextText });
+  });
+
+  const style: React.CSSProperties = {
+    fontSize: `${fontSize}px`,
+    fontWeight,
+    color,
+    textAlign: align,
+    whiteSpace: 'pre-wrap',
+    width: '100%',
+  };
+
+  if (isPreview || !onPatch) {
+    return (
+      <div style={style}>
+        {text || (isPreview ? '' : 'Tuščias tekstas')}
+      </div>
+    );
+  }
+
+  return (
+    <textarea
+      onChange={(event) => textDraft.setValue(event.target.value)}
+      onFocus={textDraft.beginEditing}
+      onBlur={textDraft.commit}
+      onClick={(event) => event.stopPropagation()}
+      placeholder="Įveskite tekstą"
+      value={textDraft.value}
+      rows={Math.max(1, textDraft.value.split('\n').length)}
+      className="w-full resize-y rounded border border-dashed border-slate-200 bg-transparent p-1 focus:border-slate-400 focus:outline-none"
+      style={style}
+    />
+  );
+}
+
+function renderDivider(style: 'solid' | 'dashed' | 'spacer', thickness: number, color: string): React.ReactNode {
+  if (style === 'spacer') {
+    return <div style={{ height: `${thickness * 8}px`, width: '100%' }} />;
+  }
+  return (
+    <div
+      style={{
+        width: '100%',
+        borderBottomWidth: `${thickness}px`,
+        borderBottomColor: color,
+        borderBottomStyle: style,
+      }}
+    />
+  );
+}
+
+function renderCustomImage(base64: string | undefined, maxWidthPct: number): React.ReactNode {
+  if (!base64) {
+    return (
+      <div className="flex h-20 w-full items-center justify-center rounded border border-dashed border-slate-300 bg-slate-50 text-xs text-slate-400">
+        Pasirinkite paveikslėlį dešinėje
+      </div>
+    );
+  }
+  return <img src={base64} alt="" style={{ maxWidth: `${maxWidthPct}%`, height: 'auto', objectFit: 'contain' }} />;
 }

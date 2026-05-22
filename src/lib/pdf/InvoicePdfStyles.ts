@@ -1,16 +1,22 @@
 import { StyleSheet } from '@react-pdf/renderer';
 
-export const getPdfStyles = (
-  primaryColor: string,
-  accentColor: string,
-  fontFamily: string | readonly string[],
-) =>
-  StyleSheet.create({
+export interface PdfPalette {
+  primaryColor: string;
+  accentColor: string;
+  textColor: string;
+  mutedColor: string;
+  borderColor: string;
+  headingColor: string;
+}
+
+export const getPdfStyles = (palette: PdfPalette, fontFamily: string | readonly string[]) => {
+  const { primaryColor, accentColor, textColor, mutedColor, borderColor, headingColor } = palette;
+  return StyleSheet.create({
     page: {
       fontFamily: fontFamily as string | string[],
       fontSize: 10,
       lineHeight: 1.5,
-      color: '#334155',
+      color: textColor,
       padding: 40,
       position: 'relative',
     },
@@ -37,10 +43,14 @@ export const getPdfStyles = (
       marginBottom: 8,
       objectFit: 'contain',
     },
+    customImage: {
+      maxWidth: '100%',
+      objectFit: 'contain',
+    },
     sectionTitle: {
       fontSize: 9,
       fontWeight: 'bold',
-      color: '#94a3b8',
+      color: headingColor,
       textTransform: 'uppercase',
       letterSpacing: 1,
       marginBottom: 4,
@@ -48,12 +58,12 @@ export const getPdfStyles = (
     companyName: {
       fontSize: 11,
       fontWeight: 'bold',
-      color: '#0f172a',
+      color: textColor,
       marginBottom: 2,
     },
     infoText: {
       fontSize: 8.5,
-      color: '#475569',
+      color: mutedColor,
     },
     invoiceInfoCol: {
       alignItems: 'flex-end',
@@ -67,7 +77,7 @@ export const getPdfStyles = (
     invoiceNo: {
       fontSize: 12,
       fontWeight: 'bold',
-      color: '#0f172a',
+      color: textColor,
       marginTop: 2,
       marginBottom: 10,
     },
@@ -76,14 +86,14 @@ export const getPdfStyles = (
       justifyContent: 'flex-end',
       gap: 5,
       fontSize: 8.5,
-      color: '#475569',
+      color: mutedColor,
     },
     dateLabel: {
-      color: '#94a3b8',
+      color: headingColor,
     },
     divider: {
       borderBottomWidth: 1,
-      borderBottomColor: '#e2e8f0',
+      borderBottomColor: borderColor,
       marginBottom: 20,
     },
     buyerCol: {
@@ -99,25 +109,25 @@ export const getPdfStyles = (
     tableHeader: {
       flexDirection: 'row',
       borderBottomWidth: 1,
-      borderBottomColor: '#cbd5e1',
+      borderBottomColor: borderColor,
       paddingBottom: 6,
       marginBottom: 6,
     },
     thText: {
       fontSize: 8,
       fontWeight: 'bold',
-      color: '#64748b',
+      color: mutedColor,
       textTransform: 'uppercase',
     },
     tableRow: {
       flexDirection: 'row',
       borderBottomWidth: 1,
-      borderBottomColor: '#f1f5f9',
+      borderBottomColor: borderColor,
       paddingVertical: 6,
     },
     tdText: {
       fontSize: 9,
-      color: '#0f172a',
+      color: textColor,
     },
     colNr: { width: '8%', textAlign: 'center' },
     colDesc: { width: '42%', paddingRight: 10 },
@@ -135,22 +145,36 @@ export const getPdfStyles = (
     },
     notesText: {
       fontSize: 8.5,
-      color: '#475569',
+      color: mutedColor,
       lineHeight: 1.4,
     },
     totalsCol: {
-      width: '40%',
+      width: '100%',
       alignItems: 'flex-end',
       gap: 4,
+    },
+    totalsLabel: {
+      fontSize: 9,
+      color: mutedColor,
+    },
+    totalsValue: {
+      fontSize: 9,
+      fontWeight: 'bold',
+      color: textColor,
     },
     totalLine: {
       flexDirection: 'row',
       justifyContent: 'space-between',
       width: '100%',
       borderTopWidth: 1,
-      borderTopColor: '#cbd5e1',
+      borderTopColor: borderColor,
       paddingTop: 6,
       marginTop: 4,
+    },
+    totalLineLabel: {
+      fontSize: 10,
+      fontWeight: 'bold',
+      color: textColor,
     },
     totalText: {
       fontSize: 12,
@@ -163,24 +187,25 @@ export const getPdfStyles = (
       marginTop: 40,
       paddingTop: 15,
       borderTopWidth: 1,
-      borderTopColor: '#f1f5f9',
+      borderTopColor: borderColor,
     },
     sigCol: {
       width: '40%',
     },
     sigTitle: {
       fontSize: 8.5,
-      color: '#64748b',
+      color: mutedColor,
       fontWeight: 'bold',
     },
     sigLine: {
       borderBottomWidth: 1,
-      borderBottomColor: '#cbd5e1',
+      borderBottomColor: borderColor,
       marginTop: 35,
       marginBottom: 3,
     },
     sigSubtext: {
       fontSize: 7.5,
-      color: '#94a3b8',
+      color: headingColor,
     },
   });
+};

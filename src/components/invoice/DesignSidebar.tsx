@@ -1,12 +1,26 @@
 import { type ChangeEvent } from 'react';
 import { useDraggable } from '@dnd-kit/core';
 import { CSS } from '@dnd-kit/utilities';
-import { Invoice } from '@/lib/domain';
-import type { SettingsDto } from '@/lib/drive/settings';
-import type { InvoiceTemplateLayoutDto, TemplateBlockId } from '@/lib/invoice-template/layout';
-import { INVOICE_TEMPLATE_BLOCKS, ROW_LIBRARY_COLUMNS } from '@/lib/invoice-template/blocks';
+import type { Invoice } from '@/lib/domain';
+import type { DesignPresetDto, SettingsDto } from '@/lib/drive/settings';
+import {
+  DEFAULT_ACCENT_COLOR,
+  DEFAULT_BORDER_COLOR,
+  DEFAULT_HEADING_COLOR,
+  DEFAULT_MUTED_COLOR,
+  DEFAULT_PRIMARY_COLOR,
+  DEFAULT_TEXT_COLOR,
+} from '@/lib/drive/settings';
+import type { InvoiceTemplateLayoutDto } from '@/lib/invoice-template/layout';
+import {
+  DATA_BLOCK_DEFINITIONS,
+  DECOR_BLOCK_DEFINITIONS,
+  ROW_LIBRARY_COLUMNS,
+} from '@/lib/invoice-template/blocks';
 import { libraryBlockDragId, libraryRowDragId } from '@/lib/invoice-template/dnd';
+import type { BlockKind } from '@/lib/invoice-template/layout';
 import { LayoutPanelTop, Paintbrush, Image as ImageIcon, Upload, RotateCcw } from 'lucide-react';
+import type { DesignOverride } from '@/lib/domain/Invoice';
 
 export interface DesignSidebarProps {
   invoice: Invoice;
@@ -15,21 +29,52 @@ export interface DesignSidebarProps {
   layout: InvoiceTemplateLayoutDto;
 }
 
+interface ColorRowConfig {
+  field: keyof Omit<DesignOverride, 'backgroundImageBase64'>;
+  presetKey: keyof Pick<
+    DesignPresetDto,
+    'primaryColor' | 'accentColor' | 'textColor' | 'mutedColor' | 'borderColor' | 'headingColor'
+  >;
+  defaultValue: string;
+  label: string;
+}
+
+const COLOR_ROWS: readonly ColorRowConfig[] = [
+  { field: 'primaryColor', presetKey: 'primaryColor', defaultValue: DEFAULT_PRIMARY_COLOR, label: 'Pagrindinė spalva (antraštė)' },
+  { field: 'accentColor', presetKey: 'accentColor', defaultValue: DEFAULT_ACCENT_COLOR, label: 'Akcento spalva (suma)' },
+  { field: 'textColor', presetKey: 'textColor', defaultValue: DEFAULT_TEXT_COLOR, label: 'Teksto spalva' },
+  { field: 'mutedColor', presetKey: 'mutedColor', defaultValue: DEFAULT_MUTED_COLOR, label: 'Pilkos detalės' },
+  { field: 'borderColor', presetKey: 'borderColor', defaultValue: DEFAULT_BORDER_COLOR, label: 'Linijų spalva' },
+  { field: 'headingColor', presetKey: 'headingColor', defaultValue: DEFAULT_HEADING_COLOR, label: 'Antraščių spalva' },
+];
+
 export function DesignSidebar({ invoice, onChange, settings }: DesignSidebarProps) {
   const presets = settings.designPresets || [];
-  const activePreset = presets.find((p) => p.id === invoice.designPresetId) || presets[0];
+  const activePreset = presets.find((preset) => preset.id === invoice.designPresetId) || presets[0];
   const override = invoice.designOverride;
-
-  const effectivePrimary = override?.primaryColor ?? activePreset?.primaryColor ?? '#0f172a';
-  const effectiveAccent = override?.accentColor ?? activePreset?.accentColor ?? '#2563eb';
   const effectiveBg = override?.backgroundImageBase64 ?? activePreset?.backgroundImageBase64;
+  const hasOverride = override !== undefined && Object.values(override).some((value) => value !== undefined);
 
   const handleSelectPreset = (presetId: string) => {
     onChange(invoice.withDesignPreset(presetId));
   };
 
-  const handleImageUpload = (e: ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
+  const handleResetOverride = () => {
+    onChange(
+      invoice.withDesignOverride({
+        primaryColor: undefined,
+        accentColor: undefined,
+        textColor: undefined,
+        mutedColor: undefined,
+        borderColor: undefined,
+        headingColor: undefined,
+        backgroundImageBase64: undefined,
+      }),
+    );
+  };
+
+  const handleImageUpload = (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
     if (!file) return;
 
     const reader = new FileReader();
@@ -41,8 +86,6 @@ export function DesignSidebar({ invoice, onChange, settings }: DesignSidebarProp
     reader.readAsDataURL(file);
   };
 
-  const hasOverride = override !== undefined;
-
   return (
     <aside className="w-70 shrink-0 border-l border-slate-200 bg-white p-4 h-full flex flex-col gap-6 no-print overflow-y-auto">
       <div>
@@ -52,7 +95,7 @@ export function DesignSidebar({ invoice, onChange, settings }: DesignSidebarProp
         </h3>
         <select
           value={invoice.designPresetId}
-          onChange={(e) => handleSelectPreset(e.target.value)}
+          onChange={(event) => handleSelectPreset(event.target.value)}
           className="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-slate-900 cursor-pointer"
         >
           {presets.map((preset) => (
@@ -72,15 +115,7 @@ export function DesignSidebar({ invoice, onChange, settings }: DesignSidebarProp
             {hasOverride && (
               <button
                 type="button"
-                onClick={() =>
-                  onChange(
-                    invoice.withDesignOverride({
-                      primaryColor: undefined,
-                      accentColor: undefined,
-                      backgroundImageBase64: undefined,
-                    }),
-                  )
-                }
+                onClick={handleResetOverride}
                 className="flex items-center gap-1 text-[10px] font-medium text-slate-500 hover:text-slate-900 cursor-pointer"
                 title="Atstatyti į šabloną"
               >
@@ -90,31 +125,14 @@ export function DesignSidebar({ invoice, onChange, settings }: DesignSidebarProp
             )}
           </div>
 
-          <div className="flex flex-col gap-1.5">
-            <label className="text-xs text-slate-600 font-medium">Pagrindinė spalva</label>
-            <div className="flex items-center gap-2">
-              <input
-                type="color"
-                value={effectivePrimary}
-                onChange={(e) => onChange(invoice.withDesignOverride({ primaryColor: e.target.value }))}
-                className="w-8 h-8 rounded border border-slate-200 cursor-pointer p-0"
-              />
-              <span className="text-xs font-mono uppercase text-slate-500">{effectivePrimary}</span>
-            </div>
-          </div>
-
-          <div className="flex flex-col gap-1.5">
-            <label className="text-xs text-slate-600 font-medium">Akcento spalva</label>
-            <div className="flex items-center gap-2">
-              <input
-                type="color"
-                value={effectiveAccent}
-                onChange={(e) => onChange(invoice.withDesignOverride({ accentColor: e.target.value }))}
-                className="w-8 h-8 rounded border border-slate-200 cursor-pointer p-0"
-              />
-              <span className="text-xs font-mono uppercase text-slate-500">{effectiveAccent}</span>
-            </div>
-          </div>
+          {COLOR_ROWS.map((row) => (
+            <ColorPickerRow
+              key={row.field}
+              label={row.label}
+              value={override?.[row.field] ?? activePreset[row.presetKey] ?? row.defaultValue}
+              onChange={(value) => onChange(invoice.withDesignOverride({ [row.field]: value }))}
+            />
+          ))}
 
           <hr className="border-slate-100 my-2" />
 
@@ -174,12 +192,26 @@ export function DesignSidebar({ invoice, onChange, settings }: DesignSidebarProp
         <div className="flex flex-col gap-2">
           <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-wide">Duomenų blokai</p>
           <div className="grid grid-cols-1 gap-2">
-            {INVOICE_TEMPLATE_BLOCKS.map((block) => (
+            {DATA_BLOCK_DEFINITIONS.map((block) => (
               <LibraryDraggableCard
-                key={block.id}
-                dragId={libraryBlockDragId(block.id)}
+                key={block.kind}
+                dragId={libraryBlockDragId(block.kind)}
                 label={block.label}
-                blockId={block.id}
+                blockKind={block.kind}
+              />
+            ))}
+          </div>
+        </div>
+
+        <div className="flex flex-col gap-2">
+          <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-wide">Dekoraciniai blokai</p>
+          <div className="grid grid-cols-1 gap-2">
+            {DECOR_BLOCK_DEFINITIONS.map((block) => (
+              <LibraryDraggableCard
+                key={block.kind}
+                dragId={libraryBlockDragId(block.kind)}
+                label={block.label}
+                blockKind={block.kind}
               />
             ))}
           </div>
@@ -189,16 +221,39 @@ export function DesignSidebar({ invoice, onChange, settings }: DesignSidebarProp
   );
 }
 
+interface ColorPickerRowProps {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+}
+
+function ColorPickerRow({ label, value, onChange }: ColorPickerRowProps) {
+  return (
+    <div className="flex flex-col gap-1.5">
+      <label className="text-xs text-slate-600 font-medium">{label}</label>
+      <div className="flex items-center gap-2">
+        <input
+          type="color"
+          value={value}
+          onChange={(event) => onChange(event.target.value)}
+          className="w-8 h-8 rounded border border-slate-200 cursor-pointer p-0"
+        />
+        <span className="text-xs font-mono uppercase text-slate-500">{value}</span>
+      </div>
+    </div>
+  );
+}
+
 interface LibraryDraggableCardProps {
   dragId: string;
   label: string;
-  blockId?: TemplateBlockId;
+  blockKind?: BlockKind;
 }
 
-function LibraryDraggableCard({ dragId, label, blockId }: LibraryDraggableCardProps) {
+function LibraryDraggableCard({ dragId, label, blockKind }: LibraryDraggableCardProps) {
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: dragId,
-    data: { source: 'library', blockId },
+    data: { source: 'library', blockKind },
   });
 
   const style = {

@@ -1,10 +1,17 @@
 import { Document, Image, Page, Text, View } from '@react-pdf/renderer';
 import type { Client, Invoice } from '@/lib/domain';
-import type { SettingsDto } from '@/lib/drive/settings';
-import type { TemplateBlockId } from '@/lib/invoice-template/layout';
-import { readTemplateBlockSettings } from '@/lib/invoice-template/layout';
+import {
+  DEFAULT_ACCENT_COLOR,
+  DEFAULT_BORDER_COLOR,
+  DEFAULT_HEADING_COLOR,
+  DEFAULT_MUTED_COLOR,
+  DEFAULT_PRIMARY_COLOR,
+  DEFAULT_TEXT_COLOR,
+  type SettingsDto,
+} from '@/lib/drive/settings';
+import { rowTotalSpan, type BlockInstance, type InvoiceTemplateRowDto } from '@/lib/invoice-template/layout';
 import { formatDate } from '@/lib/format/date';
-import { getPdfStyles } from './InvoicePdfStyles';
+import { getPdfStyles, type PdfPalette } from './InvoicePdfStyles';
 import { resolveFontStack } from './googleFonts';
 
 const PX_TO_PT = 0.75;
@@ -25,65 +32,32 @@ export interface InvoicePdfDocumentProps {
 export function InvoicePdfDocument({ invoice, client, settings }: InvoicePdfDocumentProps) {
   const activePreset =
     settings.designPresets.find((preset) => preset.id === invoice.designPresetId) || settings.designPresets[0];
-  const primaryColor = activePreset?.primaryColor || '#0f172a';
-  const accentColor = activePreset?.accentColor || '#0284c7';
+  const override = invoice.designOverride;
+  const palette: PdfPalette = {
+    primaryColor: override?.primaryColor ?? activePreset?.primaryColor ?? DEFAULT_PRIMARY_COLOR,
+    accentColor: override?.accentColor ?? activePreset?.accentColor ?? DEFAULT_ACCENT_COLOR,
+    textColor: override?.textColor ?? activePreset?.textColor ?? DEFAULT_TEXT_COLOR,
+    mutedColor: override?.mutedColor ?? activePreset?.mutedColor ?? DEFAULT_MUTED_COLOR,
+    borderColor: override?.borderColor ?? activePreset?.borderColor ?? DEFAULT_BORDER_COLOR,
+    headingColor: override?.headingColor ?? activePreset?.headingColor ?? DEFAULT_HEADING_COLOR,
+  };
   const fontStack = resolveFontStack(activePreset?.fontFamily);
 
   const totals = invoice.totals();
   const hasVat = invoice.vat.enabled;
   const items = invoice.lineItems.toArray();
-  const styles = getPdfStyles(primaryColor, accentColor, fontStack);
+  const styles = getPdfStyles(palette, fontStack);
+  const backgroundImage = override?.backgroundImageBase64 ?? activePreset?.backgroundImageBase64;
 
-  const paginatedRows = (() => {
-    const pages: typeof settings.invoiceLayout.layout[] = [];
-    let currentPage: typeof settings.invoiceLayout.layout = [];
-    let currentHeight = 0;
+  const paginatedRows = paginateRows(settings.invoiceLayout.layout);
 
-    for (const row of settings.invoiceLayout.layout) {
-      const maxMargins = row.columns.reduce((maxValue, column) => {
-        const margins = column.content.reduce((sum, blockId) => {
-          const blockSettings = readTemplateBlockSettings(settings.invoiceLayout, blockId);
-          return sum + blockSettings.marginTop + blockSettings.marginBottom;
-        }, 0);
-        return Math.max(maxValue, margins);
-      }, 0);
-
-      const densestColumnBlocks = row.columns.reduce((maxValue, column) => {
-        return Math.max(maxValue, column.content.length);
-      }, 0);
-
-      const estimatedContentHeight = Math.max(
-        DEFAULT_ROW_HEIGHT,
-        densestColumnBlocks * BLOCK_HEIGHT_ESTIMATE,
-      );
-
-      const estimatedRowHeight = estimatedContentHeight + maxMargins + 16;
-
-      if (currentPage.length > 0 && currentHeight + estimatedRowHeight > PREVIEW_PAGE_CONTENT_HEIGHT) {
-        pages.push(currentPage);
-        currentPage = [row];
-        currentHeight = estimatedRowHeight;
-        continue;
-      }
-
-      currentPage.push(row);
-      currentHeight += estimatedRowHeight;
-    }
-
-    if (currentPage.length > 0) {
-      pages.push(currentPage);
-    }
-
-    return pages.length > 0 ? pages : [[]];
-  })();
-
-  const renderBlock = (blockId: TemplateBlockId) => {
-    if (blockId === 'logo') {
+  const renderInstance = (instance: BlockInstance) => {
+    if (instance.kind === 'logo') {
       if (!settings.company?.logoBase64) return null;
       return <Image src={settings.company.logoBase64} style={styles.logo} />;
     }
 
-    if (blockId === 'seller-info') {
+    if (instance.kind === 'seller-info') {
       return (
         <View>
           <Text style={styles.sectionTitle}>Pardavėjas</Text>
@@ -103,7 +77,7 @@ export function InvoicePdfDocument({ invoice, client, settings }: InvoicePdfDocu
       );
     }
 
-    if (blockId === 'invoice-meta') {
+    if (instance.kind === 'invoice-meta') {
       return (
         <View style={styles.invoiceInfoCol}>
           <Text style={styles.invoiceTitle}>{hasVat ? 'PVM Sąskaita-Faktūra' : 'Sąskaita-Faktūra'}</Text>
@@ -120,7 +94,7 @@ export function InvoicePdfDocument({ invoice, client, settings }: InvoicePdfDocu
       );
     }
 
-    if (blockId === 'buyer-info') {
+    if (instance.kind === 'buyer-info') {
       return (
         <View style={styles.buyerCol}>
           <Text style={styles.sectionTitle}>Pirkėjas</Text>
@@ -134,7 +108,7 @@ export function InvoicePdfDocument({ invoice, client, settings }: InvoicePdfDocu
       );
     }
 
-    if (blockId === 'line-items') {
+    if (instance.kind === 'line-items') {
       return (
         <View style={styles.table}>
           <View style={styles.tableHeader}>
@@ -166,7 +140,7 @@ export function InvoicePdfDocument({ invoice, client, settings }: InvoicePdfDocu
       );
     }
 
-    if (blockId === 'notes') {
+    if (instance.kind === 'notes') {
       if (!invoice.notes) return null;
       return (
         <View>
@@ -176,28 +150,28 @@ export function InvoicePdfDocument({ invoice, client, settings }: InvoicePdfDocu
       );
     }
 
-    if (blockId === 'totals') {
+    if (instance.kind === 'totals') {
       return (
         <View style={styles.totalsCol}>
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', width: '100%' }}>
-            <Text style={{ fontSize: 9, color: '#64748b' }}>Tarpinė suma:</Text>
-            <Text style={{ fontSize: 9, fontWeight: 'bold' }}>{totals.subtotal.format()}</Text>
+            <Text style={styles.totalsLabel}>Tarpinė suma:</Text>
+            <Text style={styles.totalsValue}>{totals.subtotal.format()}</Text>
           </View>
           {hasVat && (
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', width: '100%' }}>
-              <Text style={{ fontSize: 9, color: '#64748b' }}>PVM suma:</Text>
-              <Text style={{ fontSize: 9, fontWeight: 'bold' }}>{totals.vatAmount.format()}</Text>
+              <Text style={styles.totalsLabel}>PVM suma:</Text>
+              <Text style={styles.totalsValue}>{totals.vatAmount.format()}</Text>
             </View>
           )}
           <View style={styles.totalLine}>
-            <Text style={{ fontSize: 10, fontWeight: 'bold', color: '#0f172a' }}>Iš viso:</Text>
+            <Text style={styles.totalLineLabel}>Iš viso:</Text>
             <Text style={styles.totalText}>{totals.total.format()}</Text>
           </View>
         </View>
       );
     }
 
-    if (blockId === 'signature') {
+    if (instance.kind === 'signature') {
       return (
         <View style={[styles.signatures, { marginTop: 0 }]} wrap={false}>
           <View style={styles.sigCol}>
@@ -214,6 +188,50 @@ export function InvoicePdfDocument({ invoice, client, settings }: InvoicePdfDocu
       );
     }
 
+    if (instance.kind === 'divider') {
+      if (instance.dividerStyle === 'spacer') {
+        return <View style={{ height: pxToPt(instance.dividerThickness * 6), width: '100%' }} />;
+      }
+      const borderStyle = instance.dividerStyle === 'dashed' ? 'dashed' : 'solid';
+      return (
+        <View
+          style={{
+            width: '100%',
+            borderBottomWidth: instance.dividerThickness,
+            borderBottomColor: instance.dividerColor ?? palette.borderColor,
+            borderStyle,
+          }}
+        />
+      );
+    }
+
+    if (instance.kind === 'custom-image') {
+      if (!instance.imageBase64) return null;
+      return (
+        <Image
+          src={instance.imageBase64}
+          style={[styles.customImage, { maxWidth: `${instance.imageMaxWidthPct}%` }]}
+        />
+      );
+    }
+
+    if (instance.kind === 'text') {
+      if (!instance.text) return null;
+      return (
+        <Text
+          style={{
+            fontSize: instance.fontSize,
+            fontWeight: instance.fontWeight,
+            color: instance.textColor ?? palette.textColor,
+            textAlign: instance.align,
+            width: '100%',
+          }}
+        >
+          {instance.text}
+        </Text>
+      );
+    }
+
     return null;
   };
 
@@ -221,9 +239,11 @@ export function InvoicePdfDocument({ invoice, client, settings }: InvoicePdfDocu
     <Document>
       {paginatedRows.map((rows, pageIndex) => (
         <Page key={`page-${pageIndex}`} size="A4" style={styles.page}>
-          {activePreset?.backgroundImageBase64 && <Image src={activePreset.backgroundImageBase64} style={styles.background} />}
+          {backgroundImage && <Image src={backgroundImage} style={styles.background} />}
 
-          {rows.map((row) => (
+          {rows.map((row) => {
+            const totalSpan = rowTotalSpan(row);
+            return (
             <View
               key={row.id}
               style={{
@@ -231,37 +251,69 @@ export function InvoicePdfDocument({ invoice, client, settings }: InvoicePdfDocu
                 marginBottom: pxToPt(10),
               }}
             >
-              {row.columns.map((column, index) => (
+              {row.columns.map((column, columnIndex) => (
                 <View
                   key={column.id}
                   style={{
-                    width: `${100 / row.columns.length}%`,
-                    paddingRight: index === row.columns.length - 1 ? 0 : 8,
+                    width: `${(column.span / totalSpan) * 100}%`,
+                    paddingRight: columnIndex === row.columns.length - 1 ? 0 : 8,
                   }}
                 >
-                  {column.content.map((blockId, blockIndex) => (
+                  {column.content.map((instance) => (
                     <View
-                      key={`${column.id}-${blockId}-${blockIndex}`}
+                      key={instance.id}
                       style={{
-                        marginTop: pxToPt(readTemplateBlockSettings(settings.invoiceLayout, blockId).marginTop),
-                        marginBottom: pxToPt(readTemplateBlockSettings(settings.invoiceLayout, blockId).marginBottom + 8),
+                        marginTop: pxToPt(instance.marginTop),
+                        marginBottom: pxToPt(instance.marginBottom + 8),
                         alignItems:
-                          readTemplateBlockSettings(settings.invoiceLayout, blockId).align === 'center'
+                          instance.align === 'center'
                             ? 'center'
-                            : readTemplateBlockSettings(settings.invoiceLayout, blockId).align === 'right'
+                            : instance.align === 'right'
                               ? 'flex-end'
                               : 'flex-start',
                       }}
                     >
-                      {renderBlock(blockId)}
+                      {renderInstance(instance)}
                     </View>
                   ))}
                 </View>
               ))}
             </View>
-          ))}
+            );
+          })}
         </Page>
       ))}
     </Document>
   );
+}
+
+function paginateRows(rows: InvoiceTemplateRowDto[]): InvoiceTemplateRowDto[][] {
+  const pages: InvoiceTemplateRowDto[][] = [];
+  let currentPage: InvoiceTemplateRowDto[] = [];
+  let currentHeight = 0;
+
+  for (const row of rows) {
+    const maxMargins = row.columns.reduce((maxValue, column) => {
+      const margins = column.content.reduce((sum, instance) => sum + instance.marginTop + instance.marginBottom, 0);
+      return Math.max(maxValue, margins);
+    }, 0);
+
+    const densestColumnBlocks = row.columns.reduce((maxValue, column) => Math.max(maxValue, column.content.length), 0);
+
+    const estimatedContentHeight = Math.max(DEFAULT_ROW_HEIGHT, densestColumnBlocks * BLOCK_HEIGHT_ESTIMATE);
+    const estimatedRowHeight = estimatedContentHeight + maxMargins + 16;
+
+    if (currentPage.length > 0 && currentHeight + estimatedRowHeight > PREVIEW_PAGE_CONTENT_HEIGHT) {
+      pages.push(currentPage);
+      currentPage = [row];
+      currentHeight = estimatedRowHeight;
+      continue;
+    }
+
+    currentPage.push(row);
+    currentHeight += estimatedRowHeight;
+  }
+
+  if (currentPage.length > 0) pages.push(currentPage);
+  return pages.length > 0 ? pages : [[]];
 }

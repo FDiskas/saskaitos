@@ -53,6 +53,10 @@ export const InvoiceStatusSchema = z.enum(['draft', 'sent', 'paid', 'overdue']);
 export const DesignOverrideDtoSchema = z.object({
   primaryColor: z.string().optional(),
   accentColor: z.string().optional(),
+  textColor: z.string().optional(),
+  mutedColor: z.string().optional(),
+  borderColor: z.string().optional(),
+  headingColor: z.string().optional(),
   backgroundImageBase64: z.string().optional(),
 });
 export type DesignOverrideDto = z.infer<typeof DesignOverrideDtoSchema>;

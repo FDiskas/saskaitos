@@ -1,17 +1,17 @@
-import type { TemplateBlockId } from './layout';
+import { BlockKindSchema, type BlockKind } from './layout';
 
 const LIBRARY_ROW_PREFIX = 'library:row:';
 const LIBRARY_BLOCK_PREFIX = 'library:block:';
 const CANVAS_ROW_PREFIX = 'canvas:row:';
 const CANVAS_COLUMN_PREFIX = 'canvas:column:';
-const CANVAS_BLOCK_PREFIX = 'canvas:block:';
+const CANVAS_INSTANCE_PREFIX = 'canvas:instance:';
 
 export function libraryRowDragId(columnCount: number): string {
   return `${LIBRARY_ROW_PREFIX}${columnCount}`;
 }
 
-export function libraryBlockDragId(blockId: TemplateBlockId): string {
-  return `${LIBRARY_BLOCK_PREFIX}${blockId}`;
+export function libraryBlockDragId(kind: BlockKind): string {
+  return `${LIBRARY_BLOCK_PREFIX}${kind}`;
 }
 
 export function canvasRowSortableId(rowId: string): string {
@@ -22,8 +22,8 @@ export function canvasColumnDropId(rowId: string, columnId: string): string {
   return `${CANVAS_COLUMN_PREFIX}${rowId}:${columnId}`;
 }
 
-export function canvasPlacedBlockDragId(blockId: TemplateBlockId): string {
-  return `${CANVAS_BLOCK_PREFIX}${blockId}`;
+export function canvasInstanceDragId(instanceId: string): string {
+  return `${CANVAS_INSTANCE_PREFIX}${instanceId}`;
 }
 
 export function parseLibraryRowDragId(id: string): number | null {
@@ -34,22 +34,11 @@ export function parseLibraryRowDragId(id: string): number | null {
   return value;
 }
 
-export function parseLibraryBlockDragId(id: string): TemplateBlockId | null {
+export function parseLibraryBlockDragId(id: string): BlockKind | null {
   if (!id.startsWith(LIBRARY_BLOCK_PREFIX)) return null;
-  const blockId = id.slice(LIBRARY_BLOCK_PREFIX.length);
-  if (
-    blockId === 'logo' ||
-    blockId === 'seller-info' ||
-    blockId === 'buyer-info' ||
-    blockId === 'invoice-meta' ||
-    blockId === 'line-items' ||
-    blockId === 'totals' ||
-    blockId === 'notes' ||
-    blockId === 'signature'
-  ) {
-    return blockId;
-  }
-  return null;
+  const raw = id.slice(LIBRARY_BLOCK_PREFIX.length);
+  const result = BlockKindSchema.safeParse(raw);
+  return result.success ? result.data : null;
 }
 
 export function parseCanvasRowSortableId(id: string): string | null {
@@ -67,8 +56,7 @@ export function parseCanvasColumnDropId(
   return { rowId, columnId };
 }
 
-export function parseCanvasPlacedBlockDragId(id: string): TemplateBlockId | null {
-  if (!id.startsWith(CANVAS_BLOCK_PREFIX)) return null;
-  const blockId = id.slice(CANVAS_BLOCK_PREFIX.length);
-  return parseLibraryBlockDragId(`${LIBRARY_BLOCK_PREFIX}${blockId}`);
+export function parseCanvasInstanceDragId(id: string): string | null {
+  if (!id.startsWith(CANVAS_INSTANCE_PREFIX)) return null;
+  return id.slice(CANVAS_INSTANCE_PREFIX.length);
 }

@@ -22,6 +22,10 @@ export interface InvoiceTotals {
 export interface DesignOverride {
   primaryColor?: string;
   accentColor?: string;
+  textColor?: string;
+  mutedColor?: string;
+  borderColor?: string;
+  headingColor?: string;
   backgroundImageBase64?: string;
 }
 
@@ -159,7 +163,7 @@ export class Invoice {
 
   withDesignOverride(patch: Partial<DesignOverride>): Invoice {
     const merged: DesignOverride = { ...this.props.designOverride, ...patch };
-    const hasAny = merged.primaryColor !== undefined || merged.accentColor !== undefined || merged.backgroundImageBase64 !== undefined;
+    const hasAny = Object.values(merged).some((value) => value !== undefined);
     return this.touch({ designOverride: hasAny ? merged : undefined });
   }
 

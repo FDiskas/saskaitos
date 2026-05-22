@@ -3,9 +3,12 @@ import {
   DndContext,
   DragOverlay,
   PointerSensor,
+  pointerWithin,
+  rectIntersection,
   closestCorners,
   useSensor,
   useSensors,
+  type CollisionDetection,
   type DragStartEvent,
   type DragEndEvent,
 } from '@dnd-kit/core';
@@ -28,20 +31,27 @@ import {
 } from '@/components/invoice';
 import { type Invoice, ClientId } from '@/lib/domain';
 import {
+  createBlockInstance,
   createTemplateRow,
-  moveBlockToColumn,
-  removeBlockFromTemplate,
+  findBlockInstance,
+  findDataBlockInstance,
+  insertInstance,
+  mergeColumnWithRight,
+  moveBlockInstanceToColumn,
+  removeBlockInstanceFromTemplate,
   removeTemplateRow,
   reorderTemplateRows,
   resizeTemplateRowColumns,
-  updateTemplateBlockSettings,
+  splitColumn,
+  updateBlockInstance,
+  type BlockInstance,
+  type BlockKind,
   type InvoiceTemplateLayoutDto,
-  type TemplateBlockId,
 } from '@/lib/invoice-template/layout';
-import { blockLabel } from '@/lib/invoice-template/blocks';
+import { blockLabel, isSingletonDataKind } from '@/lib/invoice-template/blocks';
 import {
   parseCanvasColumnDropId,
-  parseCanvasPlacedBlockDragId,
+  parseCanvasInstanceDragId,
   parseCanvasRowSortableId,
   parseLibraryBlockDragId,
   parseLibraryRowDragId,
@@ -60,7 +70,7 @@ export function InvoiceEditorPage() {
   const updateMutation = useUpdateInvoice();
 
   const [localInvoice, setLocalInvoice] = useState<Invoice | null>(null);
-  const [selectedBlockId, setSelectedBlockId] = useState<TemplateBlockId | null>(null);
+  const [selectedInstanceId, setSelectedInstanceId] = useState<string | null>(null);
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
   const [isPreview, setIsPreview] = useState(false);
   const [activeLibraryDragLabel, setActiveLibraryDragLabel] = useState<string | null>(null);
@@ -90,9 +100,6 @@ export function InvoiceEditorPage() {
   }, [isNew, clientId, isClientsLoading, createMutation]);
 
   useEffect(() => {
-    // Sync server snapshot into local editing buffer when no save is in flight.
-    // Why: localInvoice is a mutable working copy for optimistic UI; we can't derive
-    // it inline because the user's pending edits would be clobbered on every server poll.
     if (invoice && !updateMutation.isPending) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setLocalInvoice(invoice);
@@ -161,11 +168,11 @@ export function InvoiceEditorPage() {
     const directColumn = parseCanvasColumnDropId(overId);
     if (directColumn) return directColumn;
 
-    const overBlockId = parseCanvasPlacedBlockDragId(overId);
-    if (overBlockId) {
+    const overInstanceId = parseCanvasInstanceDragId(overId);
+    if (overInstanceId) {
       for (const row of settings.invoiceLayout.layout) {
         for (const column of row.columns) {
-          if (column.content.includes(overBlockId)) {
+          if (column.content.some((existing) => existing.id === overInstanceId)) {
             return { rowId: row.id, columnId: column.id };
           }
         }
@@ -194,14 +201,14 @@ export function InvoiceEditorPage() {
     const overColumn = parseCanvasColumnDropId(overId);
     if (overColumn) return overColumn.rowId;
 
-    const overBlockId = parseCanvasPlacedBlockDragId(overId);
-    if (!overBlockId) return null;
+    const overInstanceId = parseCanvasInstanceDragId(overId);
+    if (!overInstanceId) return null;
 
-    const rowWithBlock = settings.invoiceLayout.layout.find((row) =>
-      row.columns.some((column) => column.content.includes(overBlockId)),
+    const rowWithInstance = settings.invoiceLayout.layout.find((row) =>
+      row.columns.some((column) => column.content.some((item) => item.id === overInstanceId)),
     );
 
-    return rowWithBlock?.id ?? null;
+    return rowWithInstance?.id ?? null;
   };
 
   const handleDragEnd = (event: DragEndEvent) => {
@@ -240,30 +247,38 @@ export function InvoiceEditorPage() {
       return;
     }
 
-    const blockFromLibrary = parseLibraryBlockDragId(activeId);
-    const blockFromCanvas = parseCanvasPlacedBlockDragId(activeId);
-    const blockId = blockFromLibrary ?? blockFromCanvas;
-    if (!blockId) return;
-
-    const overBlockId = parseCanvasPlacedBlockDragId(overId);
-    // Drop on self = no-op (closestCorners can resolve a block to itself mid-drag).
-    if (blockFromCanvas && overBlockId && blockFromCanvas === overBlockId) return;
-
     const dropTarget = resolveDropTargetColumn(overId);
     if (!dropTarget) return;
 
+    const overInstanceId = parseCanvasInstanceDragId(overId);
+    const canvasInstanceId = parseCanvasInstanceDragId(activeId);
+    if (canvasInstanceId) {
+      if (overInstanceId && canvasInstanceId === overInstanceId) return;
+      handleLayoutChange(
+        moveBlockInstanceToColumn(
+          settings.invoiceLayout,
+          canvasInstanceId,
+          dropTarget.rowId,
+          dropTarget.columnId,
+          overInstanceId ?? undefined,
+        ),
+      );
+      return;
+    }
+
+    const libraryKind = parseLibraryBlockDragId(activeId);
+    if (!libraryKind) return;
+
     handleLayoutChange(
-      moveBlockToColumn(
-        settings.invoiceLayout,
-        blockId,
-        dropTarget.rowId,
-        dropTarget.columnId,
-        overBlockId ?? undefined,
-      ),
+      dropLibraryKind(settings.invoiceLayout, libraryKind, dropTarget, overInstanceId ?? undefined),
     );
   };
 
   const client = clients.find((c) => c.id.equals(localInvoice.clientId));
+
+  const selectedInstance: BlockInstance | undefined = selectedInstanceId
+    ? findBlockInstance(settings.invoiceLayout, selectedInstanceId)
+    : undefined;
 
   const content = (
     <div className="flex flex-row grow h-[calc(100vh-57px)] overflow-hidden print:h-auto print:overflow-visible">
@@ -283,44 +298,47 @@ export function InvoiceEditorPage() {
           settings={settings}
           layout={settings.invoiceLayout}
           isPreview={isPreview}
-          selectedBlockId={selectedBlockId}
+          selectedInstanceId={selectedInstanceId}
           selectedRowId={selectedRowId}
-          onSelectBlock={(blockId) => {
-            setSelectedBlockId(blockId);
+          onSelectInstance={(instanceId) => {
+            setSelectedInstanceId(instanceId);
             setSelectedRowId(null);
           }}
           onSelectRow={(rowId) => {
             setSelectedRowId(rowId);
-            setSelectedBlockId(null);
+            setSelectedInstanceId(null);
+          }}
+          onInstancePatch={(instanceId, patch) => {
+            handleLayoutChange(updateBlockInstance(settings.invoiceLayout, instanceId, patch));
           }}
         />
       </main>
 
       {!isPreview && (
         <TemplateBlockSettingsSidebar
-          selectedBlockId={selectedBlockId}
+          selectedInstance={selectedInstance ?? null}
           selectedRowId={selectedRowId}
           layout={settings.invoiceLayout}
-          onAlignChange={(align) => {
-            if (!selectedBlockId) return;
-            handleLayoutChange(updateTemplateBlockSettings(settings.invoiceLayout, selectedBlockId, { align }));
+          onInstancePatch={(patch) => {
+            if (!selectedInstanceId) return;
+            handleLayoutChange(updateBlockInstance(settings.invoiceLayout, selectedInstanceId, patch));
           }}
-          onMarginTopChange={(marginTop) => {
-            if (!selectedBlockId) return;
-            handleLayoutChange(updateTemplateBlockSettings(settings.invoiceLayout, selectedBlockId, { marginTop }));
-          }}
-          onMarginBottomChange={(marginBottom) => {
-            if (!selectedBlockId) return;
-            handleLayoutChange(updateTemplateBlockSettings(settings.invoiceLayout, selectedBlockId, { marginBottom }));
-          }}
-          onRemoveBlock={() => {
-            if (!selectedBlockId) return;
-            handleLayoutChange(removeBlockFromTemplate(settings.invoiceLayout, selectedBlockId));
-            setSelectedBlockId(null);
+          onRemoveInstance={() => {
+            if (!selectedInstanceId) return;
+            handleLayoutChange(removeBlockInstanceFromTemplate(settings.invoiceLayout, selectedInstanceId));
+            setSelectedInstanceId(null);
           }}
           onRowColumnsChange={(columns) => {
             if (!selectedRowId) return;
             handleLayoutChange(resizeTemplateRowColumns(settings.invoiceLayout, selectedRowId, columns));
+          }}
+          onMergeColumnRight={(columnId) => {
+            if (!selectedRowId) return;
+            handleLayoutChange(mergeColumnWithRight(settings.invoiceLayout, selectedRowId, columnId));
+          }}
+          onSplitColumn={(columnId) => {
+            if (!selectedRowId) return;
+            handleLayoutChange(splitColumn(settings.invoiceLayout, selectedRowId, columnId));
           }}
           onRemoveRow={() => {
             if (!selectedRowId) return;
@@ -370,7 +388,7 @@ export function InvoiceEditorPage() {
 
       <DndContext
         sensors={sensors}
-        collisionDetection={closestCorners}
+        collisionDetection={nestedDroppableCollision}
         onDragStart={handleDragStart}
         onDragCancel={() => setActiveLibraryDragLabel(null)}
         onDragEnd={handleDragEnd}
@@ -388,6 +406,47 @@ export function InvoiceEditorPage() {
   );
 }
 
+const nestedDroppableCollision: CollisionDetection = (args) => {
+  const activeId = String(args.active.id);
+
+  if (activeId.startsWith('canvas:row:') || activeId.startsWith('library:row:')) {
+    const rowContainers = args.droppableContainers.filter((container) =>
+      String(container.id).startsWith('canvas:row:'),
+    );
+    return closestCorners({ ...args, droppableContainers: rowContainers });
+  }
+
+  const innermost = pointerWithin(args);
+  if (innermost.length > 0) {
+    const preferred = innermost.find((collision) => {
+      const id = String(collision.id);
+      return id.startsWith('canvas:instance:') || id.startsWith('canvas:column:');
+    });
+    return preferred ? [preferred] : innermost;
+  }
+
+  const intersections = rectIntersection(args);
+  if (intersections.length > 0) return intersections;
+
+  return closestCorners(args);
+};
+
+function dropLibraryKind(
+  layout: InvoiceTemplateLayoutDto,
+  kind: BlockKind,
+  target: { rowId: string; columnId: string },
+  beforeInstanceId?: string,
+): InvoiceTemplateLayoutDto {
+  if (isSingletonDataKind(kind)) {
+    const existing = findDataBlockInstance(layout, kind);
+    if (existing) {
+      return moveBlockInstanceToColumn(layout, existing.id, target.rowId, target.columnId, beforeInstanceId);
+    }
+  }
+  const instance = createBlockInstance(kind);
+  return insertInstance(layout, instance, target.rowId, target.columnId, beforeInstanceId);
+}
+
 interface SyncStatusPillProps {
   isSaving: boolean;
   isPendingSave: boolean;
@@ -400,8 +459,7 @@ function resolveDragLabel(activeId: string): string | null {
   const libraryBlock = parseLibraryBlockDragId(activeId);
   if (libraryBlock) return blockLabel(libraryBlock);
 
-  const canvasBlock = parseCanvasPlacedBlockDragId(activeId);
-  if (canvasBlock) return blockLabel(canvasBlock);
+  if (parseCanvasInstanceDragId(activeId)) return 'Blokas';
 
   if (parseCanvasRowSortableId(activeId)) return 'Eilutė';
 

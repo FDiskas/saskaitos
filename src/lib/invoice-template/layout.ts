@@ -12,7 +12,7 @@ export const DataBlockKindSchema = z.enum([
 ]);
 export type DataBlockKind = z.infer<typeof DataBlockKindSchema>;
 
-export const DecorBlockKindSchema = z.enum(['divider', 'custom-image']);
+export const DecorBlockKindSchema = z.enum(['divider', 'custom-image', 'text']);
 export type DecorBlockKind = z.infer<typeof DecorBlockKindSchema>;
 
 export const BlockKindSchema = z.enum([
@@ -62,15 +62,39 @@ const CustomImageBlockInstanceSchema = z.object({
 });
 export type CustomImageBlockInstance = z.infer<typeof CustomImageBlockInstanceSchema>;
 
-export const BlockInstanceSchema: z.ZodType<DataBlockInstance | DividerBlockInstance | CustomImageBlockInstance> =
-  z.union([DataBlockInstanceSchema, DividerBlockInstanceSchema, CustomImageBlockInstanceSchema]);
-export type BlockInstance = z.infer<typeof BlockInstanceSchema>;
+export const TextBlockFontWeightSchema = z.enum(['normal', 'bold']);
+export type TextBlockFontWeight = z.infer<typeof TextBlockFontWeightSchema>;
+
+const TextBlockInstanceSchema = z.object({
+  ...BaseInstanceShape,
+  kind: z.literal('text'),
+  text: z.string().default(''),
+  fontSize: z.number().int().min(8).max(48).default(11),
+  fontWeight: TextBlockFontWeightSchema.default('normal'),
+  textColor: z.string().regex(/^#[0-9a-fA-F]{6}$/).optional(),
+});
+export type TextBlockInstance = z.infer<typeof TextBlockInstanceSchema>;
+
+export const BlockInstanceSchema = z.union([
+  DataBlockInstanceSchema,
+  DividerBlockInstanceSchema,
+  CustomImageBlockInstanceSchema,
+  TextBlockInstanceSchema,
+]);
+export type BlockInstance =
+  | DataBlockInstance
+  | DividerBlockInstance
+  | CustomImageBlockInstance
+  | TextBlockInstance;
 
 export const InvoiceTemplateColumnSchema = z.object({
   id: z.string().min(1),
+  span: z.number().int().min(1).max(4).default(1),
   content: z.array(BlockInstanceSchema).default([]),
 });
 export type InvoiceTemplateColumnDto = z.infer<typeof InvoiceTemplateColumnSchema>;
+
+export const ROW_MAX_SPAN = 4;
 
 export const InvoiceTemplateRowSchema = z.object({
   id: z.string().min(1),
@@ -130,6 +154,18 @@ export function createBlockInstance(kind: BlockKind, idFactory: () => string = (
       imageMaxWidthPct: 100,
     };
   }
+  if (kind === 'text') {
+    return {
+      id: idFactory(),
+      kind: 'text',
+      align: 'left',
+      marginTop: 0,
+      marginBottom: 0,
+      text: '',
+      fontSize: 11,
+      fontWeight: 'normal',
+    };
+  }
   return {
     id: idFactory(),
     kind,
@@ -146,6 +182,7 @@ function mapColumns(
 ): InvoiceTemplateColumnDto[] {
   return Array.from({ length: clampColumns(count) }, (_, index) => ({
     id: columnIdFactory(rowId, index),
+    span: 1,
     content: [],
   }));
 }
@@ -174,32 +211,32 @@ export function defaultInvoiceTemplateLayout(): InvoiceTemplateLayoutDto {
         id: 'row-1',
         type: 'row',
         columns: [
-          { id: 'col-1-1', content: [dataBlockInstance('logo', 'inst-logo'), dataBlockInstance('seller-info', 'inst-seller')] },
-          { id: 'col-1-2', content: [dataBlockInstance('invoice-meta', 'inst-meta')] },
+          { id: 'col-1-1', span: 1, content: [dataBlockInstance('logo', 'inst-logo'), dataBlockInstance('seller-info', 'inst-seller')] },
+          { id: 'col-1-2', span: 1, content: [dataBlockInstance('invoice-meta', 'inst-meta')] },
         ],
       },
       {
         id: 'row-2',
         type: 'row',
-        columns: [{ id: 'col-2-1', content: [dataBlockInstance('buyer-info', 'inst-buyer')] }],
+        columns: [{ id: 'col-2-1', span: 1, content: [dataBlockInstance('buyer-info', 'inst-buyer')] }],
       },
       {
         id: 'row-3',
         type: 'row',
-        columns: [{ id: 'col-3-1', content: [dataBlockInstance('line-items', 'inst-items')] }],
+        columns: [{ id: 'col-3-1', span: 1, content: [dataBlockInstance('line-items', 'inst-items')] }],
       },
       {
         id: 'row-4',
         type: 'row',
         columns: [
-          { id: 'col-4-1', content: [dataBlockInstance('notes', 'inst-notes')] },
-          { id: 'col-4-2', content: [dataBlockInstance('totals', 'inst-totals')] },
+          { id: 'col-4-1', span: 1, content: [dataBlockInstance('notes', 'inst-notes')] },
+          { id: 'col-4-2', span: 1, content: [dataBlockInstance('totals', 'inst-totals')] },
         ],
       },
       {
         id: 'row-5',
         type: 'row',
-        columns: [{ id: 'col-5-1', content: [dataBlockInstance('signature', 'inst-sig')] }],
+        columns: [{ id: 'col-5-1', span: 1, content: [dataBlockInstance('signature', 'inst-sig')] }],
       },
     ],
   };
@@ -331,7 +368,10 @@ export function resizeTemplateRowColumns(
     layout: template.layout.map((row) => {
       if (row.id !== rowId) return row;
 
-      const existingColumns = row.columns.slice(0, nextColumnCount);
+      const existingColumns = row.columns
+        .slice(0, nextColumnCount)
+        .map((column) => ({ ...column, span: 1 }));
+
       if (existingColumns.length === nextColumnCount) {
         return { ...row, columns: existingColumns };
       }
@@ -339,10 +379,75 @@ export function resizeTemplateRowColumns(
       const missing = nextColumnCount - existingColumns.length;
       const appended = Array.from({ length: missing }, (_, index) => ({
         id: defaultIdFactory(`${row.id}-col-${existingColumns.length + index + 1}`),
+        span: 1,
         content: [] as BlockInstance[],
       }));
 
       return { ...row, columns: [...existingColumns, ...appended] };
+    }),
+  };
+}
+
+export function rowTotalSpan(row: InvoiceTemplateRowDto): number {
+  return row.columns.reduce((total, column) => total + column.span, 0);
+}
+
+export function mergeColumnWithRight(
+  template: InvoiceTemplateLayoutDto,
+  rowId: string,
+  columnId: string,
+): InvoiceTemplateLayoutDto {
+  return {
+    ...template,
+    layout: template.layout.map((row) => {
+      if (row.id !== rowId) return row;
+      const index = row.columns.findIndex((column) => column.id === columnId);
+      if (index < 0 || index >= row.columns.length - 1) return row;
+
+      const left = row.columns[index];
+      const right = row.columns[index + 1];
+      if (!left || !right) return row;
+
+      const merged: InvoiceTemplateColumnDto = {
+        id: left.id,
+        span: left.span + right.span,
+        content: [...left.content, ...right.content],
+      };
+
+      const nextColumns = [...row.columns];
+      nextColumns.splice(index, 2, merged);
+      return { ...row, columns: nextColumns };
+    }),
+  };
+}
+
+export function splitColumn(
+  template: InvoiceTemplateLayoutDto,
+  rowId: string,
+  columnId: string,
+): InvoiceTemplateLayoutDto {
+  return {
+    ...template,
+    layout: template.layout.map((row) => {
+      if (row.id !== rowId) return row;
+      const index = row.columns.findIndex((column) => column.id === columnId);
+      const target = row.columns[index];
+      if (index < 0 || !target || target.span <= 1) return row;
+
+      const keptColumn: InvoiceTemplateColumnDto = {
+        id: target.id,
+        span: 1,
+        content: target.content,
+      };
+      const created = Array.from({ length: target.span - 1 }, (_, offset) => ({
+        id: defaultIdFactory(`${row.id}-col-split-${offset + 1}`),
+        span: 1,
+        content: [] as BlockInstance[],
+      }));
+
+      const nextColumns = [...row.columns];
+      nextColumns.splice(index, 1, keptColumn, ...created);
+      return { ...row, columns: nextColumns };
     }),
   };
 }
@@ -413,7 +518,28 @@ function applyInstancePatch(instance: BlockInstance, patch: Partial<BlockInstanc
     };
   }
 
+  if (instance.kind === 'text') {
+    return {
+      ...instance,
+      align,
+      marginTop,
+      marginBottom,
+      text: patch.kind === 'text' && patch.text !== undefined ? patch.text : instance.text,
+      fontSize:
+        patch.kind === 'text' && patch.fontSize !== undefined
+          ? clampFontSize(patch.fontSize)
+          : instance.fontSize,
+      fontWeight:
+        patch.kind === 'text' && patch.fontWeight !== undefined ? patch.fontWeight : instance.fontWeight,
+      textColor: patch.kind === 'text' && 'textColor' in patch ? patch.textColor : instance.textColor,
+    };
+  }
+
   return { ...instance, align, marginTop, marginBottom };
+}
+
+function clampFontSize(value: number): number {
+  return Math.max(8, Math.min(48, Math.round(value)));
 }
 
 function clampMargin(value: number): number {

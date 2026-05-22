@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { InvoiceEditorPage } from './invoice-editor';
 import { Invoice, InvoiceId, InvoiceNumber, LineItems, VatRate, ClientId, Client } from '@/lib/domain';
 
@@ -96,32 +97,32 @@ describe('InvoiceEditorPage', () => {
           id: 'row-1',
           type: 'row',
           columns: [
-            { id: 'col-1-1', content: ['seller-info'] },
-            { id: 'col-1-2', content: ['invoice-meta'] },
+            { id: 'col-1-1', span: 1, content: [{ id: 'inst-seller', kind: 'seller-info', align: 'left', marginTop: 0, marginBottom: 0 }] },
+            { id: 'col-1-2', span: 1, content: [{ id: 'inst-meta', kind: 'invoice-meta', align: 'left', marginTop: 0, marginBottom: 0 }] },
           ],
         },
         {
           id: 'row-2',
           type: 'row',
-          columns: [{ id: 'col-2-1', content: ['buyer-info'] }],
+          columns: [{ id: 'col-2-1', span: 1, content: [{ id: 'inst-buyer', kind: 'buyer-info', align: 'left', marginTop: 0, marginBottom: 0 }] }],
         },
         {
           id: 'row-3',
           type: 'row',
-          columns: [{ id: 'col-3-1', content: ['line-items'] }],
+          columns: [{ id: 'col-3-1', span: 1, content: [{ id: 'inst-items', kind: 'line-items', align: 'left', marginTop: 0, marginBottom: 0 }] }],
         },
         {
           id: 'row-4',
           type: 'row',
           columns: [
-            { id: 'col-4-1', content: ['notes'] },
-            { id: 'col-4-2', content: ['totals'] },
+            { id: 'col-4-1', span: 1, content: [{ id: 'inst-notes', kind: 'notes', align: 'left', marginTop: 0, marginBottom: 0 }] },
+            { id: 'col-4-2', span: 1, content: [{ id: 'inst-totals', kind: 'totals', align: 'left', marginTop: 0, marginBottom: 0 }] },
           ],
         },
         {
           id: 'row-5',
           type: 'row',
-          columns: [{ id: 'col-5-1', content: ['signature'] }],
+          columns: [{ id: 'col-5-1', span: 1, content: [{ id: 'inst-sig', kind: 'signature', align: 'left', marginTop: 0, marginBottom: 0 }] }],
         },
       ],
     },
@@ -273,5 +274,136 @@ describe('InvoiceEditorPage', () => {
     render(<InvoiceEditorPage />);
 
     expect(mutateSpy).toHaveBeenCalledWith(dummyClients[0]!.id);
+  });
+
+  it('when pressing space in notes textarea, then key event is not canceled', () => {
+    mockParams.id = '018fc3db-b27b-7b3f-b3f8-8a892b3c4a2a';
+    mockUseInvoice.mockReturnValue({
+      invoice: dummyInvoice,
+      isLoading: false,
+    });
+
+    render(<InvoiceEditorPage />);
+
+    fireEvent.click(screen.getByText('Pridėti papildomų pastabų...'));
+    const notesTextarea = screen.getByRole('textbox');
+
+    const wasNotCanceled = fireEvent.keyDown(notesTextarea, {
+      key: ' ',
+      code: 'Space',
+      charCode: 32,
+    });
+
+    expect(wasNotCanceled).toBe(true);
+  });
+
+  it('when pressing space in custom text block textarea, then key event is not canceled', () => {
+    mockParams.id = '018fc3db-b27b-7b3f-b3f8-8a892b3c4a2a';
+    mockUseInvoice.mockReturnValue({
+      invoice: dummyInvoice,
+      isLoading: false,
+    });
+
+    mockUseSettings.mockReturnValue({
+      settings: {
+        ...dummySettings,
+        invoiceLayout: {
+          layout: [
+            ...dummySettings.invoiceLayout.layout,
+            {
+              id: 'row-text',
+              type: 'row',
+              columns: [
+                {
+                  id: 'col-text',
+                  span: 1,
+                  content: [
+                    {
+                      id: 'inst-text',
+                      kind: 'text',
+                      text: '',
+                      fontSize: 14,
+                      fontWeight: 'normal',
+                      textColor: '#111111',
+                      align: 'left',
+                      marginTop: 0,
+                      marginBottom: 0,
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        },
+      },
+      isLoading: false,
+      update: vi.fn(),
+    });
+
+    render(<InvoiceEditorPage />);
+
+    const textBlockTextarea = screen.getByPlaceholderText('Įveskite tekstą');
+    const wasNotCanceled = fireEvent.keyDown(textBlockTextarea, {
+      key: ' ',
+      code: 'Space',
+      charCode: 32,
+    });
+
+    expect(wasNotCanceled).toBe(true);
+  });
+
+  it('when inserting space in middle of text block, then caret stays after inserted space', async () => {
+    const user = userEvent.setup();
+    mockParams.id = '018fc3db-b27b-7b3f-b3f8-8a892b3c4a2a';
+    mockUseInvoice.mockReturnValue({
+      invoice: dummyInvoice,
+      isLoading: false,
+    });
+
+    mockUseSettings.mockReturnValue({
+      settings: {
+        ...dummySettings,
+        invoiceLayout: {
+          layout: [
+            {
+              id: 'row-text-only',
+              type: 'row',
+              columns: [
+                {
+                  id: 'col-text-only',
+                  span: 1,
+                  content: [
+                    {
+                      id: 'inst-text-only',
+                      kind: 'text',
+                      text: 'Labavakar',
+                      fontSize: 14,
+                      fontWeight: 'normal',
+                      textColor: '#111111',
+                      align: 'left',
+                      marginTop: 0,
+                      marginBottom: 0,
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        },
+      },
+      isLoading: false,
+      update: vi.fn(),
+    });
+
+    render(<InvoiceEditorPage />);
+
+    const textBlockTextarea = screen.getByPlaceholderText('Įveskite tekstą') as HTMLTextAreaElement;
+    textBlockTextarea.focus();
+    textBlockTextarea.setSelectionRange(4, 4);
+
+    await user.keyboard(' ');
+
+    expect(textBlockTextarea.selectionStart).toBe(5);
+    expect(textBlockTextarea.selectionEnd).toBe(5);
   });
 });
