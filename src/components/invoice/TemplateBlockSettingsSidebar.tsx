@@ -1,5 +1,9 @@
-import { type ChangeEvent } from 'react';
+import { useState, type ChangeEvent } from 'react';
 import { Button } from '@/components/ui';
+import { ClientCombobox } from '@/components/shared';
+import { Client, Invoice, ClientId } from '@/lib/domain';
+import { useCreateClient } from '@/hooks';
+import { ClientFormDialog, type ClientFormValues } from '@/components/clients';
 import { blockLabel } from '@/lib/invoice-template/blocks';
 import { rowTotalSpan } from '@/lib/invoice-template/layout';
 import type {
@@ -14,6 +18,8 @@ import { useTextDraft } from './useTextDraft';
 import { useCommittedValueDraft } from './useCommittedValueDraft';
 
 export interface TemplateBlockSettingsSidebarProps {
+  invoice: Invoice;
+  onInvoiceChange: (updated: Invoice) => void;
   selectedInstance: BlockInstance | null;
   selectedRowId: string | null;
   layout: InvoiceTemplateLayoutDto;
@@ -26,6 +32,8 @@ export interface TemplateBlockSettingsSidebarProps {
 }
 
 export function TemplateBlockSettingsSidebar({
+  invoice,
+  onInvoiceChange,
   selectedInstance,
   selectedRowId,
   layout,
@@ -64,6 +72,8 @@ export function TemplateBlockSettingsSidebar({
 
   return (
     <InstanceSettingsPanel
+      invoice={invoice}
+      onInvoiceChange={onInvoiceChange}
       instance={selectedInstance}
       onInstancePatch={onInstancePatch}
       onRemoveInstance={onRemoveInstance}
@@ -211,12 +221,20 @@ function ColumnControls({ column, index, isLast, onMergeRight, onSplit }: Column
 }
 
 interface InstanceSettingsPanelProps {
+  invoice: Invoice;
+  onInvoiceChange: (updated: Invoice) => void;
   instance: BlockInstance;
   onInstancePatch: (patch: Partial<BlockInstance>) => void;
   onRemoveInstance: () => void;
 }
 
-function InstanceSettingsPanel({ instance, onInstancePatch, onRemoveInstance }: InstanceSettingsPanelProps) {
+function InstanceSettingsPanel({
+  invoice,
+  onInvoiceChange,
+  instance,
+  onInstancePatch,
+  onRemoveInstance,
+}: InstanceSettingsPanelProps) {
   const marginTopDraft = useCommittedValueDraft(instance.marginTop, (nextMarginTop) => {
     onInstancePatch({ marginTop: nextMarginTop });
   });
@@ -278,12 +296,83 @@ function InstanceSettingsPanel({ instance, onInstancePatch, onRemoveInstance }: 
       {instance.kind === 'custom-image' && (
         <CustomImageControls instance={instance} onInstancePatch={onInstancePatch} />
       )}
+      {instance.kind === 'buyer-info' && (
+        <BuyerControls invoice={invoice} onInvoiceChange={onInvoiceChange} />
+      )}
       {instance.kind === 'text' && <TextControls instance={instance} onInstancePatch={onInstancePatch} />}
 
       <Button type="button" variant="destructive" className="w-full" onClick={onRemoveInstance}>
         Pašalinti bloką
       </Button>
     </aside>
+  );
+}
+
+interface BuyerControlsProps {
+  invoice: Invoice;
+  onInvoiceChange: (updated: Invoice) => void;
+}
+
+function BuyerControls({ invoice, onInvoiceChange }: BuyerControlsProps) {
+  const createClientMutation = useCreateClient();
+  const [isCreateClientOpen, setIsCreateClientOpen] = useState(false);
+
+  const handleCreateClient = (values: ClientFormValues) => {
+    const created = Client.of({
+      id: ClientId.create(),
+      name: values.name,
+      code: values.code || undefined,
+      vatCode: values.vatCode || undefined,
+      address: values.address,
+      email: values.email || undefined,
+      phone: values.phone || undefined,
+      contactPerson: values.contactPerson || undefined,
+      notes: values.notes || undefined,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
+
+    createClientMutation.mutate(created, {
+      onSuccess: () => {
+        onInvoiceChange(invoice.withClientId(created.id));
+        setIsCreateClientOpen(false);
+      },
+    });
+  };
+
+  return (
+    <>
+      <div className="border-t border-slate-100 pt-3 mb-4">
+        <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500 mb-2">Pirkėjo duomenys</p>
+        <label className="text-xs font-medium text-slate-600 mb-1 block">Klientas</label>
+        <ClientCombobox
+          value={invoice.clientId.toString()}
+          onChange={(value) => {
+            if (!value) {
+              return;
+            }
+            onInvoiceChange(invoice.withClientId(ClientId.fromString(value)));
+          }}
+          placeholder="Pasirinkite klientą..."
+        />
+        <Button
+          type="button"
+          variant="secondary"
+          className="mt-2 w-full"
+          onClick={() => setIsCreateClientOpen(true)}
+        >
+          Pridėti klientą
+        </Button>
+      </div>
+
+      <ClientFormDialog
+        open={isCreateClientOpen}
+        onOpenChange={setIsCreateClientOpen}
+        editingClient={null}
+        onSave={handleCreateClient}
+        isSaving={createClientMutation.isPending}
+      />
+    </>
   );
 }
 

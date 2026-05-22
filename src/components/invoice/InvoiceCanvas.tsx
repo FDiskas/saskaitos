@@ -190,6 +190,13 @@ function SortableRow({ row, isPreview, isSelected, onSelect, children }: Sortabl
 
   const selectedClass = isSelected && !isPreview ? 'ring-2 ring-sky-400 bg-sky-50/20' : '';
 
+  const shouldIgnoreRowSelection = (target: EventTarget | null, currentTarget: EventTarget | null): boolean => {
+    if (!(target instanceof HTMLElement)) return false;
+    const interactiveElement = target.closest('button, input, textarea, select, a, [role="button"]');
+    if (!interactiveElement) return false;
+    return interactiveElement !== currentTarget;
+  };
+
   return (
     <section
       ref={setNodeRef}
@@ -204,7 +211,7 @@ function SortableRow({ row, isPreview, isSelected, onSelect, children }: Sortabl
         isPreview
           ? undefined
           : (event) => {
-              if (event.target !== event.currentTarget) return;
+              if (shouldIgnoreRowSelection(event.target, event.currentTarget)) return;
               onSelect();
             }
       }

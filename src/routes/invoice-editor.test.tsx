@@ -20,6 +20,7 @@ const mockUseCreateInvoice = vi.fn();
 const mockUseUpdateInvoice = vi.fn();
 const mockUseSettings = vi.fn();
 const mockUseClients = vi.fn();
+const mockUseCreateClient = vi.fn();
 const mockUploadBinary = vi.fn().mockResolvedValue(undefined);
 
 vi.mock('@/lib/pdf', () => ({
@@ -34,6 +35,7 @@ vi.mock('@/hooks', () => ({
   useUpdateInvoice: () => mockUseUpdateInvoice(),
   useSettings: () => mockUseSettings(),
   useClients: () => mockUseClients(),
+  useCreateClient: () => mockUseCreateClient(),
   useStorage: () => ({
     uploadBinary: mockUploadBinary,
   }),
@@ -159,6 +161,11 @@ describe('InvoiceEditorPage', () => {
     });
 
     mockUseCreateInvoice.mockReturnValue({
+      mutate: vi.fn(),
+      isPending: false,
+    });
+
+    mockUseCreateClient.mockReturnValue({
       mutate: vi.fn(),
       isPending: false,
     });

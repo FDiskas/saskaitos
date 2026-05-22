@@ -206,6 +206,8 @@ export function InvoiceEditorPage() {
 
       {!isPreview && (
         <TemplateBlockSettingsSidebar
+          invoice={localInvoice}
+          onInvoiceChange={setLocalInvoice}
           selectedInstance={selectedInstance ?? null}
           selectedRowId={selectedRowId}
           layout={settings.invoiceLayout}
