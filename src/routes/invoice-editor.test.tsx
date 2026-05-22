@@ -5,8 +5,10 @@ import { Invoice, InvoiceId, InvoiceNumber, LineItems, VatRate, ClientId, Client
 
 // Mock Router Params
 const mockParams = { id: 'new' };
+const mockSearch = { clientId: undefined as string | undefined };
 vi.mock('@tanstack/react-router', () => ({
   useParams: () => mockParams,
+  useSearch: () => mockSearch,
   Link: ({ children, to }: { children: React.ReactNode; to: string }) => <a href={to}>{children}</a>,
   useNavigate: () => vi.fn(),
 }));
@@ -107,6 +109,7 @@ describe('InvoiceEditorPage', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    mockSearch.clientId = undefined;
 
     mockUseSettings.mockReturnValue({
       settings: dummySettings,
@@ -217,5 +220,23 @@ describe('InvoiceEditorPage', () => {
       expect(window.URL.createObjectURL).toHaveBeenCalled();
       expect(mockUploadBinary).toHaveBeenCalled();
     });
+  });
+
+  it('automatically triggers creation mutation when clientId search param is provided', () => {
+    mockParams.id = 'new';
+    mockSearch.clientId = '018fc3db-c5be-7f52-8789-982367dca12a';
+    mockUseInvoice.mockReturnValue({
+      invoice: null,
+      isLoading: false,
+    });
+    const mutateSpy = vi.fn();
+    mockUseCreateInvoice.mockReturnValue({
+      mutate: mutateSpy,
+      isPending: false,
+    });
+
+    render(<InvoiceEditorPage />);
+
+    expect(mutateSpy).toHaveBeenCalledWith(dummyClients[0]!.id);
   });
 });

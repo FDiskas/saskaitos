@@ -26,8 +26,9 @@ export function InlineEditField<T = string>({
   const inputRef = useRef<HTMLInputElement | HTMLTextAreaElement>(null);
 
   useEffect(() => {
+    if (isEditing) return;
     setLocalValue(format(value));
-  }, [value, format]);
+  }, [value, format, isEditing]);
 
   useEffect(() => {
     if (isEditing && inputRef.current) {

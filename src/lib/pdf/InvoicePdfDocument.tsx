@@ -1,16 +1,9 @@
-import { Document, Page, Text, View, Font, Image } from '@react-pdf/renderer';
+import { Document, Page, Text, View, Image } from '@react-pdf/renderer';
 import { Invoice, Client } from '@/lib/domain';
 import type { SettingsDto } from '@/lib/drive/settings';
 import { formatDate } from '@/lib/format/date';
 import { getPdfStyles } from './InvoicePdfStyles';
-
-Font.register({
-  family: 'Roboto',
-  fonts: [
-    { src: 'https://fonts.gstatic.com/s/roboto/v30/KFOmCnqEu92Fr1Me5WZLCzYlKw.ttf', fontWeight: 400 },
-    { src: 'https://fonts.gstatic.com/s/roboto/v30/KFOlCnqEu92Fr1MmWUlfBBc4AMP6lQ.ttf', fontWeight: 700 },
-  ],
-});
+import { resolveFontFamily } from './googleFonts';
 
 export interface InvoicePdfDocumentProps {
   invoice: Invoice;
@@ -22,11 +15,12 @@ export function InvoicePdfDocument({ invoice, client, settings }: InvoicePdfDocu
   const activePreset = settings.designPresets.find((p) => p.id === invoice.designPresetId) || settings.designPresets[0];
   const primaryColor = activePreset?.primaryColor || '#0f172a';
   const accentColor = activePreset?.accentColor || '#0284c7';
+  const fontFamily = resolveFontFamily(activePreset?.fontFamily);
 
   const totals = invoice.totals();
   const hasVat = invoice.vat.enabled;
   const items = invoice.lineItems.toArray();
-  const styles = getPdfStyles(primaryColor, accentColor);
+  const styles = getPdfStyles(primaryColor, accentColor, fontFamily);
 
   return (
     <Document>

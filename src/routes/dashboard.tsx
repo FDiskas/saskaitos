@@ -50,14 +50,21 @@ export function DashboardPage() {
         <div className="flex items-center gap-3">
           <SyncStatusBadge />
           <Link
+            to="/invoice-editor/$id"
+            params={{ id: 'new' }}
+            className="rounded-md bg-slate-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-slate-800 shadow-sm cursor-pointer"
+          >
+            Nauja sąskaita
+          </Link>
+          <Link
             to="/clients"
-            className="rounded-md bg-white px-3 py-1.5 text-sm text-slate-700 ring-1 ring-slate-200 hover:bg-slate-50"
+            className="rounded-md bg-white px-3 py-1.5 text-sm text-slate-700 ring-1 ring-slate-200 hover:bg-slate-50 cursor-pointer"
           >
             Klientai
           </Link>
           <Link
             to="/settings"
-            className="rounded-md bg-white px-3 py-1.5 text-sm text-slate-700 ring-1 ring-slate-200 hover:bg-slate-50"
+            className="rounded-md bg-white px-3 py-1.5 text-sm text-slate-700 ring-1 ring-slate-200 hover:bg-slate-50 cursor-pointer"
           >
             Nustatymai
           </Link>

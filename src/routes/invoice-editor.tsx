@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useParams, Link } from '@tanstack/react-router';
+import { useParams, Link, useSearch } from '@tanstack/react-router';
 import { ArrowLeft, Loader2, CloudLightning, CheckCircle2 } from 'lucide-react';
 import {
   useInvoice,
@@ -10,10 +10,11 @@ import {
   useInvoiceAutosave,
 } from '@/hooks';
 import { DesignSidebar, InvoiceCanvas, InvoiceActions, NewInvoicePicker } from '@/components/invoice';
-import { Invoice } from '@/lib/domain';
+import { type Invoice, ClientId } from '@/lib/domain';
 
 export function InvoiceEditorPage() {
   const { id } = useParams({ from: '/invoice-editor/$id' });
+  const { clientId } = useSearch({ from: '/invoice-editor/$id' });
   const isNew = id === 'new';
 
   const { invoice, isLoading: isInvoiceLoading, error: invoiceError } = useInvoice(id);
@@ -24,6 +25,24 @@ export function InvoiceEditorPage() {
   const updateMutation = useUpdateInvoice();
 
   const [localInvoice, setLocalInvoice] = useState<Invoice | null>(null);
+
+  useEffect(() => {
+    if (
+      isNew &&
+      clientId &&
+      !isClientsLoading &&
+      !createMutation.isPending &&
+      !createMutation.isSuccess &&
+      !createMutation.isError
+    ) {
+      try {
+        const parsedId = ClientId.fromString(clientId);
+        createMutation.mutate(parsedId);
+      } catch (err) {
+        console.error('Invalid client ID in query params', err);
+      }
+    }
+  }, [isNew, clientId, isClientsLoading, createMutation]);
 
   useEffect(() => {
     if (invoice && !updateMutation.isPending) {

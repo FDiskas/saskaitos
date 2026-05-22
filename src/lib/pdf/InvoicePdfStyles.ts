@@ -1,9 +1,9 @@
 import { StyleSheet } from '@react-pdf/renderer';
 
-export const getPdfStyles = (primaryColor: string, accentColor: string) =>
+export const getPdfStyles = (primaryColor: string, accentColor: string, fontFamily: string) =>
   StyleSheet.create({
     page: {
-      fontFamily: 'Roboto',
+      fontFamily,
       fontSize: 10,
       lineHeight: 1.5,
       color: '#334155',

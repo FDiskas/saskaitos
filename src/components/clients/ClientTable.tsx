@@ -13,12 +13,14 @@ import {
   ArrowUp,
   ChevronsUpDown,
   Edit2,
+  FilePlus,
   Plus,
   Search,
   Trash2,
   UserPlus,
   Users,
 } from 'lucide-react';
+import { Link } from '@tanstack/react-router';
 
 import type { Client } from '@/lib/domain';
 import { Button, Card, Input } from '@/components/ui';
@@ -98,7 +100,17 @@ export function ClientTable({
         cell: (info) => {
           const client = info.row.original;
           return (
-            <div className="flex justify-end gap-1.5">
+            <div className="flex justify-end gap-1.5 items-center">
+              <Link
+                to="/invoice-editor/$id"
+                params={{ id: 'new' }}
+                search={{ clientId: client.id.toString() }}
+                className="inline-flex items-center justify-center rounded-md bg-white hover:bg-slate-50 text-slate-700 ring-1 ring-slate-200 h-8 px-2.5 text-xs font-semibold cursor-pointer shadow-sm transition-colors"
+                title="Išrašyti sąskaitą"
+              >
+                <FilePlus className="mr-1 h-3.5 w-3.5 text-slate-500" />
+                Išrašyti sąskaitą
+              </Link>
               <Button
                 variant="secondary"
                 size="sm"

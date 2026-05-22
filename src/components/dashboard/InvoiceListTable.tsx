@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { Link } from '@tanstack/react-router';
 import {
   flexRender,
   getCoreRowModel,
@@ -98,9 +99,18 @@ export function InvoiceListTable({
             <FileText className="h-6 w-6 text-slate-600" />
           </div>
           <h3 className="mt-4 text-base font-semibold text-slate-900">Sąskaitų nerasta</h3>
-          <p className="mt-2 text-sm text-slate-500">
-            Pakeiskite filtrus arba sukurkite naują sąskaitą iš kliento puslapio.
+          <p className="mt-2 text-sm text-slate-500 mb-6">
+            Pakeiskite filtrus arba sukurkite naują sąskaitą.
           </p>
+          <div className="flex justify-center">
+            <Link
+              to="/invoice-editor/$id"
+              params={{ id: 'new' }}
+              className="inline-flex items-center gap-2 rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 shadow-sm cursor-pointer"
+            >
+              Sukurti naują sąskaitą
+            </Link>
+          </div>
         </div>
       </Card>
     );

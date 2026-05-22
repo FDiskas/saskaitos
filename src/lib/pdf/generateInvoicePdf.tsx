@@ -6,10 +6,14 @@ export async function generateInvoicePdfBlob(
   client: Client,
   settings: SettingsDto,
 ): Promise<Blob> {
-  const [{ pdf }, { InvoicePdfDocument }] = await Promise.all([
+  const activePreset =
+    settings.designPresets.find((p) => p.id === invoice.designPresetId) || settings.designPresets[0];
+  const [{ pdf }, { InvoicePdfDocument }, { ensureGoogleFontRegistered }] = await Promise.all([
     import('@react-pdf/renderer'),
     import('./InvoicePdfDocument'),
+    import('./googleFonts'),
   ]);
+  await ensureGoogleFontRegistered(activePreset?.fontFamily);
   return pdf(
     <InvoicePdfDocument invoice={invoice} client={client} settings={settings} />,
   ).toBlob();

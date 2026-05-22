@@ -47,10 +47,17 @@ const clientsRoute = createRoute({
   component: ClientsPage,
 });
 
+import { z } from 'zod';
+
+const invoiceEditorSearchSchema = z.object({
+  clientId: z.string().optional(),
+});
+
 const invoiceEditorRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/invoice-editor/$id',
   component: InvoiceEditorPage,
+  validateSearch: (search) => invoiceEditorSearchSchema.parse(search),
 });
 
 const routeTree = rootRoute.addChildren([

@@ -2,13 +2,14 @@ import { Plus, Trash2 } from 'lucide-react';
 import { Button, Input, Label } from '@/components/ui';
 import { fileToBase64 } from '@/lib/files';
 import type { DesignPresetDto } from '@/lib/drive/settings';
+import { POPULAR_GOOGLE_FONTS } from '@/lib/pdf/googleFonts';
 
 export interface DesignTabProps {
   presets: DesignPresetDto[];
   onChange: (next: DesignPresetDto[]) => void;
 }
 
-const FONT_FAMILIES = ['Inter', 'Roboto', 'Geist', 'JetBrains Mono'];
+const FONT_FAMILIES = POPULAR_GOOGLE_FONTS;
 
 export function DesignTab({ presets, onChange }: DesignTabProps) {
   function updatePreset(id: string, patch: Partial<DesignPresetDto>): void {
