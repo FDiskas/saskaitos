@@ -40,6 +40,7 @@ function buildIndexEntry(invoice: Invoice): InvoiceIndexEntry {
     id: invoice.id.toString(),
     number: invoice.number.toString(),
     date: invoice.issueDate.toISOString(),
+    dueDate: invoice.dueDate.toISOString(),
     amountCents: invoice.totals().total.toCents(),
     currency: invoice.totals().total.currency,
     status: invoice.status,

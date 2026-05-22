@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { AlertCircle, Loader2, Mail } from 'lucide-react';
+import { AlertCircle, CheckCircle2, Loader2, Mail } from 'lucide-react';
 import { Invoice, Client } from '@/lib/domain';
 import type { SettingsDto } from '@/lib/drive/settings';
 import {
@@ -15,8 +15,7 @@ import {
   Textarea,
 } from '@/components/ui';
 import { sendInvoiceEmail } from '@/lib/resend/sendInvoiceEmail';
-import { pdf } from '@react-pdf/renderer';
-import { InvoicePdfDocument } from '@/lib/pdf/InvoicePdfDocument';
+import { generateInvoicePdfBlob } from '@/lib/pdf';
 import { formatDate } from '@/lib/format/date';
 
 export interface EmailDialogProps {
@@ -45,6 +44,7 @@ export function EmailDialog({ open, onOpenChange, invoice, client, settings }: E
   const [attachPdf, setAttachPdf] = useState(true);
   const [isSending, setIsSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [sentMessage, setSentMessage] = useState<string | null>(null);
 
   const hasApiKey = !!settings.resendApiKey;
   const fromEmail = settings.company?.email || '';
@@ -57,6 +57,7 @@ export function EmailDialog({ open, onOpenChange, invoice, client, settings }: E
       setBody(resolveTemplate(settings.defaultEmailBody || 'Sveiki, {{client.name}}!\n\nSiunčiu sąskaitą-faktūrą {{invoice.number}}.\n\nPagarbiai,\n{{company.name}}', invoice, client, settings));
       setAttachPdf(true);
       setError(null);
+      setSentMessage(null);
     }
   }, [open, invoice, client, settings]);
 
@@ -68,12 +69,9 @@ export function EmailDialog({ open, onOpenChange, invoice, client, settings }: E
     setError(null);
 
     try {
-      let pdfBlob: Blob | undefined;
-      if (attachPdf) {
-        pdfBlob = await pdf(
-          <InvoicePdfDocument invoice={invoice} client={client} settings={settings} />
-        ).toBlob();
-      }
+      const pdfBlob = attachPdf
+        ? await generateInvoicePdfBlob(invoice, client, settings)
+        : undefined;
 
       await sendInvoiceEmail({
         to,
@@ -87,8 +85,8 @@ export function EmailDialog({ open, onOpenChange, invoice, client, settings }: E
         fromName: settings.company?.name || undefined,
       });
 
-      alert('El. laiškas sėkmingai išsiųstas!');
-      onOpenChange(false);
+      setSentMessage('El. laiškas sėkmingai išsiųstas.');
+      setTimeout(() => onOpenChange(false), 1200);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Nepavyko išsiųsti el. laiško.');
     } finally {
@@ -124,9 +122,16 @@ export function EmailDialog({ open, onOpenChange, invoice, client, settings }: E
         )}
 
         {error && (
-          <div className="rounded-md bg-red-50 border border-red-200 p-3 flex gap-2 text-red-800 text-xs">
+          <div role="alert" className="rounded-md bg-red-50 border border-red-200 p-3 flex gap-2 text-red-800 text-xs">
             <AlertCircle className="h-4 w-4 shrink-0 text-red-600" />
             <p className="font-medium">{error}</p>
+          </div>
+        )}
+
+        {sentMessage && (
+          <div role="status" className="rounded-md bg-emerald-50 border border-emerald-200 p-3 flex gap-2 text-emerald-800 text-xs">
+            <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600" />
+            <p className="font-medium">{sentMessage}</p>
           </div>
         )}
 

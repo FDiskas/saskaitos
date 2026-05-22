@@ -15,3 +15,5 @@ export {
   type DesignOverride,
 } from './Invoice';
 export { Client, type ClientProps, type ClientPatch } from './Client';
+export { InvoiceSummary, type InvoiceSummaryProps } from './InvoiceSummary';
+export { applyStatus } from './invoiceTransitions';

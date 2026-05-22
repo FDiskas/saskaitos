@@ -11,6 +11,13 @@ import {
 import { GoogleOAuthProvider, useGoogleLogin } from '@react-oauth/google';
 import { z } from 'zod';
 import type { TokenSource } from '@/lib/drive/http';
+import {
+  clearSession,
+  isSessionValid,
+  loadStoredSession,
+  saveSession,
+  sessionFromTokenResponse,
+} from '@/lib/auth/sessionStore';
 
 const DRIVE_SCOPE = 'openid email profile https://www.googleapis.com/auth/drive.file';
 const REFRESH_INTERVAL_MS = 55 * 60 * 1000;
@@ -62,25 +69,29 @@ function InnerAuthProvider({ children }: { children: ReactNode }) {
     tokenRef.current = accessToken;
   }, [accessToken]);
 
-  const finalizeLogin = useCallback(async (token: string): Promise<void> => {
-    setAccessToken(token);
-    try {
-      const fetchedUser = await fetchUserInfo(token);
-      setUser(fetchedUser);
-    } catch {
-      setUser(null);
-    }
-    setIsLoading(false);
-    setError(null);
-    refreshResolverRef.current?.(token);
-    refreshResolverRef.current = null;
-  }, []);
+  const finalizeLogin = useCallback(
+    async (token: string, expiresInSeconds: number): Promise<void> => {
+      saveSession(sessionFromTokenResponse(token, expiresInSeconds));
+      setAccessToken(token);
+      try {
+        const fetchedUser = await fetchUserInfo(token);
+        setUser(fetchedUser);
+      } catch {
+        setUser(null);
+      }
+      setIsLoading(false);
+      setError(null);
+      refreshResolverRef.current?.(token);
+      refreshResolverRef.current = null;
+    },
+    [],
+  );
 
   const triggerLogin = useGoogleLogin({
     flow: 'implicit',
     scope: DRIVE_SCOPE,
     onSuccess: (res) => {
-      void finalizeLogin(res.access_token);
+      void finalizeLogin(res.access_token, res.expires_in);
     },
     onError: (errResp) => {
       setIsLoading(false);
@@ -106,10 +117,28 @@ function InnerAuthProvider({ children }: { children: ReactNode }) {
   );
 
   const logout = useCallback((): void => {
+    clearSession();
     setAccessToken(null);
     setUser(null);
     setError(null);
     tokenRef.current = null;
+  }, []);
+
+  useEffect(() => {
+    const stored = loadStoredSession();
+    if (!stored) return;
+    if (!isSessionValid(stored)) {
+      clearSession();
+      return;
+    }
+    setAccessToken(stored.accessToken);
+    fetchUserInfo(stored.accessToken)
+      .then((fetched) => setUser(fetched))
+      .catch(() => {
+        clearSession();
+        setAccessToken(null);
+        setUser(null);
+      });
   }, []);
 
   useEffect(() => {

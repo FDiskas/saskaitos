@@ -1,4 +1,3 @@
-import * as XLSX from 'xlsx';
 import { Invoice, Client } from '@/lib/domain';
 import type { SettingsDto } from '@/lib/drive/settings';
 import { formatDate } from '@/lib/format/date';
@@ -66,34 +65,28 @@ function getSummaryRows(invoice: Invoice): (string | number)[][] {
   return rows;
 }
 
-export function exportInvoiceToXlsx(invoice: Invoice, client: Client, settings: SettingsDto): void {
-  const seller = getSellerRows(settings);
-  const buyer = getBuyerRows(client);
-  const info = getInvoiceInfoRows(invoice);
-  const items = getItemRows(invoice);
-  const summary = getSummaryRows(invoice);
-
-  const aoa = [
-    ...info,
+export function buildInvoiceAoa(invoice: Invoice, client: Client, settings: SettingsDto): (string | number)[][] {
+  const aoa: (string | number)[][] = [
+    ...getInvoiceInfoRows(invoice),
     [],
-    ...seller,
+    ...getSellerRows(settings),
     [],
-    ...buyer,
+    ...getBuyerRows(client),
     [],
     ['PREKĖS IR PASLAUGOS'],
-    ...items,
+    ...getItemRows(invoice),
     [],
-    ...summary,
+    ...getSummaryRows(invoice),
   ];
+  if (invoice.notes) aoa.push([], ['Pastabos:'], [invoice.notes]);
+  return aoa;
+}
 
-  if (invoice.notes) {
-    aoa.push([], ['Pastabos:'], [invoice.notes]);
-  }
-
+export async function exportInvoiceToXlsx(invoice: Invoice, client: Client, settings: SettingsDto): Promise<void> {
+  const XLSX = await import('xlsx');
   const wb = XLSX.utils.book_new();
-  const ws = XLSX.utils.aoa_to_sheet(aoa);
+  const ws = XLSX.utils.aoa_to_sheet(buildInvoiceAoa(invoice, client, settings));
   XLSX.utils.book_append_sheet(wb, ws, 'Sąskaita-Faktūra');
-  
   const filename = `${formatDate(invoice.issueDate)}_${invoice.number.toString()}.xlsx`;
   XLSX.writeFile(wb, filename);
 }

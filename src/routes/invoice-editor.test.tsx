@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { InvoiceEditorPage } from './invoice-editor';
 import { Invoice, InvoiceId, InvoiceNumber, LineItems, VatRate, ClientId, Client } from '@/lib/domain';
 
@@ -19,21 +19,10 @@ const mockUseSettings = vi.fn();
 const mockUseClients = vi.fn();
 const mockUploadBinary = vi.fn().mockResolvedValue(undefined);
 
-vi.mock('@react-pdf/renderer', () => ({
-  pdf: () => ({
-    toBlob: vi.fn().mockResolvedValue(new Blob(['pdf content'], { type: 'application/pdf' })),
-  }),
-  StyleSheet: {
-    create: (styles: any) => styles,
-  },
-  Font: {
-    register: vi.fn(),
-  },
-  Document: ({ children }: any) => <div>{children}</div>,
-  Page: ({ children }: any) => <div>{children}</div>,
-  Text: ({ children }: any) => <span>{children}</span>,
-  View: ({ children }: any) => <div>{children}</div>,
-  Image: ({ children }: any) => <div>{children}</div>,
+vi.mock('@/lib/pdf', () => ({
+  generateInvoicePdfBlob: vi.fn().mockResolvedValue(
+    new Blob(['pdf content'], { type: 'application/pdf' }),
+  ),
 }));
 
 vi.mock('@/hooks', () => ({
@@ -224,10 +213,9 @@ describe('InvoiceEditorPage', () => {
     const downloadButton = screen.getByRole('button', { name: /Atsisiųsti PDF/ });
     fireEvent.click(downloadButton);
 
-    // Wait for the async flow to run
-    await new Promise((resolve) => setTimeout(resolve, 0));
-
-    expect(window.URL.createObjectURL).toHaveBeenCalled();
-    expect(mockUploadBinary).toHaveBeenCalled();
+    await waitFor(() => {
+      expect(window.URL.createObjectURL).toHaveBeenCalled();
+      expect(mockUploadBinary).toHaveBeenCalled();
+    });
   });
 });

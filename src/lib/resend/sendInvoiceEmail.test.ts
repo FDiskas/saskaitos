@@ -40,6 +40,42 @@ describe('sendInvoiceEmail', () => {
     });
   });
 
+  it('when body contains HTML tags, then escapes them to prevent injection', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({ ok: true, json: async () => ({}) });
+    vi.stubGlobal('fetch', fetchMock);
+
+    await sendInvoiceEmail({
+      to: 'a@b.lt',
+      subject: 'x',
+      body: '<script>alert(1)</script>\nAtviras & geras',
+      apiKey: 'k',
+      fromEmail: 'f@b.lt',
+    });
+
+    const bodyObj = JSON.parse((fetchMock.mock.calls[0] as any)[1].body);
+    expect(bodyObj.html).toBe('&lt;script&gt;alert(1)&lt;/script&gt;<br />Atviras &amp; geras');
+  });
+
+  it('when Resend returns 401, then throws specific API-key error', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+      ok: false, status: 401, statusText: 'Unauthorized', json: async () => ({}),
+    }));
+
+    await expect(sendInvoiceEmail({
+      to: 'a@b.lt', subject: 'x', body: 'x', apiKey: 'bad', fromEmail: 'f@b.lt',
+    })).rejects.toThrow('Patikrinkite Resend API raktą Nustatymuose.');
+  });
+
+  it('when Resend returns 403, then throws specific API-key error', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+      ok: false, status: 403, statusText: 'Forbidden', json: async () => ({}),
+    }));
+
+    await expect(sendInvoiceEmail({
+      to: 'a@b.lt', subject: 'x', body: 'x', apiKey: 'bad', fromEmail: 'f@b.lt',
+    })).rejects.toThrow('Patikrinkite Resend API raktą Nustatymuose.');
+  });
+
   it('when sending email with PDF blob, then converts to base64 and attaches', async () => {
     const fetchMock = vi.fn().mockResolvedValue({
       ok: true,

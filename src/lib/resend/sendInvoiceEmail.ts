@@ -29,18 +29,48 @@ async function buildAttachments(pdfBlob?: Blob, pdfFilename?: string) {
   return [{ filename: pdfFilename, content }];
 }
 
+const HTML_ESCAPE: Record<string, string> = {
+  '&': '&amp;',
+  '<': '&lt;',
+  '>': '&gt;',
+  '"': '&quot;',
+  "'": '&#39;',
+};
+
+function escapeHtml(text: string): string {
+  return text.replace(/[&<>"']/g, (ch) => HTML_ESCAPE[ch] ?? ch);
+}
+
+function toHtmlBody(text: string): string {
+  return escapeHtml(text).replace(/\n/g, '<br />');
+}
+
+function parseList(value: string): string[] {
+  return value.split(',').map((e) => e.trim()).filter(Boolean);
+}
+
+function buildFrom(fromEmail: string, fromName?: string): string {
+  if (!fromName) return fromEmail;
+  return `${fromName} <${fromEmail}>`;
+}
+
+const INVALID_API_KEY_MSG = 'Patikrinkite Resend API raktą Nustatymuose.';
+
+async function errorFromResponse(response: Response): Promise<Error> {
+  if (response.status === 401 || response.status === 403) {
+    return new Error(INVALID_API_KEY_MSG);
+  }
+  const data = await response.json().catch(() => ({}));
+  const message = (data as { message?: string }).message;
+  return new Error(message || `Resend API klaida: ${response.status} ${response.statusText}`);
+}
+
 export async function sendInvoiceEmail(params: SendEmailParams): Promise<void> {
   if (!params.apiKey) {
     throw new Error('Resend API raktas nenustatytas.');
   }
 
   const attachments = await buildAttachments(params.pdfBlob, params.pdfFilename);
-  const from = params.fromName 
-    ? `${params.fromName} <${params.fromEmail}>` 
-    : params.fromEmail;
-
-  // Simple HTML formatting for text body
-  const htmlContent = params.body.replace(/\n/g, '<br />');
 
   const response = await fetch('https://api.resend.com/emails', {
     method: 'POST',
@@ -49,17 +79,14 @@ export async function sendInvoiceEmail(params: SendEmailParams): Promise<void> {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      from,
-      to: params.to.split(',').map(e => e.trim()),
-      cc: params.cc ? params.cc.split(',').map(e => e.trim()) : undefined,
+      from: buildFrom(params.fromEmail, params.fromName),
+      to: parseList(params.to),
+      cc: params.cc ? parseList(params.cc) : undefined,
       subject: params.subject,
-      html: htmlContent,
+      html: toHtmlBody(params.body),
       attachments,
     }),
   });
 
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}));
-    throw new Error(errorData.message || `Resend API klaida: ${response.status} ${response.statusText}`);
-  }
+  if (!response.ok) throw await errorFromResponse(response);
 }

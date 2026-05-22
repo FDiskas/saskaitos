@@ -78,6 +78,7 @@ export const InvoiceIndexEntrySchema = z.object({
   id: uuidV7,
   number: z.string(),
   date: isoDate,
+  dueDate: isoDate.optional(),
   amountCents: z.number().int(),
   currency: z.string().min(3).max(3),
   status: InvoiceStatusSchema,

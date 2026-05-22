@@ -72,11 +72,11 @@ const mockSettings: SettingsDto = {
 };
 
 describe('exportInvoiceToXlsx', () => {
-  it('should compile the spreadsheet data correctly and trigger export', () => {
+  it('should compile the spreadsheet data correctly and trigger export', async () => {
     const invoice = makeTestInvoice();
     const client = makeTestClient();
 
-    exportInvoiceToXlsx(invoice, client, mockSettings);
+    await exportInvoiceToXlsx(invoice, client, mockSettings);
 
     expect(XLSX.utils.aoa_to_sheet).toHaveBeenCalled();
     const dataCall = vi.mocked(XLSX.utils.aoa_to_sheet).mock.calls[0]?.[0] as any[][];

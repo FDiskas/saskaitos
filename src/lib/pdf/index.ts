@@ -1,1 +1,1 @@
-export {};
+export { generateInvoicePdfBlob } from './generateInvoicePdf';
