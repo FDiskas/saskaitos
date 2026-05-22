@@ -6,6 +6,7 @@ export interface InlineEditFieldProps<T> {
   format?: (value: T) => string;
   parse?: (value: string) => T;
   type?: 'text' | 'number' | 'textarea' | 'date';
+  readOnly?: boolean;
   placeholder?: string;
   className?: string;
   inputClassName?: string;
@@ -17,6 +18,7 @@ export function InlineEditField<T = string>({
   format = (val) => String(val),
   parse = (val) => val as unknown as T,
   type = 'text',
+  readOnly = false,
   placeholder = 'Spustelkite, kad įvestumėte...',
   className = '',
   inputClassName = '',
@@ -89,6 +91,18 @@ export function InlineEditField<T = string>({
   }
 
   const displayValue = format(value);
+
+  if (readOnly) {
+    return (
+      <span
+        className={`inline-block px-1 py-0.5 ${
+          !displayValue.trim() ? 'italic text-slate-400' : 'text-slate-900'
+        } ${className}`}
+      >
+        {displayValue.trim() ? displayValue : placeholder}
+      </span>
+    );
+  }
 
   return (
     <span

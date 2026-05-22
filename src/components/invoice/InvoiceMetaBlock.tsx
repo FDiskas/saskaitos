@@ -7,9 +7,16 @@ export interface InvoiceMetaBlockProps {
   onChange: (updated: Invoice) => void;
   hasVat: boolean;
   primaryColor?: string;
+  isPreview?: boolean;
 }
 
-export function InvoiceMetaBlock({ invoice, onChange, hasVat, primaryColor }: InvoiceMetaBlockProps) {
+export function InvoiceMetaBlock({
+  invoice,
+  onChange,
+  hasVat,
+  primaryColor,
+  isPreview = false,
+}: InvoiceMetaBlockProps) {
   return (
     <div className="text-right flex flex-col gap-2">
       <h1 className="text-xl font-bold uppercase tracking-wide" style={{ color: primaryColor }}>
@@ -20,6 +27,7 @@ export function InvoiceMetaBlock({ invoice, onChange, hasVat, primaryColor }: In
         <InlineEditField
           value={invoice.number.toString()}
           onChange={(val) => onChange(invoice.withNumber(InvoiceNumber.parse(val, invoice.number.prefix)))}
+          readOnly={isPreview}
           placeholder="Įrašykite numerį..."
           className="font-mono text-slate-900 border-b border-dashed border-slate-300 hover:border-slate-500"
         />
@@ -31,6 +39,7 @@ export function InvoiceMetaBlock({ invoice, onChange, hasVat, primaryColor }: In
             value={invoice.issueDate}
             onChange={(val) => onChange(invoice.withIssueDate(val))}
             type="date"
+            readOnly={isPreview}
             format={(val) => formatDate(val)}
             parse={(val) => new Date(val)}
             className="font-mono border-b border-dashed border-slate-350"
@@ -42,6 +51,7 @@ export function InvoiceMetaBlock({ invoice, onChange, hasVat, primaryColor }: In
             value={invoice.dueDate}
             onChange={(val) => onChange(invoice.withDueDate(val))}
             type="date"
+            readOnly={isPreview}
             format={(val) => formatDate(val)}
             parse={(val) => new Date(val)}
             className="font-mono border-b border-dashed border-slate-350"

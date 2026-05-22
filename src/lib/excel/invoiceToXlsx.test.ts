@@ -69,6 +69,10 @@ const mockSettings: SettingsDto = {
   },
   series: [],
   designPresets: [],
+  invoiceLayout: {
+    layout: [],
+    blockSettings: {},
+  },
 };
 
 describe('exportInvoiceToXlsx', () => {

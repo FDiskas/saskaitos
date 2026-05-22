@@ -1,4 +1,14 @@
 import { useState, useEffect, useCallback } from 'react';
+import {
+  DndContext,
+  DragOverlay,
+  PointerSensor,
+  closestCenter,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+  type DragStartEvent,
+} from '@dnd-kit/core';
 import { useParams, Link, useSearch } from '@tanstack/react-router';
 import { ArrowLeft, Loader2, CloudLightning, CheckCircle2 } from 'lucide-react';
 import {
@@ -9,8 +19,33 @@ import {
   useClients,
   useInvoiceAutosave,
 } from '@/hooks';
-import { DesignSidebar, InvoiceCanvas, InvoiceActions, NewInvoicePicker } from '@/components/invoice';
+import {
+  DesignSidebar,
+  InvoiceCanvas,
+  InvoiceActions,
+  NewInvoicePicker,
+  TemplateBlockSettingsSidebar,
+} from '@/components/invoice';
 import { type Invoice, ClientId } from '@/lib/domain';
+import {
+  createTemplateRow,
+  moveBlockToColumn,
+  removeBlockFromTemplate,
+  removeTemplateRow,
+  reorderTemplateRows,
+  resizeTemplateRowColumns,
+  updateTemplateBlockSettings,
+  type InvoiceTemplateLayoutDto,
+  type TemplateBlockId,
+} from '@/lib/invoice-template/layout';
+import { blockLabel } from '@/lib/invoice-template/blocks';
+import {
+  parseCanvasColumnDropId,
+  parseCanvasPlacedBlockDragId,
+  parseCanvasRowSortableId,
+  parseLibraryBlockDragId,
+  parseLibraryRowDragId,
+} from '@/lib/invoice-template/dnd';
 
 export function InvoiceEditorPage() {
   const { id } = useParams({ from: '/invoice-editor/$id' });
@@ -18,13 +53,18 @@ export function InvoiceEditorPage() {
   const isNew = id === 'new';
 
   const { invoice, isLoading: isInvoiceLoading, error: invoiceError } = useInvoice(id);
-  const { settings, isLoading: isSettingsLoading } = useSettings();
+  const { settings, isLoading: isSettingsLoading, update: updateSettings } = useSettings();
   const { clients, isLoading: isClientsLoading } = useClients();
 
   const createMutation = useCreateInvoice();
   const updateMutation = useUpdateInvoice();
 
   const [localInvoice, setLocalInvoice] = useState<Invoice | null>(null);
+  const [selectedBlockId, setSelectedBlockId] = useState<TemplateBlockId | null>(null);
+  const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
+  const [isPreview, setIsPreview] = useState(false);
+  const [activeDragLabel, setActiveDragLabel] = useState<string | null>(null);
+  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 4 } }));
 
   useEffect(() => {
     if (
@@ -53,6 +93,13 @@ export function InvoiceEditorPage() {
   const handleSave = useCallback(
     (payload: { updated: Invoice; previous: Invoice }) => updateMutation.mutate(payload),
     [updateMutation],
+  );
+
+  const handleLayoutChange = useCallback(
+    (nextLayout: InvoiceTemplateLayoutDto) => {
+      updateSettings((current) => ({ ...current, invoiceLayout: nextLayout }));
+    },
+    [updateSettings],
   );
 
   const isPendingSave = useInvoiceAutosave({
@@ -94,7 +141,168 @@ export function InvoiceEditorPage() {
 
   if (!localInvoice || !settings) return null;
 
+  const resolveDropTargetColumn = (overId: string): { rowId: string; columnId: string } | null => {
+    if (overId === 'canvas:root') {
+      const firstRow = settings.invoiceLayout.layout[0];
+      const firstColumn = firstRow?.columns[0];
+      if (!firstRow || !firstColumn) return null;
+      return { rowId: firstRow.id, columnId: firstColumn.id };
+    }
+
+    const directColumn = parseCanvasColumnDropId(overId);
+    if (directColumn) return directColumn;
+
+    const overRowId = parseCanvasRowSortableId(overId);
+    if (!overRowId) return null;
+
+    const row = settings.invoiceLayout.layout.find((candidate) => candidate.id === overRowId);
+    const firstColumn = row?.columns[0];
+    if (!firstColumn) return null;
+    return { rowId: overRowId, columnId: firstColumn.id };
+  };
+
+  const handleDragStart = (event: DragStartEvent) => {
+    const activeId = String(event.active.id);
+    const rowColumns = parseLibraryRowDragId(activeId);
+    if (rowColumns !== null) {
+      setActiveDragLabel(`Eilutė (${rowColumns} st.)`);
+      return;
+    }
+
+    const libraryBlock = parseLibraryBlockDragId(activeId);
+    if (libraryBlock) {
+      setActiveDragLabel(blockLabel(libraryBlock));
+      return;
+    }
+
+    const placedBlock = parseCanvasPlacedBlockDragId(activeId);
+    if (placedBlock) {
+      setActiveDragLabel(blockLabel(placedBlock));
+      return;
+    }
+
+    const sortableRowId = parseCanvasRowSortableId(activeId);
+    if (sortableRowId) {
+      setActiveDragLabel('Eilutė');
+    }
+  };
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    setActiveDragLabel(null);
+    const overId = event.over ? String(event.over.id) : null;
+    if (!overId) return;
+
+    const activeId = String(event.active.id);
+
+    const activeRowId = parseCanvasRowSortableId(activeId);
+    const overRowId = parseCanvasRowSortableId(overId);
+    if (activeRowId && overRowId && activeRowId !== overRowId) {
+      handleLayoutChange(reorderTemplateRows(settings.invoiceLayout, activeRowId, overRowId));
+      return;
+    }
+
+    const libraryRowColumns = parseLibraryRowDragId(activeId);
+    if (libraryRowColumns !== null) {
+      const nextRow = createTemplateRow(libraryRowColumns);
+      const nextRows = [...settings.invoiceLayout.layout];
+
+      if (overRowId) {
+        const insertIndex = nextRows.findIndex((row) => row.id === overRowId);
+        if (insertIndex >= 0) {
+          nextRows.splice(insertIndex, 0, nextRow);
+        } else {
+          nextRows.push(nextRow);
+        }
+      } else {
+        nextRows.push(nextRow);
+      }
+
+      handleLayoutChange({ ...settings.invoiceLayout, layout: nextRows });
+      return;
+    }
+
+    const blockFromLibrary = parseLibraryBlockDragId(activeId);
+    const blockFromCanvas = parseCanvasPlacedBlockDragId(activeId);
+    const blockId = blockFromLibrary ?? blockFromCanvas;
+    if (!blockId) return;
+
+    const dropTarget = resolveDropTargetColumn(overId);
+    if (!dropTarget) return;
+
+    handleLayoutChange(
+      moveBlockToColumn(settings.invoiceLayout, blockId, dropTarget.rowId, dropTarget.columnId),
+    );
+  };
+
   const client = clients.find((c) => c.id.equals(localInvoice.clientId));
+
+  const content = (
+    <div className="flex flex-row grow h-[calc(100vh-57px)] overflow-hidden print:h-auto print:overflow-visible">
+      {!isPreview && (
+        <DesignSidebar
+          invoice={localInvoice}
+          onChange={setLocalInvoice}
+          settings={settings}
+          layout={settings.invoiceLayout}
+        />
+      )}
+
+      <main className="grow overflow-y-auto p-8 flex justify-center bg-slate-50/50 print:p-0 print:bg-white print:overflow-visible">
+        <InvoiceCanvas
+          invoice={localInvoice}
+          onChange={setLocalInvoice}
+          settings={settings}
+          layout={settings.invoiceLayout}
+          onLayoutChange={handleLayoutChange}
+          isPreview={isPreview}
+          selectedBlockId={selectedBlockId}
+          selectedRowId={selectedRowId}
+          onSelectBlock={(blockId) => {
+            setSelectedBlockId(blockId);
+            setSelectedRowId(null);
+          }}
+          onSelectRow={(rowId) => {
+            setSelectedRowId(rowId);
+            setSelectedBlockId(null);
+          }}
+        />
+      </main>
+
+      {!isPreview && (
+        <TemplateBlockSettingsSidebar
+          selectedBlockId={selectedBlockId}
+          selectedRowId={selectedRowId}
+          layout={settings.invoiceLayout}
+          onAlignChange={(align) => {
+            if (!selectedBlockId) return;
+            handleLayoutChange(updateTemplateBlockSettings(settings.invoiceLayout, selectedBlockId, { align }));
+          }}
+          onMarginTopChange={(marginTop) => {
+            if (!selectedBlockId) return;
+            handleLayoutChange(updateTemplateBlockSettings(settings.invoiceLayout, selectedBlockId, { marginTop }));
+          }}
+          onMarginBottomChange={(marginBottom) => {
+            if (!selectedBlockId) return;
+            handleLayoutChange(updateTemplateBlockSettings(settings.invoiceLayout, selectedBlockId, { marginBottom }));
+          }}
+          onRemoveBlock={() => {
+            if (!selectedBlockId) return;
+            handleLayoutChange(removeBlockFromTemplate(settings.invoiceLayout, selectedBlockId));
+            setSelectedBlockId(null);
+          }}
+          onRowColumnsChange={(columns) => {
+            if (!selectedRowId) return;
+            handleLayoutChange(resizeTemplateRowColumns(settings.invoiceLayout, selectedRowId, columns));
+          }}
+          onRemoveRow={() => {
+            if (!selectedRowId) return;
+            handleLayoutChange(removeTemplateRow(settings.invoiceLayout, selectedRowId));
+            setSelectedRowId(null);
+          }}
+        />
+      )}
+    </div>
+  );
 
   return (
     <div className="min-h-screen flex flex-col bg-slate-100">
@@ -115,6 +323,14 @@ export function InvoiceEditorPage() {
 
         <SyncStatusPill isSaving={updateMutation.isPending} isPendingSave={isPendingSave} />
 
+        <button
+          type="button"
+          className="rounded-md border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50"
+          onClick={() => setIsPreview((current) => !current)}
+        >
+          {isPreview ? 'Redagavimo režimas' : 'Preview režimas'}
+        </button>
+
         {client ? (
           <InvoiceActions invoice={localInvoice} client={client} settings={settings} />
         ) : (
@@ -124,13 +340,23 @@ export function InvoiceEditorPage() {
         )}
       </header>
 
-      <div className="flex flex-row flex-grow h-[calc(100vh-57px)] overflow-hidden print:h-auto print:overflow-visible">
-        <DesignSidebar invoice={localInvoice} onChange={setLocalInvoice} settings={settings} />
-
-        <main className="flex-grow overflow-y-auto p-8 flex justify-center bg-slate-50/50 print:p-0 print:bg-white print:overflow-visible">
-          <InvoiceCanvas invoice={localInvoice} onChange={setLocalInvoice} settings={settings} />
-        </main>
-      </div>
+      <DndContext
+        sensors={isPreview ? undefined : sensors}
+        collisionDetection={closestCenter}
+        onDragStart={isPreview ? undefined : handleDragStart}
+        onDragEnd={isPreview ? undefined : handleDragEnd}
+      >
+        {content}
+        {!isPreview && (
+          <DragOverlay>
+            {activeDragLabel ? (
+              <div className="rounded-md border border-sky-300 bg-sky-50 px-3 py-2 text-xs font-semibold text-sky-900 shadow-lg">
+                {activeDragLabel}
+              </div>
+            ) : null}
+          </DragOverlay>
+        )}
+      </DndContext>
     </div>
   );
 }

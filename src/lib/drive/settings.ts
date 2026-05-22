@@ -1,5 +1,10 @@
 import { z } from 'zod';
 import { SeriesDtoSchema, type SeriesDto } from './schemas';
+import {
+  InvoiceTemplateLayoutSchema,
+  defaultInvoiceTemplateLayout,
+  type InvoiceTemplateLayoutDto,
+} from '@/lib/invoice-template/layout';
 
 export const DEFAULT_SERIES_ID = 'default';
 export const DEFAULT_DESIGN_PRESET_ID = 'default';
@@ -38,6 +43,7 @@ export interface SettingsDto {
   defaultEmailSubject?: string;
   defaultEmailBody?: string;
   designPresets: DesignPresetDto[];
+  invoiceLayout: InvoiceTemplateLayoutDto;
 }
 
 const RawSettingsSchema = z.object({
@@ -47,6 +53,7 @@ const RawSettingsSchema = z.object({
   defaultEmailSubject: z.string().optional(),
   defaultEmailBody: z.string().optional(),
   designPresets: z.array(DesignPresetDtoSchema).default([]),
+  invoiceLayout: InvoiceTemplateLayoutSchema.default(defaultInvoiceTemplateLayout()),
 });
 
 export const SettingsDtoSchema: z.ZodType<SettingsDto> = RawSettingsSchema as unknown as z.ZodType<SettingsDto>;
@@ -69,5 +76,6 @@ export function defaultSettings(): SettingsDto {
     company: null,
     series: [initialSeries],
     designPresets: [initialPreset],
+    invoiceLayout: defaultInvoiceTemplateLayout(),
   };
 }

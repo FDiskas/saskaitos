@@ -10,7 +10,7 @@ export function SellerBlock({ settings }: SellerBlockProps) {
 
   if (!company) {
     return (
-      <div className="flex flex-col gap-2 max-w-[50%]">
+      <div className="flex flex-col gap-2">
         <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wider">Pardavėjas</h2>
         <div className="rounded-md bg-amber-50 border border-amber-200 p-3 flex gap-2 text-amber-800 text-xs no-print">
           <AlertCircle className="h-4 w-4 shrink-0 text-amber-600" />
@@ -24,14 +24,7 @@ export function SellerBlock({ settings }: SellerBlockProps) {
   }
 
   return (
-    <div className="flex flex-col gap-2 max-w-[50%]">
-      {company.logoBase64 && (
-        <img
-          src={company.logoBase64}
-          alt="Logo"
-          className="max-h-16 max-w-[200px] object-contain mb-2 print:max-h-16"
-        />
-      )}
+    <div className="flex flex-col gap-2">
       <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wider">Pardavėjas</h2>
       <div className="text-xs text-slate-700 leading-relaxed">
         <p className="font-bold text-slate-900 text-sm">{company.name}</p>

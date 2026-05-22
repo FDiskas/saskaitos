@@ -90,6 +90,41 @@ describe('InvoiceEditorPage', () => {
         fontFamily: 'Inter',
       }
     ],
+    invoiceLayout: {
+      layout: [
+        {
+          id: 'row-1',
+          type: 'row',
+          columns: [
+            { id: 'col-1-1', content: ['seller-info'] },
+            { id: 'col-1-2', content: ['invoice-meta'] },
+          ],
+        },
+        {
+          id: 'row-2',
+          type: 'row',
+          columns: [{ id: 'col-2-1', content: ['buyer-info'] }],
+        },
+        {
+          id: 'row-3',
+          type: 'row',
+          columns: [{ id: 'col-3-1', content: ['line-items'] }],
+        },
+        {
+          id: 'row-4',
+          type: 'row',
+          columns: [
+            { id: 'col-4-1', content: ['notes'] },
+            { id: 'col-4-2', content: ['totals'] },
+          ],
+        },
+        {
+          id: 'row-5',
+          type: 'row',
+          columns: [{ id: 'col-5-1', content: ['signature'] }],
+        },
+      ],
+    },
   };
 
   const dummyInvoice = Invoice.create({

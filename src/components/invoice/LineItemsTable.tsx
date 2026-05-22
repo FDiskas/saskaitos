@@ -19,11 +19,13 @@ import { LineItemRow } from './LineItemRow';
 export interface LineItemsTableProps {
   invoice: Invoice;
   onChange: (updatedInvoice: Invoice) => void;
+  isPreview?: boolean;
 }
 
-export function LineItemsTable({ invoice, onChange }: LineItemsTableProps) {
+export function LineItemsTable({ invoice, onChange, isPreview = false }: LineItemsTableProps) {
   const items = invoice.lineItems.toArray();
   const currency = invoice.totals().subtotal.currency;
+  const showActions = !isPreview;
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
@@ -62,24 +64,24 @@ export function LineItemsTable({ invoice, onChange }: LineItemsTableProps) {
       <table className="w-full border-collapse text-left text-sm text-slate-700">
         <thead>
           <tr className="border-b border-slate-200 text-xs font-semibold uppercase tracking-wider text-slate-500">
-            <th className="py-3 pl-1 pr-2 w-8 no-print"></th>
+            {showActions && <th className="py-3 pl-1 pr-2 w-8 no-print"></th>}
             <th className="py-3 pl-1 pr-4 text-center w-10">Nr.</th>
-            <th className="py-3 px-4 min-w-[200px]">Paslaugos / prekės aprašymas</th>
+            <th className="py-3 px-4 min-w-50">Paslaugos / prekės aprašymas</th>
             <th className="py-3 px-4 text-center w-24">Kiekis</th>
             <th className="py-3 px-4 text-center w-24">Mato vnt.</th>
             <th className="py-3 px-4 text-right w-32">Kaina (vnt.)</th>
             <th className="py-3 px-4 text-right w-32">Suma</th>
-            <th className="py-3 pl-2 pr-1 w-12 no-print"></th>
+            {showActions && <th className="py-3 pl-2 pr-1 w-12 no-print"></th>}
           </tr>
         </thead>
         <tbody>
           {items.length === 0 ? (
             <tr>
-              <td colSpan={8} className="py-8 text-center text-slate-400 italic">
+              <td colSpan={showActions ? 8 : 6} className="py-8 text-center text-slate-400 italic">
                 Nėra pridėtų prekių ar paslaugų. Spustelkite mygtuką žemiau, kad pridėtumėte.
               </td>
             </tr>
-          ) : (
+          ) : showActions ? (
             <DndContextRows
               items={items}
               currency={currency}
@@ -88,20 +90,34 @@ export function LineItemsTable({ invoice, onChange }: LineItemsTableProps) {
               onUpdate={handleUpdateItem}
               onRemove={handleRemoveItem}
             />
+          ) : (
+            items.map((item, index) => (
+              <LineItemRow
+                key={item.id}
+                item={item}
+                index={index}
+                currency={currency}
+                onUpdate={handleUpdateItem}
+                onRemove={handleRemoveItem}
+                isPreview
+              />
+            ))
           )}
         </tbody>
       </table>
 
-      <div className="mt-4 flex justify-start no-print">
-        <button
-          type="button"
-          onClick={handleAddItem}
-          className="flex items-center gap-1.5 rounded-md border border-dashed border-slate-300 hover:border-slate-400 bg-white px-3.5 py-1.5 text-xs font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition-all cursor-pointer shadow-sm"
-        >
-          <Plus className="h-3.5 w-3.5" />
-          Pridėti eilutę
-        </button>
-      </div>
+      {showActions && (
+        <div className="mt-4 flex justify-start no-print">
+          <button
+            type="button"
+            onClick={handleAddItem}
+            className="flex items-center gap-1.5 rounded-md border border-dashed border-slate-300 hover:border-slate-400 bg-white px-3.5 py-1.5 text-xs font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition-all cursor-pointer shadow-sm"
+          >
+            <Plus className="h-3.5 w-3.5" />
+            Pridėti eilutę
+          </button>
+        </div>
+      )}
     </div>
   );
 }

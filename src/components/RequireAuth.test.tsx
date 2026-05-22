@@ -15,7 +15,7 @@ const mockUseLocation = vi.fn<() => { href: string; pathname: string }>(() => ({
 }));
 
 vi.mock('@tanstack/react-router', () => ({
-  Navigate: (props: { to: string; search?: unknown; replace?: boolean }) => {
+  Navigate: (props: { to: string; search?: Record<string, unknown>; replace?: boolean }) => {
     mockNavigate(props);
     return <div data-testid="navigate" data-to={props.to} data-search={JSON.stringify(props.search ?? {})} />;
   },

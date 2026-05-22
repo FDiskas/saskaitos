@@ -16,6 +16,7 @@ describe('SettingsDto schema', () => {
     expect(parsed.series[0]?.isDefault).toBe(true);
     expect(parsed.designPresets).toHaveLength(1);
     expect(parsed.designPresets[0]?.id).toBe(DEFAULT_DESIGN_PRESET_ID);
+    expect(parsed.invoiceLayout.layout.length).toBeGreaterThan(0);
   });
 
   it('when company filled with valid values, then parsing keeps them', () => {
@@ -73,5 +74,23 @@ describe('SettingsDto schema', () => {
     const legacy = { company: null, series: [] };
     const parsed = SettingsDtoSchema.parse(legacy);
     expect(parsed.designPresets).toEqual([]);
+    expect(parsed.invoiceLayout.layout.length).toBeGreaterThan(0);
+  });
+
+  it('when invoiceLayout row has invalid columns, then parsing fails', () => {
+    const value = {
+      ...defaultSettings(),
+      invoiceLayout: {
+        layout: [
+          {
+            id: 'row-x',
+            type: 'row',
+            columns: [],
+          },
+        ],
+      },
+    };
+
+    expect(() => SettingsDtoSchema.parse(value)).toThrow();
   });
 });

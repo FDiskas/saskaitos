@@ -3,9 +3,14 @@ import { Invoice, VatRate, type VatPercent } from '@/lib/domain';
 export interface VatToggleProps {
   invoice: Invoice;
   onChange: (updated: Invoice) => void;
+  isPreview?: boolean;
 }
 
-export function VatToggle({ invoice, onChange }: VatToggleProps) {
+export function VatToggle({ invoice, onChange, isPreview = false }: VatToggleProps) {
+  if (isPreview) {
+    return null;
+  }
+
   const hasVat = invoice.vat.enabled;
 
   const handleToggle = (enabled: boolean) => {
