@@ -136,6 +136,27 @@ export class Invoice {
     return this.touch({ notes });
   }
 
+  withDesignPreset(designPresetId: string): Invoice {
+    return this.touch({ designPresetId });
+  }
+
+  withNumber(number: InvoiceNumber): Invoice {
+    return this.touch({ number });
+  }
+
+  withIssueDate(issueDate: Date): Invoice {
+    return this.touch({ issueDate });
+  }
+
+  withDueDate(dueDate: Date): Invoice {
+    return this.touch({ dueDate });
+  }
+
+  withClientId(clientId: ClientId): Invoice {
+    return this.touch({ clientId });
+  }
+
+
   markDraft(): Invoice {
     return this.touch({ status: 'draft' });
   }

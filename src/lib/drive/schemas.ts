@@ -66,6 +66,20 @@ export const InvoiceDtoSchema = z.object({
 });
 export type InvoiceDto = z.infer<typeof InvoiceDtoSchema>;
 
+export const InvoiceIndexEntrySchema = z.object({
+  id: uuidV7,
+  number: z.string(),
+  date: isoDate,
+  amountCents: z.number().int(),
+  currency: z.string().min(3).max(3),
+  status: InvoiceStatusSchema,
+});
+export type InvoiceIndexEntry = z.infer<typeof InvoiceIndexEntrySchema>;
+
+export const InvoicesIndexFileSchema = z.array(InvoiceIndexEntrySchema);
+export type InvoicesIndexFileDto = z.infer<typeof InvoicesIndexFileSchema>;
+
+
 export const ClientDtoSchema = z.object({
   id: uuidV7,
   name: z.string().min(1),

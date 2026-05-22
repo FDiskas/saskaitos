@@ -9,6 +9,7 @@ import { LoginPage } from '@/routes/login';
 import { DashboardPage } from '@/routes/dashboard';
 import { SettingsPage } from '@/routes/settings';
 import { ClientsPage } from '@/routes/clients';
+import { InvoiceEditorPage } from '@/routes/invoice-editor';
 
 const rootRoute = createRootRoute({
   component: () => <Outlet />,
@@ -46,12 +47,19 @@ const clientsRoute = createRoute({
   component: ClientsPage,
 });
 
+const invoiceEditorRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/invoice-editor/$id',
+  component: InvoiceEditorPage,
+});
+
 const routeTree = rootRoute.addChildren([
   indexRoute,
   loginRoute,
   dashboardRoute,
   settingsRoute,
   clientsRoute,
+  invoiceEditorRoute,
 ]);
 
 export const router = createRouter({
