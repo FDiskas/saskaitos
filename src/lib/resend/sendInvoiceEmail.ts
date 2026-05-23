@@ -54,14 +54,16 @@ function buildFrom(fromEmail: string, fromName?: string): string {
   return `${fromName} <${fromEmail}>`;
 }
 
+const RESEND_ENDPOINT = 'https://corsproxy.io/?https://api.resend.com/emails';
+
 const INVALID_API_KEY_MSG = 'Patikrinkite Resend API raktą Nustatymuose.';
 
 async function errorFromResponse(response: Response): Promise<Error> {
-  if (response.status === 401 || response.status === 403) {
-    return new Error(INVALID_API_KEY_MSG);
-  }
   const data = await response.json().catch(() => ({}));
   const message = (data as { message?: string }).message;
+  if (response.status === 401 || response.status === 403) {
+    return new Error(message || INVALID_API_KEY_MSG);
+  }
   return new Error(message || `Resend API klaida: ${response.status} ${response.statusText}`);
 }
 
@@ -72,7 +74,7 @@ export async function sendInvoiceEmail(params: SendEmailParams): Promise<void> {
 
   const attachments = await buildAttachments(params.pdfBlob, params.pdfFilename);
 
-  const response = await fetch('https://api.resend.com/emails', {
+  const response = await fetch(RESEND_ENDPOINT, {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${params.apiKey}`,

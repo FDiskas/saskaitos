@@ -129,11 +129,11 @@ export function InvoicePdfDocument({ invoice, client, settings }: InvoicePdfDocu
               <View style={styles.colQty}><Text style={styles.tdText}>{item.quantity}</Text></View>
               <View style={styles.colUnit}><Text style={styles.tdText}>{item.unit}</Text></View>
               <View style={styles.colPrice}>
-                <Text style={[styles.tdText, { textAlign: 'right' }]}>{item.unitPrice.toNumber().toFixed(2)}</Text>
+                <Text style={[styles.tdText, { textAlign: 'right' }]}>{item.unitPrice.format()}</Text>
               </View>
               <View style={styles.colSum}>
                 <Text style={[styles.tdText, { textAlign: 'right', fontWeight: 'bold' }]}>
-                  {item.total().toNumber().toFixed(2)}
+                  {item.total().format()}
                 </Text>
               </View>
             </View>

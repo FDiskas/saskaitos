@@ -33,7 +33,7 @@ describe('sendInvoiceEmail', () => {
       fromName: 'Pardavėjas',
     });
 
-    expect(fetchMock).toHaveBeenCalledWith('https://api.resend.com/emails', {
+    expect(fetchMock).toHaveBeenCalledWith('https://corsproxy.io/?https://api.resend.com/emails', {
       method: 'POST',
       headers: {
         'Authorization': 'Bearer re_123456789',
@@ -74,6 +74,19 @@ describe('sendInvoiceEmail', () => {
     await expect(sendInvoiceEmail({
       to: 'a@b.lt', subject: 'x', body: 'x', apiKey: 'bad', fromEmail: 'f@b.lt',
     })).rejects.toThrow('Patikrinkite Resend API raktą Nustatymuose.');
+  });
+
+  it('when Resend returns 401 with API message, then throws that message', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+      ok: false,
+      status: 401,
+      statusText: 'Unauthorized',
+      json: async () => ({ message: 'API key is missing or invalid.' }),
+    }));
+
+    await expect(sendInvoiceEmail({
+      to: 'a@b.lt', subject: 'x', body: 'x', apiKey: 'bad', fromEmail: 'f@b.lt',
+    })).rejects.toThrow('API key is missing or invalid.');
   });
 
   it('when Resend returns 403, then throws specific API-key error', async () => {
