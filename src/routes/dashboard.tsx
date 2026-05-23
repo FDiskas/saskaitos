@@ -13,6 +13,7 @@ import {
   DashboardFilters,
   InvoiceListTable,
   KpiCards,
+  RevenueCharts,
   type DashboardFilterValues,
 } from '@/components/dashboard';
 import { computeKpi } from '@/lib/utils/dashboardKpi';
@@ -147,6 +148,7 @@ function DashboardContent() {
 
   return (
     <div className="space-y-6">
+      <RevenueCharts summaries={summaries} today={today} />
       <KpiCards kpi={kpi} />
       <DashboardFilters values={filters} onChange={setFilters} />
       <InvoiceListTable
