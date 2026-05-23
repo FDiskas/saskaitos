@@ -13,6 +13,7 @@ function s(args: {
   status?: InvoiceStatus;
   issueDate?: Date;
   dueDate?: Date;
+  companyId?: string;
 }): InvoiceSummary {
   return InvoiceSummary.of({
     id: InvoiceId.create(),
@@ -23,6 +24,7 @@ function s(args: {
     dueDate: args.dueDate ?? new Date('2026-06-10'),
     amount: Money.fromCents(10000),
     status: args.status ?? 'sent',
+    companyId: args.companyId,
   });
 }
 
@@ -91,5 +93,26 @@ describe('filterSummaries', () => {
     ];
     const r = filterSummaries(list, { clientId: clientA, statuses: ['overdue'] }, today);
     expect(r).toHaveLength(1);
+  });
+
+  it('when companyId set, then only summaries with same companyId pass', () => {
+    const list = [
+      s({ companyId: 'co-1' }),
+      s({ companyId: 'co-2' }),
+      s({ companyId: 'co-1' }),
+    ];
+    const r = filterSummaries(list, { companyId: 'co-1' }, today);
+    expect(r).toHaveLength(2);
+  });
+
+  it('when companyId set and summary has no companyId, then excluded', () => {
+    const list = [s({ companyId: undefined }), s({ companyId: 'co-1' })];
+    const r = filterSummaries(list, { companyId: 'co-1' }, today);
+    expect(r).toHaveLength(1);
+  });
+
+  it('when companyId filter null, then all pass regardless of companyId', () => {
+    const list = [s({ companyId: 'co-1' }), s({ companyId: undefined })];
+    expect(filterSummaries(list, { companyId: null }, today)).toHaveLength(2);
   });
 });

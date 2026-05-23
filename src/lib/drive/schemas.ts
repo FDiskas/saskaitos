@@ -76,6 +76,7 @@ export const InvoiceDtoSchema = z.object({
   designOverride: DesignOverrideDtoSchema.optional(),
   createdAt: isoDate,
   updatedAt: isoDate,
+  companyId: z.string().optional(),
 });
 export type InvoiceDto = z.infer<typeof InvoiceDtoSchema>;
 
@@ -87,6 +88,7 @@ export const InvoiceIndexEntrySchema = z.object({
   amountCents: z.number().int(),
   currency: z.string().min(3).max(3),
   status: InvoiceStatusSchema,
+  companyId: z.string().optional(),
 });
 export type InvoiceIndexEntry = z.infer<typeof InvoiceIndexEntrySchema>;
 
@@ -169,6 +171,7 @@ export function invoiceToDto(invoice: Invoice): InvoiceDto {
     designOverride: invoice.designOverride,
     createdAt: invoice.createdAt.toISOString(),
     updatedAt: invoice.updatedAt.toISOString(),
+    companyId: invoice.companyId,
   };
 }
 
@@ -189,6 +192,7 @@ export function invoiceFromDto(dto: InvoiceDto): Invoice {
     designOverride: dto.designOverride,
     createdAt: new Date(dto.createdAt),
     updatedAt: new Date(dto.updatedAt),
+    companyId: dto.companyId,
   });
 }
 

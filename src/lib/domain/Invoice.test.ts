@@ -216,6 +216,30 @@ describe('Invoice', () => {
     });
   });
 
+  describe('companyId', () => {
+    it('when companyId provided in create props, then exposed via getter', () => {
+      const inv = Invoice.create({
+        id: InvoiceId.create(),
+        number: InvoiceNumber.of('SF-', 1),
+        seriesId: 's',
+        clientId: ClientId.create(),
+        issueDate: new Date('2026-05-22'),
+        dueDate: new Date('2026-06-22'),
+        lineItems: LineItems.empty(),
+        vat: { enabled: false, rate: VatRate.of(21) },
+        designPresetId: 'd',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        companyId: 'company-abc',
+      });
+      expect(inv.companyId).toBe('company-abc');
+    });
+
+    it('when companyId omitted, then getter returns undefined', () => {
+      expect(baseInvoice().companyId).toBeUndefined();
+    });
+  });
+
   describe('isOverdue', () => {
     it('when today < dueDate, then false', () => {
       const inv = baseInvoice().markSent();

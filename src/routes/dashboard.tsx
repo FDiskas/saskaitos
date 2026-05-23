@@ -5,9 +5,10 @@ import {
   useGoogleAuth,
   useInvoiceList,
   useInvoiceStatus,
+  useSettings,
 } from '@/hooks';
 import { env } from '@/env';
-import { CompanyProfileSwitcher, SyncStatusBadge } from '@/components/shared';
+import { AppHeader } from '@/components/shared';
 import { Card, CardBody } from '@/components/ui';
 import {
   DashboardFilters,
@@ -29,7 +30,7 @@ const EMPTY_FILTERS: DashboardFilterValues = {
 };
 
 export function DashboardPage() {
-  const { user, isAuthenticated, logout } = useGoogleAuth();
+  const { isAuthenticated } = useGoogleAuth();
   const navigate = useNavigate();
   const { isReady, isPending, error } = useBootstrap();
 
@@ -40,47 +41,20 @@ export function DashboardPage() {
   }, [isAuthenticated, navigate]);
 
   return (
-    <main className="min-h-screen bg-slate-50 px-6 py-8">
-      <header className="mb-6 flex items-center justify-between">
-        <div>
-          <h1 className="text-xl font-semibold text-slate-900">Sąskaitos — Dashboard</h1>
-          <p className="text-sm text-slate-500">
-            {env.useInMemory ? 'In-memory dev rėžimas' : user?.email ?? 'Sąskaitos sistema'}
-          </p>
-        </div>
-        <div className="flex items-center gap-3">
-          <CompanyProfileSwitcher />
-          <SyncStatusBadge />
+    <main className="min-h-screen bg-slate-50 px-4 py-6 sm:px-6 sm:py-8">
+      <AppHeader
+        title="Sąskaitos — Dashboard"
+        current="dashboard"
+        actions={
           <Link
             to="/invoice-editor/$id"
             params={{ id: 'new' }}
-            className="rounded-md bg-slate-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-slate-800 shadow-sm cursor-pointer"
+            className="inline-flex items-center justify-center rounded-md bg-slate-900 px-3 py-1.5 text-sm font-medium text-white shadow-sm hover:bg-slate-800"
           >
             Nauja sąskaita
           </Link>
-          <Link
-            to="/clients"
-            className="rounded-md bg-white px-3 py-1.5 text-sm text-slate-700 ring-1 ring-slate-200 hover:bg-slate-50 cursor-pointer"
-          >
-            Klientai
-          </Link>
-          <Link
-            to="/settings"
-            className="rounded-md bg-white px-3 py-1.5 text-sm text-slate-700 ring-1 ring-slate-200 hover:bg-slate-50 cursor-pointer"
-          >
-            Nustatymai
-          </Link>
-          {!env.useInMemory ? (
-            <button
-              type="button"
-              onClick={logout}
-              className="rounded-md bg-slate-900 px-3 py-1.5 text-sm text-white hover:bg-slate-800"
-            >
-              Atsijungti
-            </button>
-          ) : null}
-        </div>
-      </header>
+        }
+      />
 
       {error ? (
         <Card>
@@ -108,13 +82,26 @@ function DashboardContent() {
   const today = useMemo(() => new Date(), []);
   const { summaries, isLoading } = useInvoiceList();
   const statusMutation = useInvoiceStatus();
+  const { settings } = useSettings();
   const [filters, setFilters] = useState<DashboardFilterValues>(EMPTY_FILTERS);
 
-  const kpi = useMemo(() => computeKpi(summaries, today), [summaries, today]);
-  const filtered = useMemo(
+  const activeCompanyId = settings?.activeCompanyId ?? settings?.companies[0]?.id ?? null;
+
+  const companyScopedSummaries = useMemo(
     () =>
       filterSummaries(
         summaries,
+        { companyId: activeCompanyId },
+        today,
+      ),
+    [summaries, activeCompanyId, today],
+  );
+
+  const kpi = useMemo(() => computeKpi(companyScopedSummaries, today), [companyScopedSummaries, today]);
+  const filtered = useMemo(
+    () =>
+      filterSummaries(
+        companyScopedSummaries,
         {
           search: filters.search,
           clientId: filters.clientId,
@@ -124,7 +111,7 @@ function DashboardContent() {
         },
         today,
       ),
-    [summaries, filters, today],
+    [companyScopedSummaries, filters, today],
   );
 
   const handleOpen = (s: InvoiceSummary) => {
@@ -148,7 +135,7 @@ function DashboardContent() {
 
   return (
     <div className="space-y-6">
-      <RevenueCharts summaries={summaries} today={today} />
+      <RevenueCharts summaries={companyScopedSummaries} today={today} />
       <KpiCards kpi={kpi} />
       <DashboardFilters values={filters} onChange={setFilters} />
       <InvoiceListTable

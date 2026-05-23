@@ -6,6 +6,7 @@ export interface InvoiceFilters {
   statuses?: InvoiceStatus[];
   dateFrom?: Date | null;
   dateTo?: Date | null;
+  companyId?: string | null;
 }
 
 function matchesSearch(s: InvoiceSummary, search: string): boolean {
@@ -39,6 +40,11 @@ function matchesDateRange(
   return true;
 }
 
+function matchesCompany(s: InvoiceSummary, companyId: string | null | undefined): boolean {
+  if (!companyId) return true;
+  return s.companyId === companyId;
+}
+
 export function filterSummaries(
   list: InvoiceSummary[],
   filters: InvoiceFilters,
@@ -49,6 +55,7 @@ export function filterSummaries(
       matchesSearch(s, filters.search ?? '') &&
       matchesClient(s, filters.clientId ?? null) &&
       matchesStatuses(s, filters.statuses, today) &&
-      matchesDateRange(s, filters.dateFrom ?? null, filters.dateTo ?? null),
+      matchesDateRange(s, filters.dateFrom ?? null, filters.dateTo ?? null) &&
+      matchesCompany(s, filters.companyId ?? null),
   );
 }

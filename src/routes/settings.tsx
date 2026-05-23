@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useMemo } from 'react';
-import { Link, useNavigate } from '@tanstack/react-router';
+import { useNavigate } from '@tanstack/react-router';
 import { useGoogleAuth, useSettings } from '@/hooks';
 import { useStorageOrNull } from '@/lib/storage';
 import { env } from '@/env';
 import { Card, CardBody, CardHeader, CardTitle, Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui';
-import { CompanyProfileSwitcher, SyncStatusBadge } from '@/components/shared';
+import { AppHeader } from '@/components/shared';
 import { CompanyProfilesList, CompanyTab, DesignTab, EmailTab, IntegrationsTab, SeriesTab } from '@/components/settings';
 import type { CompanyDto } from '@/lib/drive/settings';
 import type { SeriesDto } from '@/lib/drive/schemas';
@@ -27,7 +27,7 @@ function createCompanyProfileId(): string {
 }
 
 export function SettingsPage() {
-  const { isAuthenticated, user, logout } = useGoogleAuth();
+  const { isAuthenticated } = useGoogleAuth();
   const navigate = useNavigate();
   const storage = useStorageOrNull();
 
@@ -38,40 +38,8 @@ export function SettingsPage() {
   }, [isAuthenticated, navigate]);
 
   return (
-    <main className="min-h-screen bg-slate-50 px-6 py-8">
-      <header className="mb-6 flex items-center justify-between">
-        <div>
-          <h1 className="text-xl font-semibold text-slate-900">Nustatymai</h1>
-          <p className="text-sm text-slate-500">
-            {env.useInMemory ? 'In-memory dev rėžimas' : user?.email ?? 'Sąskaitos sistema'}
-          </p>
-        </div>
-        <div className="flex items-center gap-3">
-          <CompanyProfileSwitcher />
-          <SyncStatusBadge />
-          <Link
-            to="/clients"
-            className="rounded-md bg-white px-3 py-1.5 text-sm text-slate-700 ring-1 ring-slate-200 hover:bg-slate-50"
-          >
-            Klientai
-          </Link>
-          <Link
-            to="/dashboard"
-            className="rounded-md bg-white px-3 py-1.5 text-sm text-slate-700 ring-1 ring-slate-200 hover:bg-slate-50"
-          >
-            Į pultą
-          </Link>
-          {!env.useInMemory ? (
-            <button
-              type="button"
-              onClick={logout}
-              className="rounded-md bg-slate-900 px-3 py-1.5 text-sm text-white hover:bg-slate-800"
-            >
-              Atsijungti
-            </button>
-          ) : null}
-        </div>
-      </header>
+    <main className="min-h-screen bg-slate-50 px-4 py-6 sm:px-6 sm:py-8">
+      <AppHeader title="Nustatymai" current="settings" />
 
       {storage ? (
         <SettingsContent />

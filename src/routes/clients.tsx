@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link, useNavigate } from '@tanstack/react-router';
+import { useNavigate } from '@tanstack/react-router';
 
 import {
   useBootstrap,
@@ -12,7 +12,7 @@ import {
 import { env } from '@/env';
 import { useStorageOrNull } from '@/lib/storage';
 import { Client, ClientId } from '@/lib/domain';
-import { CompanyProfileSwitcher, SyncStatusBadge } from '@/components/shared';
+import { AppHeader } from '@/components/shared';
 import { Card, CardBody } from '@/components/ui';
 import {
   ClientDeleteDialog,
@@ -22,7 +22,7 @@ import {
 } from '@/components/clients';
 
 export function ClientsPage() {
-  const { isAuthenticated, user, logout } = useGoogleAuth();
+  const { isAuthenticated } = useGoogleAuth();
   const navigate = useNavigate();
   const storage = useStorageOrNull();
   const { isReady } = useBootstrap();
@@ -35,13 +35,8 @@ export function ClientsPage() {
 
   if (!storage || !isReady) {
     return (
-      <main className="min-h-screen bg-slate-50 px-6 py-8">
-        <header className="mb-6 flex items-center justify-between">
-          <div>
-            <h1 className="text-xl font-semibold text-slate-900">Klientų Valdymas</h1>
-            <p className="text-sm text-slate-500">Sąskaitos sistema</p>
-          </div>
-        </header>
+      <main className="min-h-screen bg-slate-50 px-4 py-6 sm:px-6 sm:py-8">
+        <AppHeader title="Klientų Valdymas" current="clients" />
         <Card>
           <CardBody>
             <p className="text-sm text-slate-500">
@@ -54,41 +49,8 @@ export function ClientsPage() {
   }
 
   return (
-    <main className="min-h-screen bg-slate-50 px-6 py-8">
-      <header className="mb-6 flex items-center justify-between">
-        <div>
-          <h1 className="text-xl font-semibold text-slate-900">Klientų Valdymas</h1>
-          <p className="text-sm text-slate-500">
-            {env.useInMemory ? 'In-memory dev rėžimas' : user?.email ?? 'Sąskaitos sistema'}
-          </p>
-        </div>
-        <div className="flex items-center gap-3">
-          <CompanyProfileSwitcher />
-          <SyncStatusBadge />
-          <Link
-            to="/dashboard"
-            className="rounded-md bg-white px-3 py-1.5 text-sm text-slate-700 ring-1 ring-slate-200 hover:bg-slate-50"
-          >
-            Į pultą
-          </Link>
-          <Link
-            to="/settings"
-            className="rounded-md bg-white px-3 py-1.5 text-sm text-slate-700 ring-1 ring-slate-200 hover:bg-slate-50"
-          >
-            Nustatymai
-          </Link>
-          {!env.useInMemory ? (
-            <button
-              type="button"
-              onClick={logout}
-              className="rounded-md bg-slate-900 px-3 py-1.5 text-sm text-white hover:bg-slate-800 cursor-pointer"
-            >
-              Atsijungti
-            </button>
-          ) : null}
-        </div>
-      </header>
-
+    <main className="min-h-screen bg-slate-50 px-4 py-6 sm:px-6 sm:py-8">
+      <AppHeader title="Klientų Valdymas" current="clients" />
       <ClientsContent />
     </main>
   );

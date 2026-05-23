@@ -44,11 +44,13 @@ export interface InvoiceProps {
   designOverride?: DesignOverride;
   createdAt: Date;
   updatedAt: Date;
+  companyId?: string;
 }
 
-type FullInvoiceProps = Required<Omit<InvoiceProps, 'notes' | 'designOverride'>> & {
+type FullInvoiceProps = Required<Omit<InvoiceProps, 'notes' | 'designOverride' | 'companyId'>> & {
   notes?: string;
   designOverride?: DesignOverride;
+  companyId?: string;
 };
 
 export class Invoice {
@@ -119,6 +121,14 @@ export class Invoice {
 
   get updatedAt(): Date {
     return this.props.updatedAt;
+  }
+
+  get companyId(): string | undefined {
+    return this.props.companyId;
+  }
+
+  withCompanyId(companyId: string): Invoice {
+    return this.touch({ companyId });
   }
 
   totals(): InvoiceTotals {

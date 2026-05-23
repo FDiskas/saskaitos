@@ -3,6 +3,7 @@
 ## project/
 
 - [no-backend-architecture](project/no-backend-architecture.md) — hard constraint: zero infra, all persistence in user's own Google Drive via drive.file. keywords: architecture, backend, google-drive, philosophy
+- [shared-app-header](project/shared-app-header.md) — AppHeader is single shared top nav for dashboard/clients/settings with mobile hamburger drawer. keywords: header, navigation, responsive, mobile, app-header
 
 ## decisions/
 
@@ -18,6 +19,7 @@
 - [block-instance-model](decisions/block-instance-model.md) — column.content is BlockInstance[] with per-instance settings; decor kinds (divider, custom-image) allowed multiple per layout; legacy auto-migrated. keywords: layout, block-instance, divider, image, decor, migration
 - [pdf-palette-colors](decisions/pdf-palette-colors.md) — preset/override expose 6 colors (primary/accent/text/muted/border/heading); PDF uses PdfPalette, no hardcoded grays. keywords: palette, colors, design-preset, override, pdf
 - [jars-company-lookup](decisions/jars-company-lookup.md) — manual-button jars.lt company search; user key in Drive settings; 100/mo free quota → no auto-fire. keywords: jars, company-search, api-key, lookup, integrations
+- [invoice-company-scoping](decisions/invoice-company-scoping.md) — invoices carry optional companyId; dashboard implicitly filters by active company; legacy entries → first profile. keywords: invoice, company, multi-company, filter, dashboard, companyId
 
 ## developer/
 

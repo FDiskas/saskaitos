@@ -70,6 +70,30 @@ describe('Invoice schema', () => {
       InvoiceDtoSchema.parse({ ...invoiceToDto(sampleInvoice()), vat: { enabled: true, rate: 13 } }),
     ).toThrow();
   });
+
+  it('when invoice has companyId, then DTO roundtrips it', () => {
+    const original = Invoice.create({
+      id: InvoiceId.create(),
+      number: InvoiceNumber.of('SF-', 1),
+      seriesId: 's',
+      clientId: ClientId.create(),
+      issueDate: new Date('2026-05-22T00:00:00.000Z'),
+      dueDate: new Date('2026-06-22T00:00:00.000Z'),
+      lineItems: LineItems.empty(),
+      vat: { enabled: false, rate: VatRate.of(21) },
+      designPresetId: 'd',
+      createdAt: new Date('2026-05-22T00:00:00.000Z'),
+      updatedAt: new Date('2026-05-22T00:00:00.000Z'),
+      companyId: 'company-xyz',
+    });
+    const restored = invoiceFromDto(InvoiceDtoSchema.parse(invoiceToDto(original)));
+    expect(restored.companyId).toBe('company-xyz');
+  });
+
+  it('when DTO omits companyId, then domain restores undefined', () => {
+    const restored = invoiceFromDto(InvoiceDtoSchema.parse(invoiceToDto(sampleInvoice())));
+    expect(restored.companyId).toBeUndefined();
+  });
 });
 
 describe('Client schema', () => {

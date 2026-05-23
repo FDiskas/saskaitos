@@ -44,6 +44,7 @@ function buildIndexEntry(invoice: Invoice): InvoiceIndexEntry {
     amountCents: invoice.totals().total.toCents(),
     currency: invoice.totals().total.currency,
     status: invoice.status,
+    companyId: invoice.companyId,
   };
 }
 
@@ -79,6 +80,9 @@ export function useCreateInvoice() {
         const series = Series.of(defaultSeriesDto);
         const { number, updatedSeries } = series.next();
 
+        const activeCompanyId =
+          latestSettings.activeCompanyId ?? latestSettings.companies[0]?.id;
+
         const invoice = Invoice.create({
           id: InvoiceId.create(),
           number,
@@ -92,6 +96,7 @@ export function useCreateInvoice() {
           designPresetId: latestSettings.designPresets[0]?.id || 'default',
           createdAt: new Date(),
           updatedAt: new Date(),
+          companyId: activeCompanyId,
         });
 
         const invoicePath = getInvoicePath(client, number, invoice.issueDate);

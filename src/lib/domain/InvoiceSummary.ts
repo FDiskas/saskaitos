@@ -12,6 +12,7 @@ export interface InvoiceSummaryProps {
   dueDate: Date;
   amount: Money;
   status: InvoiceStatus;
+  companyId?: string;
 }
 
 export class InvoiceSummary {
@@ -55,6 +56,10 @@ export class InvoiceSummary {
 
   get status(): InvoiceStatus {
     return this.props.status;
+  }
+
+  get companyId(): string | undefined {
+    return this.props.companyId;
   }
 
   effectiveStatus(today: Date): InvoiceStatus {
