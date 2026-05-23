@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import {
   Client,
   ClientId,
+  Discount,
   Invoice,
   InvoiceId,
   InvoiceNumber,
@@ -93,6 +94,34 @@ describe('Invoice schema', () => {
   it('when DTO omits companyId, then domain restores undefined', () => {
     const restored = invoiceFromDto(InvoiceDtoSchema.parse(invoiceToDto(sampleInvoice())));
     expect(restored.companyId).toBeUndefined();
+  });
+
+  it('when invoice has percent discount, then DTO roundtrips it', () => {
+    const original = sampleInvoice().withDiscount(Discount.percent(15));
+    const restored = invoiceFromDto(InvoiceDtoSchema.parse(invoiceToDto(original)));
+    expect(restored.discount.kind).toBe('percent');
+    expect(restored.discount.percent).toBe(15);
+  });
+
+  it('when invoice has fixed discount, then DTO roundtrips it', () => {
+    const original = sampleInvoice().withDiscount(Discount.fixed(new Money(7.5)));
+    const restored = invoiceFromDto(InvoiceDtoSchema.parse(invoiceToDto(original)));
+    expect(restored.discount.kind).toBe('fixed');
+    expect(restored.discount.amount.toCents()).toBe(750);
+  });
+
+  it('when invoice has no discount, then DTO omits discount and restores none', () => {
+    const dto = invoiceToDto(sampleInvoice());
+    expect(dto.discount).toBeUndefined();
+    const restored = invoiceFromDto(InvoiceDtoSchema.parse(dto));
+    expect(restored.discount.isZero()).toBe(true);
+  });
+
+  it('when legacy DTO has no discount field, then domain restores none', () => {
+    const restored = invoiceFromDto(
+      InvoiceDtoSchema.parse({ ...invoiceToDto(sampleInvoice()) }),
+    );
+    expect(restored.discount.isZero()).toBe(true);
   });
 });
 

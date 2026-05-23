@@ -10,6 +10,7 @@ export { InvoiceMetaBlock, type InvoiceMetaBlockProps } from './InvoiceMetaBlock
 export { BuyerBlock, type BuyerBlockProps } from './BuyerBlock';
 export { NotesBlock, type NotesBlockProps } from './NotesBlock';
 export { VatToggle, type VatToggleProps } from './VatToggle';
+export { DiscountToggle, type DiscountToggleProps } from './DiscountToggle';
 export { TotalsBox, type TotalsBoxProps } from './TotalsBox';
 export { AmountInWordsBlock, type AmountInWordsBlockProps } from './AmountInWordsBlock';
 export { InvoiceSignatures } from './InvoiceSignatures';

@@ -15,6 +15,8 @@ import type {
   InvoiceTemplateRowDto,
   TextBlockInstance,
 } from '@/lib/invoice-template/layout';
+import { DiscountToggle } from './DiscountToggle';
+import { VatToggle } from './VatToggle';
 import { useTextDraft } from './useTextDraft';
 import { useCommittedValueDraft } from './useCommittedValueDraft';
 
@@ -316,6 +318,9 @@ function InstanceSettingsPanel({
       {instance.kind === 'buyer-info' && (
         <BuyerControls invoice={invoice} onInvoiceChange={onInvoiceChange} />
       )}
+      {instance.kind === 'totals' && (
+        <TotalsControls invoice={invoice} onInvoiceChange={onInvoiceChange} />
+      )}
       {instance.kind === 'text' && <TextControls instance={instance} onInstancePatch={onInstancePatch} />}
 
       <Button type="button" variant="destructive" className="w-full" onClick={onRemoveInstance}>
@@ -449,6 +454,21 @@ function BuyerControls({ invoice, onInvoiceChange }: BuyerControlsProps) {
         isSaving={createClientMutation.isPending}
       />
     </>
+  );
+}
+
+interface TotalsControlsProps {
+  invoice: Invoice;
+  onInvoiceChange: (updated: Invoice) => void;
+}
+
+function TotalsControls({ invoice, onInvoiceChange }: TotalsControlsProps) {
+  return (
+    <div className="border-t border-slate-100 pt-3 mb-4 flex flex-col gap-2">
+      <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Sumos nustatymai</p>
+      <VatToggle invoice={invoice} onChange={onInvoiceChange} />
+      <DiscountToggle invoice={invoice} onChange={onInvoiceChange} />
+    </div>
   );
 }
 

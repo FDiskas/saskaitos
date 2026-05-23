@@ -59,6 +59,13 @@ function getSummaryRows(invoice: Invoice): (string | number)[][] {
   const rows: (string | number)[][] = [
     ['Tarpinė suma', '', '', '', '', totals.subtotal.toNumber()],
   ];
+  if (!invoice.discount.isZero()) {
+    const label = invoice.discount.kind === 'percent'
+      ? `Nuolaida (${invoice.discount.percent}%)`
+      : 'Nuolaida';
+    rows.push([label, '', '', '', '', -totals.discountAmount.toNumber()]);
+    rows.push(['Apmokestinama suma', '', '', '', '', totals.taxableAmount.toNumber()]);
+  }
   if (invoice.vat.enabled) {
     rows.push(['PVM suma', '', '', '', '', totals.vatAmount.toNumber()]);
   }

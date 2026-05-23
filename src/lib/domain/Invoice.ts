@@ -1,4 +1,5 @@
 import { type ClientId } from './ClientId';
+import { Discount } from './Discount';
 import { type InvoiceId } from './InvoiceId';
 import { type InvoiceNumber } from './InvoiceNumber';
 import { type LineItem } from './LineItem';
@@ -15,6 +16,8 @@ export interface InvoiceVat {
 
 export interface InvoiceTotals {
   subtotal: Money;
+  discountAmount: Money;
+  taxableAmount: Money;
   vatAmount: Money;
   total: Money;
 }
@@ -38,6 +41,7 @@ export interface InvoiceProps {
   dueDate: Date;
   lineItems: LineItems;
   vat: InvoiceVat;
+  discount?: Discount;
   status?: InvoiceStatus;
   notes?: string;
   designPresetId: string;
@@ -63,6 +67,7 @@ export class Invoice {
   static create(props: InvoiceProps): Invoice {
     return new Invoice({
       ...props,
+      discount: props.discount ?? Discount.none(),
       status: props.status ?? 'draft',
     });
   }
@@ -99,6 +104,10 @@ export class Invoice {
     return this.props.vat;
   }
 
+  get discount(): Discount {
+    return this.props.discount;
+  }
+
   get status(): InvoiceStatus {
     return this.props.status;
   }
@@ -133,11 +142,21 @@ export class Invoice {
 
   totals(): InvoiceTotals {
     const subtotal = this.props.lineItems.subtotal();
+    const discountAmount = this.props.discount.applyTo(subtotal);
+    const taxableAmount = subtotal.subtract(discountAmount);
     if (!this.props.vat.enabled) {
-      return { subtotal, vatAmount: Money.zero(), total: subtotal };
+      const zero = Money.zero(subtotal.currency);
+      return { subtotal, discountAmount, taxableAmount, vatAmount: zero, total: taxableAmount };
     }
-    const vatAmount = this.props.lineItems.vatAmount(subtotal.currency);
-    return { subtotal, vatAmount, total: subtotal.add(vatAmount) };
+    const vatAmount = this.scaledVat(subtotal, taxableAmount);
+    return { subtotal, discountAmount, taxableAmount, vatAmount, total: taxableAmount.add(vatAmount) };
+  }
+
+  private scaledVat(subtotal: Money, taxableAmount: Money): Money {
+    const rawVat = this.props.lineItems.vatAmount(subtotal.currency);
+    if (subtotal.isZero() || this.props.discount.isZero()) return rawVat;
+    const fraction = taxableAmount.toCents() / subtotal.toCents();
+    return rawVat.multiply(fraction);
   }
 
   withLineItem(item: LineItem): Invoice {
@@ -161,6 +180,10 @@ export class Invoice {
 
   withVatDisabled(): Invoice {
     return this.touch({ vat: { enabled: false, rate: this.props.vat.rate } });
+  }
+
+  withDiscount(discount: Discount): Invoice {
+    return this.touch({ discount });
   }
 
   withNotes(notes: string | undefined): Invoice {

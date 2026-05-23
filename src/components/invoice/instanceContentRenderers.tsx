@@ -12,7 +12,6 @@ import { NotesBlock } from './NotesBlock';
 import { SellerBlock } from './SellerBlock';
 import { TotalsBox } from './TotalsBox';
 import { useTextDraft } from './useTextDraft';
-import { VatToggle } from './VatToggle';
 
 export interface CanvasPalette {
   primaryColor: string;
@@ -61,7 +60,6 @@ export const INSTANCE_RENDERERS: Record<BlockKind, InstanceRenderer> = {
       instance.align === 'center' ? 'items-center' : instance.align === 'left' ? 'items-start' : 'items-end';
     return (
       <div className={`flex w-full min-w-0 flex-col gap-3 ${totalsAlignClass}`}>
-        <VatToggle invoice={context.invoice} onChange={context.onChange} isPreview={context.isPreview} />
         <TotalsBox invoice={context.invoice} accentColor={context.palette.accentColor} />
       </div>
     );

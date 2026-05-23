@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { Invoice } from './Invoice';
 import { InvoiceId } from './InvoiceId';
 import { ClientId } from './ClientId';
+import { Discount } from './Discount';
 import { InvoiceNumber } from './InvoiceNumber';
 import { LineItem } from './LineItem';
 import { LineItems } from './LineItems';
@@ -104,6 +105,49 @@ describe('Invoice', () => {
       expect(totals.subtotal.toCents()).toBe(20000);
       expect(totals.vatAmount.toCents()).toBe(2600);
       expect(totals.total.toCents()).toBe(22600);
+    });
+
+    it('when discount 10% applied, then taxable=subtotal-discount and vat scales', () => {
+      const inv = baseInvoice().withDiscount(Discount.percent(10));
+      const t = inv.totals();
+      // subtotal: 223.45; discount: 22.34 (223.45*0.10 → 22.345 → banker 22.34)
+      expect(t.subtotal.toCents()).toBe(22345);
+      expect(t.discountAmount.toCents()).toBe(2234);
+      expect(t.taxableAmount.toCents()).toBe(20111);
+      // vat: 20111 * 0.21 = 4223.31 → 4223
+      expect(t.vatAmount.toCents()).toBe(4223);
+      expect(t.total.toCents()).toBe(24334);
+    });
+
+    it('when fixed discount 5 EUR applied without VAT, then total = subtotal - 5', () => {
+      const inv = baseInvoice().withVatDisabled().withDiscount(Discount.fixed(new Money(5)));
+      const t = inv.totals();
+      expect(t.discountAmount.toCents()).toBe(500);
+      expect(t.taxableAmount.toCents()).toBe(21845);
+      expect(t.vatAmount.isZero()).toBe(true);
+      expect(t.total.toCents()).toBe(21845);
+    });
+
+    it('when no discount, then discountAmount zero and taxable=subtotal', () => {
+      const t = baseInvoice().totals();
+      expect(t.discountAmount.isZero()).toBe(true);
+      expect(t.taxableAmount.equals(t.subtotal)).toBe(true);
+    });
+
+    it('when fixed discount exceeds subtotal, then capped and total non-negative', () => {
+      const inv = baseInvoice().withVatDisabled().withDiscount(Discount.fixed(new Money(10000)));
+      const t = inv.totals();
+      expect(t.discountAmount.equals(t.subtotal)).toBe(true);
+      expect(t.taxableAmount.isZero()).toBe(true);
+      expect(t.total.isZero()).toBe(true);
+    });
+
+    it('when withDiscount, then returns new instance with discount', () => {
+      const inv = baseInvoice();
+      const discounted = inv.withDiscount(Discount.percent(10));
+      expect(inv.discount.isZero()).toBe(true);
+      expect(discounted.discount.kind).toBe('percent');
+      expect(discounted).not.toBe(inv);
     });
 
     it('when empty line items, then all totals zero', () => {

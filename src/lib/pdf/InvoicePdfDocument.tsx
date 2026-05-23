@@ -153,12 +153,28 @@ export function InvoicePdfDocument({ invoice, client, settings }: InvoicePdfDocu
     }
 
     if (instance.kind === 'totals') {
+      const hasDiscount = !invoice.discount.isZero();
+      const discountLabel = invoice.discount.kind === 'percent'
+        ? `Nuolaida (${invoice.discount.percent}%):`
+        : 'Nuolaida:';
       return (
         <View style={styles.totalsCol}>
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', width: '100%' }}>
             <Text style={styles.totalsLabel}>Tarpinė suma:</Text>
             <Text style={styles.totalsValue}>{totals.subtotal.format()}</Text>
           </View>
+          {hasDiscount && (
+            <>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', width: '100%' }}>
+                <Text style={styles.totalsLabel}>{discountLabel}</Text>
+                <Text style={styles.totalsValue}>−{totals.discountAmount.format()}</Text>
+              </View>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', width: '100%' }}>
+                <Text style={styles.totalsLabel}>Apmokestinama suma:</Text>
+                <Text style={styles.totalsValue}>{totals.taxableAmount.format()}</Text>
+              </View>
+            </>
+          )}
           {hasVat && (
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', width: '100%' }}>
               <Text style={styles.totalsLabel}>PVM suma:</Text>

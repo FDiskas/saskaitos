@@ -8,6 +8,7 @@ export interface TotalsBoxProps {
 export function TotalsBox({ invoice, accentColor }: TotalsBoxProps) {
   const totals = invoice.totals();
   const hasVat = invoice.vat.enabled;
+  const hasDiscount = !invoice.discount.isZero();
 
   return (
     <div className="w-full flex flex-col gap-1.5 border-t border-slate-200 pt-3 text-right">
@@ -15,6 +16,18 @@ export function TotalsBox({ invoice, accentColor }: TotalsBoxProps) {
         <span>Tarpinė suma:</span>
         <span className="font-mono">{totals.subtotal.format()}</span>
       </div>
+      {hasDiscount && (
+        <>
+          <div className="flex justify-between text-xs text-slate-500">
+            <span>Nuolaida{describeDiscount(invoice)}:</span>
+            <span className="font-mono">−{totals.discountAmount.format()}</span>
+          </div>
+          <div className="flex justify-between text-xs text-slate-500">
+            <span>Apmokestinama suma:</span>
+            <span className="font-mono">{totals.taxableAmount.format()}</span>
+          </div>
+        </>
+      )}
       {hasVat && (
         <div className="flex justify-between text-xs text-slate-500">
           <span>PVM suma:</span>
@@ -29,4 +42,9 @@ export function TotalsBox({ invoice, accentColor }: TotalsBoxProps) {
       </div>
     </div>
   );
+}
+
+function describeDiscount(invoice: Invoice): string {
+  if (invoice.discount.kind === 'percent') return ` (${invoice.discount.percent}%)`;
+  return '';
 }

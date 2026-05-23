@@ -2,6 +2,7 @@ import { z } from 'zod';
 import {
   Client,
   ClientId,
+  Discount,
   Invoice,
   InvoiceId,
   InvoiceNumber,
@@ -35,6 +36,13 @@ export const LineItemDtoSchema = z.object({
 export type LineItemDto = z.infer<typeof LineItemDtoSchema>;
 
 const vatPercentSchema = z.union([z.literal(0), z.literal(5), z.literal(9), z.literal(21)]);
+
+export const DiscountDtoSchema = z.discriminatedUnion('kind', [
+  z.object({ kind: z.literal('none') }),
+  z.object({ kind: z.literal('percent'), percent: z.number().min(0).max(100) }),
+  z.object({ kind: z.literal('fixed'), amount: MoneyDtoSchema }),
+]);
+export type DiscountDto = z.infer<typeof DiscountDtoSchema>;
 
 export const InvoiceVatDtoSchema = z.object({
   enabled: z.boolean(),
@@ -70,6 +78,7 @@ export const InvoiceDtoSchema = z.object({
   dueDate: isoDate,
   lineItems: z.array(LineItemDtoSchema),
   vat: InvoiceVatDtoSchema,
+  discount: DiscountDtoSchema.optional(),
   status: InvoiceStatusSchema,
   notes: z.string().optional(),
   designPresetId: z.string(),
@@ -155,6 +164,18 @@ function lineItemFromDto(dto: LineItemDto, fallbackVatRate: VatPercent): LineIte
   });
 }
 
+function discountToDto(discount: Discount): DiscountDto {
+  if (discount.kind === 'percent') return { kind: 'percent', percent: discount.percent };
+  if (discount.kind === 'fixed') return { kind: 'fixed', amount: moneyToDto(discount.amount) };
+  return { kind: 'none' };
+}
+
+function discountFromDto(dto: DiscountDto | undefined): Discount {
+  if (!dto || dto.kind === 'none') return Discount.none();
+  if (dto.kind === 'percent') return Discount.percent(dto.percent);
+  return Discount.fixed(moneyFromDto(dto.amount));
+}
+
 export function invoiceToDto(invoice: Invoice): InvoiceDto {
   return {
     id: invoice.id.toString(),
@@ -165,6 +186,7 @@ export function invoiceToDto(invoice: Invoice): InvoiceDto {
     dueDate: invoice.dueDate.toISOString(),
     lineItems: invoice.lineItems.toArray().map(lineItemToDto),
     vat: { enabled: invoice.vat.enabled, rate: invoice.vat.rate.percent },
+    discount: invoice.discount.isZero() ? undefined : discountToDto(invoice.discount),
     status: invoice.status,
     notes: invoice.notes,
     designPresetId: invoice.designPresetId,
@@ -186,6 +208,7 @@ export function invoiceFromDto(dto: InvoiceDto): Invoice {
     dueDate: new Date(dto.dueDate),
     lineItems: LineItems.of(dto.lineItems.map((item) => lineItemFromDto(item, invoiceVatRate))),
     vat: { enabled: dto.vat.enabled, rate: VatRate.of(invoiceVatRate) },
+    discount: discountFromDto(dto.discount),
     status: dto.status,
     notes: dto.notes,
     designPresetId: dto.designPresetId,
