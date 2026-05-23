@@ -1,5 +1,6 @@
+import { useMemo } from 'react';
 import { Plus, Trash2 } from 'lucide-react';
-import { Button, Input, Label } from '@/components/ui';
+import { Button, Combobox, Input, Label, type ComboboxItem } from '@/components/ui';
 import { fileToBase64 } from '@/lib/files';
 import {
   DEFAULT_ACCENT_COLOR,
@@ -10,14 +11,13 @@ import {
   DEFAULT_TEXT_COLOR,
   type DesignPresetDto,
 } from '@/lib/drive/settings';
-import { POPULAR_GOOGLE_FONTS } from '@/lib/pdf/googleFonts';
+import { availableFontFamilies } from '@/lib/pdf/googleFonts';
 
 export interface DesignTabProps {
   presets: DesignPresetDto[];
   onChange: (next: DesignPresetDto[]) => void;
 }
 
-const FONT_FAMILIES = POPULAR_GOOGLE_FONTS;
 
 interface ColorFieldConfig {
   key: keyof Pick<
@@ -128,18 +128,10 @@ function DesignCard({ preset, canDelete, onUpdate, onRemove, onBackground }: Des
           />
         ))}
       </div>
-      <div className="flex flex-col gap-1.5">
-        <Label>Šriftas</Label>
-        <select
-          value={preset.fontFamily}
-          onChange={(e) => onUpdate({ fontFamily: e.target.value })}
-          className="h-9 rounded-md border border-slate-200 bg-white px-3 text-sm"
-        >
-          {FONT_FAMILIES.map((font) => (
-            <option key={font}>{font}</option>
-          ))}
-        </select>
-      </div>
+      <FontPicker
+        value={preset.fontFamily}
+        onChange={(next) => onUpdate({ fontFamily: next })}
+      />
       <div className="flex items-center gap-3">
         {preset.backgroundImageBase64 ? (
           <img
@@ -201,6 +193,27 @@ function ColorField({
         />
         <Input value={value} onChange={(e) => onChange(e.target.value)} className="font-mono" />
       </div>
+    </div>
+  );
+}
+
+function FontPicker({ value, onChange }: { value: string; onChange: (next: string) => void }) {
+  const items = useMemo<ComboboxItem[]>(
+    () => availableFontFamilies.map((f) => ({ value: f, label: f })),
+    [],
+  );
+  return (
+    <div className="flex flex-col gap-1.5">
+      <Label>Šriftas</Label>
+      <Combobox
+        value={value}
+        onChange={(next) => onChange(next ?? 'Inter')}
+        items={items}
+        placeholder="Pasirinkite šriftą..."
+        searchPlaceholder="Ieškoti šrifto..."
+        emptyText="Šriftas nerastas."
+        allowClear={false}
+      />
     </div>
   );
 }

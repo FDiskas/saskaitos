@@ -41,6 +41,7 @@ vi.mock('@/hooks', () => ({
   }),
   useInvoiceAutosave: () => false,
   getInvoicePdfPath: vi.fn().mockReturnValue('mocked-pdf-path.pdf'),
+  useGoogleFontInBrowser: () => undefined,
 }));
 
 // Mock window.print and URL

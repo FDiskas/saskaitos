@@ -1,4 +1,5 @@
 import { type ReactNode, useMemo } from 'react';
+import { useGoogleFontInBrowser } from '@/hooks';
 import { useDroppable } from '@dnd-kit/core';
 import {
   SortableContext,
@@ -74,6 +75,7 @@ export function InvoiceCanvas({
     headingColor: override?.headingColor ?? activePreset?.headingColor ?? DEFAULT_HEADING_COLOR,
   };
   const effectiveBg = override?.backgroundImageBase64 ?? activePreset?.backgroundImageBase64;
+  useGoogleFontInBrowser(activePreset?.fontFamily);
 
   const rowSortableIds = useMemo(
     () => layout.layout.map((row) => canvasRowSortableId(row.id)),

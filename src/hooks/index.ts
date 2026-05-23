@@ -13,4 +13,5 @@ export { useInvoiceAutosave, type AutosaveOptions } from './useInvoiceAutosave';
 export { useInvoiceList } from './useInvoiceList';
 export { useInvoiceStatus } from './useInvoiceStatus';
 export { useStorage } from '../lib/storage';
+export { useGoogleFontInBrowser } from './useGoogleFontInBrowser';
 

@@ -11,6 +11,7 @@ import { DashboardPage } from '@/routes/dashboard';
 import { SettingsPage } from '@/routes/settings';
 import { ClientsPage } from '@/routes/clients';
 import { InvoiceEditorPage } from '@/routes/invoice-editor';
+import { PdfFontExperimentPage } from '@/routes/pdf-font-experiment';
 import { RequireAuth } from '@/components/RequireAuth';
 
 const rootRoute = createRootRoute({
@@ -81,6 +82,12 @@ const invoiceEditorRoute = createRoute({
   validateSearch: (search) => invoiceEditorSearchSchema.parse(search),
 });
 
+const pdfFontExperimentRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/pdf-font-experiment',
+  component: PdfFontExperimentPage,
+});
+
 const routeTree = rootRoute.addChildren([
   indexRoute,
   loginRoute,
@@ -88,6 +95,7 @@ const routeTree = rootRoute.addChildren([
   settingsRoute,
   clientsRoute,
   invoiceEditorRoute,
+  pdfFontExperimentRoute,
 ]);
 
 export const router = createRouter({

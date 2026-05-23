@@ -3,6 +3,7 @@ export { Input, type InputProps } from './input';
 export { Textarea, type TextareaProps } from './textarea';
 export { Label, type LabelProps } from './label';
 export { Card, CardHeader, CardTitle, CardBody } from './card';
+export { Combobox, type ComboboxItem, type ComboboxProps } from './combobox';
 export { Tabs, TabsList, TabsTrigger, TabsContent, type TabsProps } from './tabs';
 export { Switch, type SwitchProps } from './switch';
 export {
