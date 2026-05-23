@@ -1,5 +1,5 @@
 /* eslint-disable react-refresh/only-export-components */
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -16,6 +16,9 @@ import {
   Label,
   Textarea,
 } from '@/components/ui';
+import { JarsCompanySearchButton } from '@/components/shared';
+import { useSettings } from '@/hooks';
+import type { JarsCompany } from '@/lib/jars';
 
 export const clientFormSchema = z.object({
   name: z.string().min(1, 'Pavadinimas yra privalomas'),
@@ -49,6 +52,8 @@ export function ClientFormDialog({
     register,
     handleSubmit,
     reset,
+    setValue,
+    watch,
     formState: { errors },
   } = useForm<ClientFormValues>({
     resolver: zodResolver(clientFormSchema),
@@ -63,6 +68,27 @@ export function ClientFormDialog({
       notes: '',
     },
   });
+
+  const { settings } = useSettings();
+  const [jarsError, setJarsError] = useState<string | null>(null);
+  const nameQuery = watch('name') ?? '';
+
+  function applyJarsResult(company: JarsCompany): void {
+    setValue('name', company.name, { shouldDirty: true, shouldValidate: true });
+    setValue('code', company.code, { shouldDirty: true, shouldValidate: true });
+    if (company.vatCode) {
+      setValue('vatCode', company.vatCode, { shouldDirty: true, shouldValidate: true });
+    }
+    if (company.address) {
+      setValue('address', company.address, { shouldDirty: true, shouldValidate: true });
+    }
+    const status = company.status;
+    if (status && status !== 'ACTIVE') {
+      setJarsError(`Dėmesio: įmonės statusas Registrų centre — ${status}.`);
+      return;
+    }
+    setJarsError(null);
+  }
 
   useEffect(() => {
     if (open) {
@@ -100,13 +126,22 @@ export function ClientFormDialog({
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="client-name">Pavadinimas *</Label>
-            <Input
-              id="client-name"
-              placeholder="UAB Pavyzdys"
-              {...register('name')}
-              className={errors.name ? 'border-red-500 focus:ring-red-200' : ''}
-            />
+            <div className="flex items-center gap-2">
+              <Input
+                id="client-name"
+                placeholder="UAB Pavyzdys"
+                {...register('name')}
+                className={errors.name ? 'border-red-500 focus:ring-red-200' : ''}
+              />
+              <JarsCompanySearchButton
+                apiKey={settings?.jarsApiKey}
+                query={nameQuery}
+                onResult={applyJarsResult}
+                onError={setJarsError}
+              />
+            </div>
             {errors.name && <span className="text-xs text-red-500">{errors.name.message}</span>}
+            {jarsError && <span className="text-xs text-amber-600">{jarsError}</span>}
           </div>
 
           <div className="flex flex-col gap-1.5">

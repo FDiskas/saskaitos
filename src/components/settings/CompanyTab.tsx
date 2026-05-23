@@ -1,9 +1,11 @@
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Button, Input, Label, Textarea } from '@/components/ui';
+import { JarsCompanySearchButton } from '@/components/shared';
 import { fileToBase64 } from '@/lib/files';
 import { CompanyDtoSchema, type CompanyDto } from '@/lib/drive/settings';
+import type { JarsCompany } from '@/lib/jars';
 
 const EMPTY: CompanyDto = {
   name: '',
@@ -21,9 +23,10 @@ const DEBOUNCE_MS = 500;
 export interface CompanyTabProps {
   value: CompanyDto | null;
   onChange: (next: CompanyDto) => void;
+  jarsApiKey?: string;
 }
 
-export function CompanyTab({ value, onChange }: CompanyTabProps) {
+export function CompanyTab({ value, onChange, jarsApiKey }: CompanyTabProps) {
   const defaults = useMemo(() => value ?? EMPTY, [value]);
   const form = useForm<CompanyDto>({
     defaultValues: defaults,
@@ -32,6 +35,26 @@ export function CompanyTab({ value, onChange }: CompanyTabProps) {
   });
   const { register, watch, setValue, formState, reset } = form;
   const lastSnapshotRef = useRef<string>(JSON.stringify(defaults));
+  const [jarsError, setJarsError] = useState<string | null>(null);
+
+  function applyJarsResult(company: JarsCompany): void {
+    setValue('name', company.name, { shouldDirty: true, shouldValidate: true });
+    setValue('code', company.code, { shouldDirty: true, shouldValidate: true });
+    if (company.vatCode) {
+      setValue('vatCode', company.vatCode, { shouldDirty: true, shouldValidate: true });
+    }
+    if (company.address) {
+      setValue('address', company.address, { shouldDirty: true, shouldValidate: true });
+    }
+    const status = company.status;
+    if (status && status !== 'ACTIVE') {
+      setJarsError(`Dėmesio: įmonės statusas Registrų centre — ${status}.`);
+      return;
+    }
+    setJarsError(null);
+  }
+
+  const nameQuery = watch('name') ?? '';
 
   useEffect(() => {
     reset(defaults);
@@ -67,8 +90,16 @@ export function CompanyTab({ value, onChange }: CompanyTabProps) {
 
   return (
     <form className="grid gap-5 lg:grid-cols-2" onSubmit={(e) => e.preventDefault()}>
-      <Field label="Pavadinimas">
-        <Input {...register('name')} placeholder="UAB Pavyzdys" />
+      <Field label="Pavadinimas" error={jarsError ?? undefined}>
+        <div className="flex items-center gap-2">
+          <Input {...register('name')} placeholder="UAB Pavyzdys" />
+          <JarsCompanySearchButton
+            apiKey={jarsApiKey}
+            query={nameQuery}
+            onResult={applyJarsResult}
+            onError={setJarsError}
+          />
+        </div>
       </Field>
       <Field label="Įmonės kodas">
         <Input {...register('code')} placeholder="300000000" />

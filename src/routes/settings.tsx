@@ -5,7 +5,7 @@ import { useStorageOrNull } from '@/lib/storage';
 import { env } from '@/env';
 import { Card, CardBody, CardHeader, CardTitle, Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui';
 import { CompanyProfileSwitcher, SyncStatusBadge } from '@/components/shared';
-import { CompanyProfilesList, CompanyTab, DesignTab, EmailTab, SeriesTab } from '@/components/settings';
+import { CompanyProfilesList, CompanyTab, DesignTab, EmailTab, IntegrationsTab, SeriesTab } from '@/components/settings';
 import type { CompanyDto } from '@/lib/drive/settings';
 import type { SeriesDto } from '@/lib/drive/schemas';
 import type { DesignPresetDto } from '@/lib/drive/settings';
@@ -201,6 +201,11 @@ function SettingsContent() {
       })),
     [update],
   );
+  const setIntegrations = useCallback(
+    (next: { jarsApiKey?: string }) =>
+      update((s) => ({ ...s, jarsApiKey: next.jarsApiKey })),
+    [update],
+  );
 
   if (error) {
     return (
@@ -233,6 +238,7 @@ function SettingsContent() {
             <TabsTrigger value="company">Įmonė</TabsTrigger>
             <TabsTrigger value="series">Serijos</TabsTrigger>
             <TabsTrigger value="email">Email</TabsTrigger>
+            <TabsTrigger value="integrations">Integracijos</TabsTrigger>
             <TabsTrigger value="design">Dizainas</TabsTrigger>
           </TabsList>
           <TabsContent value="company">
@@ -245,7 +251,7 @@ function SettingsContent() {
                 onAdd={addCompany}
               />
               {activeCompany ? (
-                <CompanyTab value={activeCompany} onChange={setCompany} />
+                <CompanyTab value={activeCompany} onChange={setCompany} jarsApiKey={settings.jarsApiKey} />
               ) : (
                 <div className="rounded-lg border border-dashed border-slate-300 bg-slate-50 p-4 text-sm text-slate-500">
                   Pasirinkite juridinį vienetą redagavimui arba sukurkite naują.
@@ -263,6 +269,9 @@ function SettingsContent() {
               defaultBody={settings.defaultEmailBody}
               onChange={setEmailDefaults}
             />
+          </TabsContent>
+          <TabsContent value="integrations">
+            <IntegrationsTab jarsApiKey={settings.jarsApiKey} onChange={setIntegrations} />
           </TabsContent>
           <TabsContent value="design">
             <DesignTab presets={settings.designPresets} onChange={setPresets} />

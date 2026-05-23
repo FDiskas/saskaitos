@@ -17,6 +17,7 @@
 - [per-line-vat-on-invoice-lines](decisions/per-line-vat-on-invoice-lines.md) — VAT lives on line items; totals sum per-line VAT; global VAT action applies one rate to all lines. keywords: vat, pvm, line-item, totals, bulk-update
 - [block-instance-model](decisions/block-instance-model.md) — column.content is BlockInstance[] with per-instance settings; decor kinds (divider, custom-image) allowed multiple per layout; legacy auto-migrated. keywords: layout, block-instance, divider, image, decor, migration
 - [pdf-palette-colors](decisions/pdf-palette-colors.md) — preset/override expose 6 colors (primary/accent/text/muted/border/heading); PDF uses PdfPalette, no hardcoded grays. keywords: palette, colors, design-preset, override, pdf
+- [jars-company-lookup](decisions/jars-company-lookup.md) — manual-button jars.lt company search; user key in Drive settings; 100/mo free quota → no auto-fire. keywords: jars, company-search, api-key, lookup, integrations
 
 ## developer/
 

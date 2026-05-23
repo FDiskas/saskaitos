@@ -62,6 +62,7 @@ export interface SettingsDto {
   resendApiKey?: string;
   defaultEmailSubject?: string;
   defaultEmailBody?: string;
+  jarsApiKey?: string;
   designPresets: DesignPresetDto[];
   invoiceLayout: InvoiceTemplateLayoutDto;
 }
@@ -76,6 +77,7 @@ const RawSettingsSchema = z.object({
   resendApiKey: z.string().optional(),
   defaultEmailSubject: z.string().optional(),
   defaultEmailBody: z.string().optional(),
+  jarsApiKey: z.string().optional(),
   designPresets: z.array(DesignPresetDtoSchema).default([]),
   invoiceLayout: MigratedInvoiceLayoutSchema.default(defaultInvoiceTemplateLayout()),
 });
@@ -98,6 +100,7 @@ function normalizeCompanySelection(raw: z.infer<typeof RawSettingsSchema>): Sett
     resendApiKey: raw.resendApiKey,
     defaultEmailSubject: raw.defaultEmailSubject,
     defaultEmailBody: raw.defaultEmailBody,
+    jarsApiKey: raw.jarsApiKey,
     designPresets: raw.designPresets,
     invoiceLayout: raw.invoiceLayout,
   };

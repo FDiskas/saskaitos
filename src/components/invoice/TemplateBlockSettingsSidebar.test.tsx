@@ -14,10 +14,12 @@ vi.mock('@/components/shared', () => ({
       <span>{value}</span>
     </div>
   ),
+  JarsCompanySearchButton: () => null,
 }));
 
 vi.mock('@/hooks', () => ({
   useCreateClient: () => mockUseCreateClient(),
+  useSettings: () => ({ settings: null, isLoading: false, isUpdating: false, error: null, update: vi.fn() }),
 }));
 
 vi.mock('@/lib/files', () => ({

@@ -3,3 +3,4 @@ export { CompanyProfilesList, type CompanyProfilesListProps } from './CompanyPro
 export { SeriesTab, type SeriesTabProps } from './SeriesTab';
 export { EmailTab, type EmailTabProps } from './EmailTab';
 export { DesignTab, type DesignTabProps } from './DesignTab';
+export { IntegrationsTab, type IntegrationsTabProps } from './IntegrationsTab';
