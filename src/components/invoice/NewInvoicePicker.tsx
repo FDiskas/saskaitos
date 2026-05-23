@@ -1,8 +1,10 @@
-import { ArrowLeft, Loader2 } from 'lucide-react';
+import { useState } from 'react';
+import { ArrowLeft, Loader2, UserPlus } from 'lucide-react';
 import { Link } from '@tanstack/react-router';
 import { ClientCombobox } from '@/components/shared';
-import { type ClientId } from '@/lib/domain';
-import { useClients } from '@/hooks';
+import { ClientFormDialog, type ClientFormValues } from '@/components/clients';
+import { Client, ClientId } from '@/lib/domain';
+import { useClients, useCreateClient } from '@/hooks';
 
 export interface NewInvoicePickerProps {
   onClientSelected: (clientId: ClientId) => void;
@@ -11,11 +13,20 @@ export interface NewInvoicePickerProps {
 
 export function NewInvoicePicker({ onClientSelected, isPending }: NewInvoicePickerProps) {
   const { clients } = useClients();
+  const createClient = useCreateClient();
+  const [isFormOpen, setIsFormOpen] = useState(false);
 
-  const handleChange = (val: string | null) => {
+  const handleSelectExisting = (val: string | null) => {
     if (!val) return;
     const client = clients.find((c) => c.id.toString() === val);
     if (client) onClientSelected(client.id);
+  };
+
+  const handleCreateAndSelect = (values: ClientFormValues) => {
+    const created = clientFromForm(values);
+    createClient.mutate(created);
+    setIsFormOpen(false);
+    onClientSelected(created.id);
   };
 
   return (
@@ -28,7 +39,16 @@ export function NewInvoicePicker({ onClientSelected, isPending }: NewInvoicePick
 
         <div className="flex flex-col gap-2">
           <label className="text-xs font-semibold text-slate-500 uppercase">Klientas</label>
-          <ClientCombobox value={null} onChange={handleChange} placeholder="Pasirinkite iš sąrašo..." />
+          <ClientCombobox value={null} onChange={handleSelectExisting} placeholder="Pasirinkite iš sąrašo..." />
+          <button
+            type="button"
+            onClick={() => setIsFormOpen(true)}
+            disabled={isPending}
+            className="inline-flex items-center justify-center gap-1.5 rounded-md border border-dashed border-slate-300 px-3 py-2 text-xs font-medium text-slate-600 hover:bg-slate-50 hover:text-slate-900 hover:border-slate-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+          >
+            <UserPlus className="h-3.5 w-3.5" />
+            Sukurti naują klientą
+          </button>
         </div>
 
         {isPending && (
@@ -44,6 +64,31 @@ export function NewInvoicePicker({ onClientSelected, isPending }: NewInvoicePick
           </Link>
         </div>
       </div>
+
+      <ClientFormDialog
+        open={isFormOpen}
+        onOpenChange={setIsFormOpen}
+        editingClient={null}
+        onSave={handleCreateAndSelect}
+        isSaving={createClient.isPending}
+      />
     </div>
   );
+}
+
+function clientFromForm(values: ClientFormValues): Client {
+  const now = new Date();
+  return Client.of({
+    id: ClientId.create(),
+    name: values.name,
+    code: values.code || undefined,
+    vatCode: values.vatCode || undefined,
+    address: values.address,
+    email: values.email || undefined,
+    phone: values.phone || undefined,
+    contactPerson: values.contactPerson || undefined,
+    notes: values.notes || undefined,
+    createdAt: now,
+    updatedAt: now,
+  });
 }

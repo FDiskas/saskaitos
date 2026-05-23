@@ -8,7 +8,7 @@ import {
   useSettings,
 } from '@/hooks';
 import { env } from '@/env';
-import { AppHeader } from '@/components/shared';
+import { AppFooter, AppHeader } from '@/components/shared';
 import { Card, CardBody } from '@/components/ui';
 import {
   DashboardFilters,
@@ -73,6 +73,8 @@ export function DashboardPage() {
       ) : (
         <DashboardContent />
       )}
+
+      <AppFooter />
     </main>
   );
 }

@@ -12,7 +12,7 @@ import {
 import { env } from '@/env';
 import { useStorageOrNull } from '@/lib/storage';
 import { Client, ClientId } from '@/lib/domain';
-import { AppHeader } from '@/components/shared';
+import { AppFooter, AppHeader } from '@/components/shared';
 import { Card, CardBody } from '@/components/ui';
 import {
   ClientDeleteDialog,
@@ -44,6 +44,7 @@ export function ClientsPage() {
             </p>
           </CardBody>
         </Card>
+        <AppFooter />
       </main>
     );
   }
@@ -52,6 +53,7 @@ export function ClientsPage() {
     <main className="min-h-screen bg-slate-50 px-4 py-6 sm:px-6 sm:py-8">
       <AppHeader title="Klientų Valdymas" current="clients" />
       <ClientsContent />
+      <AppFooter />
     </main>
   );
 }

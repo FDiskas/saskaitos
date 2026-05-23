@@ -4,7 +4,7 @@ import { useGoogleAuth, useSettings } from '@/hooks';
 import { useStorageOrNull } from '@/lib/storage';
 import { env } from '@/env';
 import { Card, CardBody, CardHeader, CardTitle, Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui';
-import { AppHeader } from '@/components/shared';
+import { AppFooter, AppHeader } from '@/components/shared';
 import { CompanyProfilesList, CompanyTab, DesignTab, EmailTab, IntegrationsTab, SeriesTab } from '@/components/settings';
 import type { CompanyDto } from '@/lib/drive/settings';
 import type { SeriesDto } from '@/lib/drive/schemas';
@@ -50,6 +50,8 @@ export function SettingsPage() {
           </CardBody>
         </Card>
       )}
+
+      <AppFooter />
     </main>
   );
 }
