@@ -23,7 +23,6 @@ const Metadata = z.object({
 
 interface CatalogEntry {
   family: string;
-  subsets: string[];
   files: { 400: string; 700: string };
 }
 
@@ -79,7 +78,7 @@ function parseTtfFromCss(css: string): Map<number, string> {
   return result;
 }
 
-async function loadEntry(family: string, subsets: string[]): Promise<CatalogEntry | null> {
+async function loadEntry(family: string): Promise<CatalogEntry | null> {
   try {
     const url = `${CSS_URL}?family=${familyToParam(family)}:wght@400;700&subset=${REQUIRED_SUBSET}&display=swap`;
     const css = await httpsGet(url, { 'user-agent': '' });
@@ -87,7 +86,7 @@ async function loadEntry(family: string, subsets: string[]): Promise<CatalogEntr
     const r400 = ttfs.get(400);
     const r700 = ttfs.get(700);
     if (!r400 || !r700) return null;
-    return { family, subsets, files: { 400: r400, 700: r700 } };
+    return { family, files: { 400: r400, 700: r700 } };
   } catch (e) {
     process.stderr.write(`skip ${family}: ${e instanceof Error ? e.message : String(e)}\n`);
     return null;
@@ -131,7 +130,7 @@ async function main(): Promise<void> {
   const results = await runPool(
     candidates,
     async (f) => {
-      const entry = await loadEntry(f.family, f.subsets);
+      const entry = await loadEntry(f.family);
       progress += 1;
       if (progress % 50 === 0) {
         process.stdout.write(`  ${progress}/${candidates.length}…\n`);
@@ -146,7 +145,6 @@ async function main(): Promise<void> {
 
   const catalog = {
     generatedAt: new Date().toISOString(),
-    source: 'fonts.google.com/metadata/fonts + fonts.googleapis.com/css2 (empty UA)',
     fonts,
   };
 

@@ -8,13 +8,11 @@ const WeightFiles = z.object({
 
 const CatalogFont = z.object({
   family: z.string().min(1),
-  subsets: z.array(z.string()),
   files: WeightFiles,
 });
 
 const Catalog = z.object({
   generatedAt: z.string(),
-  source: z.string(),
   fonts: z.array(CatalogFont).nonempty(),
 });
 
@@ -22,7 +20,6 @@ type CatalogFontT = z.infer<typeof CatalogFont>;
 
 export type FontStack = readonly [string, string];
 
-const LITHUANIAN_SUBSET = 'latin-ext';
 const FONT_WEIGHTS = [400, 700] as const;
 const FALLBACK_FAMILY = 'Roboto';
 const BUILTIN_FALLBACK = 'Helvetica';
@@ -50,17 +47,8 @@ function findEntry(family: string): CatalogFontT | undefined {
   return catalog.fonts.find((f) => f.family === family);
 }
 
-function supportsLithuanian(entry: CatalogFontT): boolean {
-  return entry.subsets.includes(LITHUANIAN_SUBSET);
-}
-
-function isUsableFamily(family: string): boolean {
-  const entry = findEntry(family);
-  return entry !== undefined && supportsLithuanian(entry);
-}
-
 function resolveBaseFamily(family: string | undefined): string {
-  if (family && isUsableFamily(family)) return family;
+  if (family && findEntry(family)) return family;
   return FALLBACK_FAMILY;
 }
 
@@ -68,12 +56,10 @@ export function resolveFontStack(family: string | undefined): FontStack {
   return [resolveBaseFamily(family), BUILTIN_FALLBACK];
 }
 
-export const availableFontFamilies: ReadonlyArray<string> = catalog.fonts
-  .filter(supportsLithuanian)
-  .map((f) => f.family);
+export const availableFontFamilies: ReadonlyArray<string> = catalog.fonts.map((f) => f.family);
 
 export function isFontAvailable(family: string): boolean {
-  return isUsableFamily(family);
+  return findEntry(family) !== undefined;
 }
 
 function clearStaleSources(
