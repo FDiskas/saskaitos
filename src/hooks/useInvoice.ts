@@ -29,11 +29,10 @@ export function getInvoicePdfPath(client: Client, number: InvoiceNumber, date: D
 export function useInvoice(invoiceId: string) {
   const storage = useStorage();
   const { clients, isLoading: isClientsLoading } = useClients();
-  const clientsKey = clients.map((client) => client.id.toString()).join(',');
 
-  // eslint-disable-next-line @tanstack/query/exhaustive-deps -- storage is stable via context
+  // eslint-disable-next-line @tanstack/query/exhaustive-deps -- storage and clients are read freshly; invalidation drives refetch
   const query = useQuery({
-    queryKey: [...queryKeys.invoice(invoiceId), clientsKey],
+    queryKey: queryKeys.invoice(invoiceId),
     queryFn: async (): Promise<Invoice | null> => {
       if (invoiceId === 'new') return null;
 

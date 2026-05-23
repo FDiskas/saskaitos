@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { type Invoice } from '@/lib/domain';
 
 const DEBOUNCE_MS = 500;
@@ -17,14 +17,18 @@ export function useInvoiceAutosave({ local, server, enabled, onSave }: AutosaveO
     server !== null &&
     local.updatedAt.getTime() > server.updatedAt.getTime();
 
+  const onSaveRef = useRef(onSave);
+  useEffect(() => {
+    onSaveRef.current = onSave;
+  });
+
   useEffect(() => {
     if (!isPendingSave || !local || !server) return;
     const timer = setTimeout(() => {
-      onSave({ updated: local, previous: server });
+      onSaveRef.current({ updated: local, previous: server });
     }, DEBOUNCE_MS);
-
     return () => clearTimeout(timer);
-  }, [isPendingSave, local, server, onSave]);
+  }, [isPendingSave, local, server]);
 
   return isPendingSave;
 }

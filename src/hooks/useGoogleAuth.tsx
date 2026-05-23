@@ -109,19 +109,24 @@ function InnerAuthProvider({ children }: { children: ReactNode }) {
     },
   });
 
+  const triggerLoginRef = useRef(triggerLogin);
+  useEffect(() => {
+    triggerLoginRef.current = triggerLogin;
+  });
+
   const login = useCallback((): void => {
     setIsLoading(true);
     setError(null);
-    triggerLogin();
-  }, [triggerLogin]);
+    triggerLoginRef.current();
+  }, []);
 
   const refreshAccessToken = useCallback(
     (): Promise<string | null> =>
       new Promise<string | null>((resolve) => {
         refreshResolverRef.current = resolve;
-        triggerLogin({ prompt: '' });
+        triggerLoginRef.current({ prompt: '' });
       }),
-    [triggerLogin],
+    [],
   );
 
   const logout = useCallback((): void => {

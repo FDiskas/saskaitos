@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import {
   DndContext,
   DragOverlay,
@@ -71,34 +71,42 @@ export function InvoiceEditorPage() {
     setActiveLibraryDragLabel(resolveDragLabel(String(event.active.id)));
   };
 
+  const createMutationRef = useRef(createMutation);
   useEffect(() => {
-    if (
-      isNew &&
-      clientId &&
-      !isClientsLoading &&
-      !createMutation.isPending &&
-      !createMutation.isSuccess &&
-      !createMutation.isError
-    ) {
-      try {
-        const parsedId = ClientId.fromString(clientId);
-        createMutation.mutate(parsedId);
-      } catch (err) {
-        console.error('Invalid client ID in query params', err);
-      }
-    }
-  }, [isNew, clientId, isClientsLoading, createMutation]);
+    createMutationRef.current = createMutation;
+  });
+  const autoCreateAttemptedRef = useRef(false);
 
   useEffect(() => {
-    if (invoice && !updateMutation.isPending) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setLocalInvoice(invoice);
+    if (!isNew || !clientId || isClientsLoading) return;
+    if (autoCreateAttemptedRef.current) return;
+    autoCreateAttemptedRef.current = true;
+    try {
+      const parsedId = ClientId.fromString(clientId);
+      createMutationRef.current.mutate(parsedId);
+    } catch (err) {
+      console.error('Invalid client ID in query params', err);
     }
+  }, [isNew, clientId, isClientsLoading]);
+
+  useEffect(() => {
+    if (!invoice) return;
+    if (updateMutation.isPending) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setLocalInvoice((current) => {
+      if (!current) return invoice;
+      if (current.updatedAt.getTime() > invoice.updatedAt.getTime()) return current;
+      return invoice;
+    });
   }, [invoice, updateMutation.isPending]);
 
+  const updateMutationRef = useRef(updateMutation);
+  useEffect(() => {
+    updateMutationRef.current = updateMutation;
+  });
   const handleSave = useCallback(
-    (payload: { updated: Invoice; previous: Invoice }) => updateMutation.mutate(payload),
-    [updateMutation],
+    (payload: { updated: Invoice; previous: Invoice }) => updateMutationRef.current.mutate(payload),
+    [],
   );
 
   const handleLayoutChange = useCallback(
