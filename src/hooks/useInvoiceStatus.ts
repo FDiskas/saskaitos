@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { queryKeys } from '@/query-keys';
-import { StoragePath, useStorage, type Storage } from '@/lib/storage';
+import { StoragePath, type Storage } from '@/lib/storage';
+import { useStorage } from './useStorage';
 import { applyStatus, InvoiceSummary, type Client, type InvoiceStatus } from '@/lib/domain';
 import {
   InvoiceDtoSchema,

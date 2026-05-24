@@ -1,8 +1,8 @@
 import type { ReactNode } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { RouterProvider } from '@tanstack/react-router';
-import { GoogleAuthProvider, useGoogleAuth } from '@/hooks';
-import { StorageProvider } from '@/lib/storage';
+import { useGoogleAuth } from '@/hooks';
+import { GoogleAuthProvider, StorageProvider } from '@/providers';
 import { env } from '@/env';
 import { router } from '@/router';
 import type { TokenSource } from '@/lib/drive';

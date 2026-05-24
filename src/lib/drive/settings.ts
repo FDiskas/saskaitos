@@ -106,7 +106,8 @@ function normalizeCompanySelection(raw: z.infer<typeof RawSettingsSchema>): Sett
   };
 }
 
-export const SettingsDtoSchema: z.ZodType<SettingsDto> = RawSettingsSchema.transform(normalizeCompanySelection);
+export const SettingsDtoSchema: z.ZodType<SettingsDto, z.ZodTypeDef, unknown> =
+  RawSettingsSchema.transform(normalizeCompanySelection);
 
 export function defaultSettings(): SettingsDto {
   const initialSeries: SeriesDto = {

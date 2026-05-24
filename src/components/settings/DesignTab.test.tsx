@@ -38,7 +38,7 @@ describe('DesignTab', () => {
     });
 
     expect(onChange).toHaveBeenCalledTimes(1);
-    const nextPresets = onChange.mock.calls[0][0] as DesignPresetDto[];
+    const nextPresets = (onChange.mock.calls[0]?.[0] ?? []) as DesignPresetDto[];
     expect(nextPresets[0]?.textColor).toBe('#111111');
   });
 });

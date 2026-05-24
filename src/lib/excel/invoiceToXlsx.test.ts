@@ -90,7 +90,6 @@ const mockSettings: SettingsDto = {
   designPresets: [],
   invoiceLayout: {
     layout: [],
-    blockSettings: {},
   },
 };
 

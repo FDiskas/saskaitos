@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { queryKeys } from '@/query-keys';
-import { useStorage } from '@/lib/storage';
+import { useStorage } from './useStorage';
 import { useClients } from './useClients';
 import { type Invoice, type Client, type InvoiceNumber } from '@/lib/domain';
 import { InvoiceDtoSchema, invoiceFromDto, InvoicesIndexFileSchema, type InvoiceIndexEntry } from '@/lib/drive/schemas';

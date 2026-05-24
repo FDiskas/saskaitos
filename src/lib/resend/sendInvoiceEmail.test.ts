@@ -1,5 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { z } from 'zod';
 import { sendInvoiceEmail } from './sendInvoiceEmail';
+
+const AttachmentSchema = z.object({ filename: z.string(), content: z.string() });
 
 function getJsonRequestBody(fetchMock: ReturnType<typeof vi.fn>, callIndex = 0): Record<string, unknown> {
   const call = fetchMock.mock.calls[callIndex];
@@ -121,12 +124,12 @@ describe('sendInvoiceEmail', () => {
 
     expect(fetchMock).toHaveBeenCalled();
     const bodyObj = getJsonRequestBody(fetchMock);
+    const attachments = z.array(AttachmentSchema).parse(bodyObj.attachments);
 
-    expect(bodyObj.attachments).toHaveLength(1);
-    expect(bodyObj.attachments[0].filename).toBe('invoice.pdf');
-    expect(bodyObj.attachments[0].content).toBeTypeOf('string');
-    // Check if the content is valid base64 (corresponds to our input)
-    expect(bodyObj.attachments[0].content).toBe(btoa('%PDF-1.4 dummy content'));
+    expect(attachments).toHaveLength(1);
+    expect(attachments[0]?.filename).toBe('invoice.pdf');
+    expect(attachments[0]?.content).toBeTypeOf('string');
+    expect(attachments[0]?.content).toBe(btoa('%PDF-1.4 dummy content'));
   });
 
   it('when Resend API returns error, then sendInvoiceEmail throws error with message', async () => {

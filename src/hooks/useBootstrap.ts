@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
-import { ensureAppStructure, useStorageOrNull } from '@/lib/storage';
+import { ensureAppStructure } from '@/lib/storage';
+import { useStorageOrNull } from './useStorage';
 
 export function useBootstrap(): { isReady: boolean; isPending: boolean; error: unknown } {
   const storage = useStorageOrNull();

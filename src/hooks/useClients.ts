@@ -1,12 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { queryKeys } from '@/query-keys';
-import {
-  APP_ROOT,
-  CLIENTS_FILE,
-  StoragePath,
-  useStorage,
-  type Storage,
-} from '@/lib/storage';
+import { APP_ROOT, CLIENTS_FILE, StoragePath, type Storage } from '@/lib/storage';
+import { useStorage } from './useStorage';
 import type { Client } from '@/lib/domain';
 import { ClientsFileSchema, clientToDto, clientFromDto } from '@/lib/drive/schemas';
 import { syncQueue } from '@/stores';

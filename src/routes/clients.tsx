@@ -8,9 +8,9 @@ import {
   useUpdateClient,
   useDeleteClient,
   useGoogleAuth,
+  useStorageOrNull,
 } from '@/hooks';
 import { env } from '@/env';
-import { useStorageOrNull } from '@/lib/storage';
 import { Client, ClientId } from '@/lib/domain';
 import { AppFooter, AppHeader } from '@/components/shared';
 import { Card, CardBody } from '@/components/ui';

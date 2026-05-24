@@ -1,7 +1,5 @@
 import {
-  createContext,
   useCallback,
-  useContext,
   useEffect,
   useMemo,
   useRef,
@@ -9,7 +7,6 @@ import {
   type ReactNode,
 } from 'react';
 import { GoogleOAuthProvider, useGoogleLogin } from '@react-oauth/google';
-import { z } from 'zod';
 import type { TokenSource } from '@/lib/drive/http';
 import {
   clearSession,
@@ -18,31 +15,15 @@ import {
   saveSession,
   sessionFromTokenResponse,
 } from '@/lib/auth/sessionStore';
+import {
+  GoogleAuthContext,
+  UserInfoSchema,
+  type GoogleAuthValue,
+  type GoogleUser,
+} from './googleAuthContext';
 
 const DRIVE_SCOPE = 'openid email profile https://www.googleapis.com/auth/drive.file';
 const REFRESH_INTERVAL_MS = 55 * 60 * 1000;
-
-const UserInfoSchema = z.object({
-  email: z.string().email(),
-  name: z.string().optional(),
-  picture: z.string().url().optional(),
-});
-
-export type GoogleUser = z.infer<typeof UserInfoSchema>;
-
-export interface GoogleAuthValue {
-  user: GoogleUser | null;
-  accessToken: string | null;
-  isAuthenticated: boolean;
-  isLoading: boolean;
-  isRestoring: boolean;
-  error: string | null;
-  login: () => void;
-  logout: () => void;
-  tokenSource: TokenSource;
-}
-
-const GoogleAuthContext = createContext<GoogleAuthValue | null>(null);
 
 export function GoogleAuthProvider({
   clientId,
@@ -202,27 +183,6 @@ function InnerAuthProvider({ children }: { children: ReactNode }) {
   );
 
   return <GoogleAuthContext.Provider value={value}>{children}</GoogleAuthContext.Provider>;
-}
-
-const detachedTokenSource: TokenSource = {
-  getAccessToken: () => null,
-  refreshAccessToken: async () => null,
-};
-
-const detachedAuth: GoogleAuthValue = {
-  user: null,
-  accessToken: null,
-  isAuthenticated: false,
-  isLoading: false,
-  isRestoring: false,
-  error: null,
-  login: () => undefined,
-  logout: () => undefined,
-  tokenSource: detachedTokenSource,
-};
-
-export function useGoogleAuth(): GoogleAuthValue {
-  return useContext(GoogleAuthContext) ?? detachedAuth;
 }
 
 async function fetchUserInfo(token: string): Promise<GoogleUser> {

@@ -7,11 +7,11 @@ import {
 
 const LazyPreview = lazy(() => import('./PdfFontExperimentPreview'));
 
-type LoadState =
-  | { kind: 'idle' }
-  | { kind: 'loading' }
+type LoadResult =
   | { kind: 'ready'; family: string; ms: number }
-  | { kind: 'error'; message: string };
+  | { kind: 'error'; family: string; message: string };
+
+type LoadState = { kind: 'loading' } | LoadResult;
 
 function describeError(e: unknown): string {
   if (e instanceof Error) return e.message;
@@ -19,7 +19,6 @@ function describeError(e: unknown): string {
 }
 
 function StatusLine({ state }: { state: LoadState }) {
-  if (state.kind === 'idle') return <span className="text-slate-500">Pasirink šriftą</span>;
   if (state.kind === 'loading') return <span className="text-slate-500">Kraunama…</span>;
   if (state.kind === 'ready')
     return (
@@ -32,25 +31,27 @@ function StatusLine({ state }: { state: LoadState }) {
 
 export function PdfFontExperiment() {
   const [family, setFamily] = useState<string>(availableFontFamilies[0] ?? 'DM Sans');
-  const [state, setState] = useState<LoadState>({ kind: 'idle' });
+  const [result, setResult] = useState<LoadResult | null>(null);
 
   useEffect(() => {
     let cancelled = false;
-    setState({ kind: 'loading' });
     const t0 = performance.now();
     ensureGoogleFontRegistered(family)
       .then(() => {
         if (cancelled) return;
-        setState({ kind: 'ready', family, ms: performance.now() - t0 });
+        setResult({ kind: 'ready', family, ms: performance.now() - t0 });
       })
       .catch((e: unknown) => {
         if (cancelled) return;
-        setState({ kind: 'error', message: describeError(e) });
+        setResult({ kind: 'error', family, message: describeError(e) });
       });
     return () => {
       cancelled = true;
     };
   }, [family]);
+
+  const state: LoadState =
+    result === null || result.family !== family ? { kind: 'loading' } : result;
 
   return (
     <div className="mx-auto max-w-4xl space-y-4 p-6">

@@ -1,4 +1,4 @@
-import { Money } from '@/lib/domain';
+import { type Money } from '@/lib/domain';
 
 const UNITS = [
   'nulis',
@@ -82,7 +82,8 @@ function convertTriadToWords(triad: number): string {
   }
 
   if (remainder >= 10 && remainder <= 19) {
-    parts.push(TEENS[remainder - 10]);
+    const teenWord = TEENS[remainder - 10];
+    if (teenWord) parts.push(teenWord);
     return parts.join(' ');
   }
 
@@ -90,11 +91,13 @@ function convertTriadToWords(triad: number): string {
   const units = remainder % 10;
 
   if (tens >= 2) {
-    parts.push(TENS[tens]);
+    const tenWord = TENS[tens];
+    if (tenWord) parts.push(tenWord);
   }
 
   if (units > 0) {
-    parts.push(UNITS[units]);
+    const unitWord = UNITS[units];
+    if (unitWord) parts.push(unitWord);
   }
 
   return parts.join(' ');

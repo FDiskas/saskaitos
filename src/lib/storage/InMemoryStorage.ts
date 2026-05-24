@@ -1,5 +1,4 @@
-import type { ZodType } from 'zod';
-import type { ListQuery, Storage, StorageEntry } from './Storage';
+import type { ListQuery, Storage, StorageEntry, StorageReadSchema } from './Storage';
 import type { StoragePath } from './StoragePath';
 
 interface Record {
@@ -11,7 +10,7 @@ interface Record {
 export class InMemoryStorage implements Storage {
   private readonly files = new Map<string, Record>();
 
-  async read<T>(path: StoragePath, schema: ZodType<T>): Promise<T | null> {
+  async read<T>(path: StoragePath, schema: StorageReadSchema<T>): Promise<T | null> {
     const record = this.files.get(path.toString());
     if (!record) return null;
     if (typeof record.body !== 'string') return null;

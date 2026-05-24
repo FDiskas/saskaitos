@@ -1,6 +1,5 @@
-import type { ZodType } from 'zod';
 import type { DriveClient } from '@/lib/drive/DriveClient';
-import type { ListQuery, Storage, StorageEntry } from './Storage';
+import type { ListQuery, Storage, StorageEntry, StorageReadSchema } from './Storage';
 import type { StoragePath } from './StoragePath';
 
 const ROOT = 'root';
@@ -13,7 +12,7 @@ export class DriveStorage implements Storage {
     this.client = client;
   }
 
-  async read<T>(path: StoragePath, schema: ZodType<T>): Promise<T | null> {
+  async read<T>(path: StoragePath, schema: StorageReadSchema<T>): Promise<T | null> {
     const parentId = await this.resolveFolder(path.folder, { create: false });
     if (!parentId) return null;
     const file = await this.client.findFile(path.name, parentId);
