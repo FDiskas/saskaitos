@@ -2,7 +2,8 @@ import type { ReactNode } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { RouterProvider } from '@tanstack/react-router';
 import { useGoogleAuth } from '@/hooks';
-import { GoogleAuthProvider, StorageProvider } from '@/providers';
+import { GoogleAuthProvider, LanguageProvider, StorageProvider } from '@/providers';
+import { LanguageBridge } from '@/components/shared/LanguageBridge';
 import { env } from '@/env';
 import { router } from '@/router';
 import type { TokenSource } from '@/lib/drive';
@@ -20,19 +21,25 @@ export function App() {
   if (env.useInMemory) {
     return (
       <QueryClientProvider client={queryClient}>
-        <StorageProvider useInMemory hasToken={false} tokenSource={noopTokenSource}>
-          <RouterProvider router={router} />
-        </StorageProvider>
+        <LanguageProvider>
+          <StorageProvider useInMemory hasToken={false} tokenSource={noopTokenSource}>
+            <LanguageBridge />
+            <RouterProvider router={router} />
+          </StorageProvider>
+        </LanguageProvider>
       </QueryClientProvider>
     );
   }
   return (
     <QueryClientProvider client={queryClient}>
-      <GoogleAuthProvider clientId={env.googleClientId}>
-        <StorageWiring>
-          <RouterProvider router={router} />
-        </StorageWiring>
-      </GoogleAuthProvider>
+      <LanguageProvider>
+        <GoogleAuthProvider clientId={env.googleClientId}>
+          <StorageWiring>
+            <LanguageBridge />
+            <RouterProvider router={router} />
+          </StorageWiring>
+        </GoogleAuthProvider>
+      </LanguageProvider>
     </QueryClientProvider>
   );
 }

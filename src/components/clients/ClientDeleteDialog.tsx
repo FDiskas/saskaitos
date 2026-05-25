@@ -7,6 +7,7 @@ import {
   AlertDialogTitle,
   Button,
 } from '@/components/ui';
+import { useTranslate } from '@/hooks';
 
 export interface ClientDeleteDialogProps {
   client: Client | null;
@@ -21,18 +22,20 @@ export function ClientDeleteDialog({
   onCancel,
   isDeleting,
 }: ClientDeleteDialogProps) {
+  const t = useTranslate();
   return (
     <AlertDialog open={client !== null} onOpenChange={(open) => !open && onCancel()}>
       <AlertDialogHeader>
-        <AlertDialogTitle>Ar tikrai norite ištrinti klientą?</AlertDialogTitle>
+        <AlertDialogTitle>{t['clients.delete.title']}</AlertDialogTitle>
         <AlertDialogDescription>
-          Šis veiksmas pašalins klientą <strong className="text-slate-900">{client?.name}</strong> iš pagrindinio sąrašo.
-          Kliento aplankas Drive saugykloje bus perkeltas į šiukšlinę (pažymėtas kaip trashed), jo duomenys nebus visiškai ištrinti.
+          {t['clients.delete.descriptionPrefix']}
+          <strong className="text-slate-900">{client?.name}</strong>
+          {t['clients.delete.descriptionSuffix']}
         </AlertDialogDescription>
       </AlertDialogHeader>
       <AlertDialogFooter>
         <Button variant="secondary" onClick={onCancel} className="cursor-pointer">
-          Atšaukti
+          {t['clients.delete.cancel']}
         </Button>
         <Button
           variant="destructive"
@@ -40,7 +43,7 @@ export function ClientDeleteDialog({
           disabled={isDeleting}
           className="cursor-pointer shadow-sm"
         >
-          Ištrinti
+          {t['clients.delete.confirm']}
         </Button>
       </AlertDialogFooter>
     </AlertDialog>

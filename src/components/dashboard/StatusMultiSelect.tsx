@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Check, ChevronsUpDown, X } from 'lucide-react';
+import { useTranslate } from '@/hooks';
 import type { InvoiceStatus } from '@/lib/domain';
 import { ALL_STATUSES, statusMeta } from './statusMeta';
 
@@ -12,8 +13,10 @@ export interface StatusMultiSelectProps {
 export function StatusMultiSelect({
   value,
   onChange,
-  placeholder = 'Visi statusai',
+  placeholder,
 }: StatusMultiSelectProps) {
+  const t = useTranslate();
+  const effectivePlaceholder = placeholder ?? t['dashboard.filters.allStatuses'];
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -37,8 +40,8 @@ export function StatusMultiSelect({
 
   const label =
     value.length === 0
-      ? placeholder
-      : value.map((s) => statusMeta(s).label).join(', ');
+      ? effectivePlaceholder
+      : value.map((s) => statusMeta(s, t).label).join(', ');
 
   return (
     <div ref={ref} className="relative w-full">
@@ -71,7 +74,7 @@ export function StatusMultiSelect({
       {open ? (
         <div className="absolute z-50 mt-1 w-full rounded-md border border-slate-200 bg-white py-1 shadow-lg">
           {ALL_STATUSES.map((s) => {
-            const m = statusMeta(s);
+            const m = statusMeta(s, t);
             const active = value.includes(s);
             return (
               <button

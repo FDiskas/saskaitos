@@ -1,5 +1,4 @@
-/* eslint-disable react-refresh/only-export-components */
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -17,21 +16,29 @@ import {
   Textarea,
 } from '@/components/ui';
 import { JarsCompanySearchButton } from '@/components/shared';
-import { useSettings } from '@/hooks';
+import { useLanguage, useSettings, useTranslate } from '@/hooks';
+import { translate, withParams } from '@/lib/translate';
 import type { JarsCompany } from '@/lib/jars';
 
-export const clientFormSchema = z.object({
-  name: z.string().min(1, 'Pavadinimas yra privalomas'),
-  code: z.string().optional(),
-  vatCode: z.string().optional(),
-  address: z.string().min(1, 'Adresas yra privalomas'),
-  email: z.union([z.string().email('Neteisingas el. pašto formatas'), z.string().length(0)]).optional(),
-  phone: z.string().optional(),
-  contactPerson: z.string().optional(),
-  notes: z.string().optional(),
-});
+function buildClientFormSchema(t: typeof translate) {
+  return z.object({
+    name: z.string().min(1, t['clients.form.errorNameRequired'] as string),
+    code: z.string().optional(),
+    vatCode: z.string().optional(),
+    address: z.string().min(1, t['clients.form.errorAddressRequired'] as string),
+    email: z
+      .union([
+        z.string().email(t['clients.form.errorEmailInvalid'] as string),
+        z.string().length(0),
+      ])
+      .optional(),
+    phone: z.string().optional(),
+    contactPerson: z.string().optional(),
+    notes: z.string().optional(),
+  });
+}
 
-export type ClientFormValues = z.infer<typeof clientFormSchema>;
+export type ClientFormValues = z.infer<ReturnType<typeof buildClientFormSchema>>;
 
 export interface ClientFormDialogProps {
   open: boolean;
@@ -48,6 +55,10 @@ export function ClientFormDialog({
   onSave,
   isSaving,
 }: ClientFormDialogProps) {
+  const { language } = useLanguage();
+  // language drives translate mutation; rebuild schema when it changes
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const clientFormSchema = useMemo(() => buildClientFormSchema(translate), [language]);
   const {
     register,
     handleSubmit,
@@ -70,6 +81,7 @@ export function ClientFormDialog({
   });
 
   const { settings } = useSettings();
+  const t = useTranslate();
   const [jarsError, setJarsError] = useState<string | null>(null);
   const nameQuery = watch('name') ?? '';
 
@@ -84,7 +96,7 @@ export function ClientFormDialog({
     }
     const status = company.status;
     if (status && status !== 'ACTIVE') {
-      setJarsError(`Dėmesio: įmonės statusas Registrų centre — ${status}.`);
+      setJarsError(withParams(t['clients.form.jarsStatusWarning'], { status }));
       return;
     }
     setJarsError(null);
@@ -112,11 +124,11 @@ export function ClientFormDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogHeader>
-        <DialogTitle>{editingClient ? 'Redaguoti Klientą' : 'Pridėti Klientą'}</DialogTitle>
+        <DialogTitle>{editingClient ? t['clients.form.titleEdit'] : t['clients.form.titleCreate']}</DialogTitle>
         <DialogDescription>
           {editingClient
-            ? 'Atnaujinkite kliento profilio informaciją žemiau.'
-            : 'Įveskite naujo kliento informaciją profiliui sukurti.'}
+            ? t['clients.form.descriptionEdit']
+            : t['clients.form.descriptionCreate']}
         </DialogDescription>
       </DialogHeader>
 
@@ -125,11 +137,11 @@ export function ClientFormDialog({
 
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="client-name">Pavadinimas *</Label>
+            <Label htmlFor="client-name">{t['clients.form.fieldName']}</Label>
             <div className="flex items-center gap-2">
               <Input
                 id="client-name"
-                placeholder="UAB Pavyzdys"
+                placeholder={t['clients.form.placeholderName']}
                 {...register('name')}
                 className={errors.name ? 'border-red-500 focus:ring-red-200' : ''}
               />
@@ -145,10 +157,10 @@ export function ClientFormDialog({
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="client-address">Adresas *</Label>
+            <Label htmlFor="client-address">{t['clients.form.fieldAddress']}</Label>
             <Input
               id="client-address"
-              placeholder="Gedimino pr. 1, Vilnius"
+              placeholder={t['clients.form.placeholderAddress']}
               {...register('address')}
               className={errors.address ? 'border-red-500 focus:ring-red-200' : ''}
             />
@@ -160,22 +172,22 @@ export function ClientFormDialog({
 
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="client-code">Įmonės kodas</Label>
-            <Input id="client-code" placeholder="301234567" {...register('code')} />
+            <Label htmlFor="client-code">{t['clients.form.fieldCompanyCode']}</Label>
+            <Input id="client-code" placeholder={t['clients.form.placeholderCompanyCode']} {...register('code')} />
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="client-vatCode">PVM kodas</Label>
-            <Input id="client-vatCode" placeholder="LT100012345617" {...register('vatCode')} />
+            <Label htmlFor="client-vatCode">{t['clients.form.fieldVatCode']}</Label>
+            <Input id="client-vatCode" placeholder={t['clients.form.placeholderVatCode']} {...register('vatCode')} />
           </div>
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="client-email">El. paštas</Label>
+            <Label htmlFor="client-email">{t['clients.form.fieldEmail']}</Label>
             <Input
               id="client-email"
-              placeholder="info@pavyzdys.lt"
+              placeholder={t['clients.form.placeholderEmail']}
               {...register('email')}
               className={errors.email ? 'border-red-500 focus:ring-red-200' : ''}
             />
@@ -183,27 +195,35 @@ export function ClientFormDialog({
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="client-phone">Telefonas</Label>
-            <Input id="client-phone" placeholder="+37060000000" {...register('phone')} />
+            <Label htmlFor="client-phone">{t['clients.form.fieldPhone']}</Label>
+            <Input id="client-phone" placeholder={t['clients.form.placeholderPhone']} {...register('phone')} />
           </div>
         </div>
 
         <div className="flex flex-col gap-1.5">
-          <Label htmlFor="client-contactPerson">Kontaktinis asmuo</Label>
-          <Input id="client-contactPerson" placeholder="Vardenis Pavardenis" {...register('contactPerson')} />
+          <Label htmlFor="client-contactPerson">{t['clients.form.fieldContactPerson']}</Label>
+          <Input
+            id="client-contactPerson"
+            placeholder={t['clients.form.placeholderContactPerson']}
+            {...register('contactPerson')}
+          />
         </div>
 
         <div className="flex flex-col gap-1.5">
-          <Label htmlFor="client-notes">Pastabos</Label>
-          <Textarea id="client-notes" placeholder="Papildoma informacija..." {...register('notes')} />
+          <Label htmlFor="client-notes">{t['clients.form.fieldNotes']}</Label>
+          <Textarea
+            id="client-notes"
+            placeholder={t['clients.form.placeholderNotes']}
+            {...register('notes')}
+          />
         </div>
 
         <DialogFooter>
           <Button type="button" variant="secondary" onClick={() => onOpenChange(false)} className="cursor-pointer">
-            Atšaukti
+            {t['clients.form.actionCancel']}
           </Button>
           <Button type="submit" disabled={isSaving} className="cursor-pointer shadow-sm">
-            {editingClient ? 'Išsaugoti' : 'Sukurti'}
+            {editingClient ? t['clients.form.actionSave'] : t['clients.form.actionCreate']}
           </Button>
         </DialogFooter>
       </form>

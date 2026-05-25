@@ -29,20 +29,24 @@ vi.mock('@/lib/pdf', () => ({
   ),
 }));
 
-vi.mock('@/hooks', () => ({
-  useInvoice: (id: string) => mockUseInvoice(id),
-  useCreateInvoice: () => mockUseCreateInvoice(),
-  useUpdateInvoice: () => mockUseUpdateInvoice(),
-  useSettings: () => mockUseSettings(),
-  useClients: () => mockUseClients(),
-  useCreateClient: () => mockUseCreateClient(),
-  useStorage: () => ({
-    uploadBinary: mockUploadBinary,
-  }),
-  useInvoiceAutosave: () => false,
-  getInvoicePdfPath: vi.fn().mockReturnValue('mocked-pdf-path.pdf'),
-  useGoogleFontInBrowser: () => undefined,
-}));
+vi.mock('@/hooks', async (importOriginal) => {
+  const actual = (await importOriginal()) as Record<string, unknown>;
+  return {
+    ...actual,
+    useInvoice: (id: string) => mockUseInvoice(id),
+    useCreateInvoice: () => mockUseCreateInvoice(),
+    useUpdateInvoice: () => mockUseUpdateInvoice(),
+    useSettings: () => mockUseSettings(),
+    useClients: () => mockUseClients(),
+    useCreateClient: () => mockUseCreateClient(),
+    useStorage: () => ({
+      uploadBinary: mockUploadBinary,
+    }),
+    useInvoiceAutosave: () => false,
+    getInvoicePdfPath: vi.fn().mockReturnValue('mocked-pdf-path.pdf'),
+    useGoogleFontInBrowser: () => undefined,
+  };
+});
 
 // Mock window.print and URL
 const originalPrint = window.print;

@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { useTranslate } from '@/hooks';
 
 export interface InlineEditFieldProps<T> {
   value: T;
@@ -19,10 +20,12 @@ export function InlineEditField<T = string>({
   parse = (val) => val as unknown as T,
   type = 'text',
   readOnly = false,
-  placeholder = 'Spustelkite, kad įvestumėte...',
+  placeholder,
   className = '',
   inputClassName = '',
 }: InlineEditFieldProps<T>) {
+  const t = useTranslate();
+  const effectivePlaceholder = placeholder ?? (t['invoice.inlineEdit.defaultPlaceholder'] as string);
   const [isEditing, setIsEditing] = useState(false);
   const [localValue, setLocalValue] = useState('');
   const inputRef = useRef<HTMLInputElement | HTMLTextAreaElement>(null);
@@ -98,7 +101,7 @@ export function InlineEditField<T = string>({
           !displayValue.trim() ? 'italic text-slate-400' : 'text-slate-900'
         } ${className}`}
       >
-        {displayValue.trim() ? displayValue : placeholder}
+        {displayValue.trim() ? displayValue : effectivePlaceholder}
       </span>
     );
   }
@@ -117,7 +120,7 @@ export function InlineEditField<T = string>({
         !displayValue.trim() ? 'italic text-slate-400' : 'text-slate-900'
       } ${className}`}
     >
-      {displayValue.trim() ? displayValue : placeholder}
+      {displayValue.trim() ? displayValue : effectivePlaceholder}
     </span>
   );
 }

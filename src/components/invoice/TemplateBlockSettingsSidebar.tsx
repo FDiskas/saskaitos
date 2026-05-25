@@ -3,7 +3,8 @@ import { Button } from '@/components/ui';
 import { ClientCombobox } from '@/components/shared';
 import { Client, type Invoice, ClientId } from '@/lib/domain';
 import { fileToBase64 } from '@/lib/files';
-import { useCreateClient } from '@/hooks';
+import { useCreateClient, useTranslate } from '@/hooks';
+import { withParams } from '@/lib/translate';
 import { ClientFormDialog, type ClientFormValues } from '@/components/clients';
 import { blockLabel } from '@/lib/invoice-template/blocks';
 import { rowTotalSpan } from '@/lib/invoice-template/layout';
@@ -51,13 +52,12 @@ export function TemplateBlockSettingsSidebar({
   onSplitColumn,
   onRemoveRow,
 }: TemplateBlockSettingsSidebarProps) {
+  const t = useTranslate();
   if (!selectedInstance && !selectedRowId) {
     return (
       <aside className="w-70 shrink-0 border-r border-slate-200 bg-white p-4 h-full no-print">
-        <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Nustatymai</h3>
-        <p className="text-xs text-slate-500">
-          Pasirinkite bloką arba eilutę drobėje, kad galėtumėte keisti nustatymus.
-        </p>
+        <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">{t['invoice.blockSettings.title']}</h3>
+        <p className="text-xs text-slate-500">{t['invoice.blockSettings.intro']}</p>
       </aside>
     );
   }
@@ -107,12 +107,13 @@ function RowSettingsPanel({
   onSplitColumn,
   onRemoveRow,
 }: RowSettingsPanelProps) {
+  const t = useTranslate();
   const selectedRow = layout.layout.find((row) => row.id === rowId);
   if (!selectedRow) {
     return (
       <aside className="w-70 shrink-0 border-r border-slate-200 bg-white p-4 h-full no-print">
-        <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Eilutės nustatymai</h3>
-        <p className="text-xs text-slate-500">Pasirinkta eilutė nerasta.</p>
+        <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">{t['invoice.blockSettings.row.title']}</h3>
+        <p className="text-xs text-slate-500">{t['invoice.blockSettings.row.notFound']}</p>
       </aside>
     );
   }
@@ -121,10 +122,10 @@ function RowSettingsPanel({
 
   return (
     <aside className="w-70 shrink-0 border-r border-slate-200 bg-white p-4 h-full no-print overflow-y-auto">
-      <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Eilutės nustatymai</h3>
-      <p className="text-sm font-semibold text-slate-900 mb-4">Eilutė</p>
+      <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">{t['invoice.blockSettings.row.title']}</h3>
+      <p className="text-sm font-semibold text-slate-900 mb-4">{t['invoice.blockSettings.row.heading']}</p>
 
-      <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500 mb-2">Stulpelių struktūra</p>
+      <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500 mb-2">{t['invoice.blockSettings.row.structure']}</p>
       <ColumnLayoutPreview row={selectedRow} totalSpan={totalSpan} />
 
       <div className="flex flex-col gap-2 mb-4">
@@ -140,7 +141,7 @@ function RowSettingsPanel({
         ))}
       </div>
 
-      <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500 mb-2">Greitas išdėstymas</p>
+      <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500 mb-2">{t['invoice.blockSettings.row.quickLayout']}</p>
       <div className="grid grid-cols-4 gap-1 mb-4">
         {[1, 2, 3, 4].map((value) => (
           <button
@@ -159,7 +160,7 @@ function RowSettingsPanel({
       </div>
 
       <Button type="button" variant="destructive" className="w-full" onClick={onRemoveRow}>
-        Pašalinti eilutę
+        {t['invoice.blockSettings.row.remove']}
       </Button>
     </aside>
   );
@@ -199,30 +200,31 @@ interface ColumnControlsProps {
 }
 
 function ColumnControls({ column, index, isLast, onMergeRight, onSplit }: ColumnControlsProps) {
+  const t = useTranslate();
+  const label = column.span > 1
+    ? withParams(t['invoice.blockSettings.row.columnWithWidth'], { index: index + 1, span: column.span })
+    : withParams(t['invoice.blockSettings.row.column'], { index: index + 1 });
   return (
     <div className="rounded-md border border-slate-200 bg-white p-2 text-xs">
-      <p className="font-semibold text-slate-700 mb-1.5">
-        Stulpelis {index + 1}
-        {column.span > 1 ? ` (plotis ${column.span})` : ''}
-      </p>
+      <p className="font-semibold text-slate-700 mb-1.5">{label}</p>
       <div className="flex flex-wrap gap-1">
         <button
           type="button"
           disabled={isLast}
           onClick={onMergeRight}
           className="rounded border border-slate-200 bg-slate-50 px-2 py-1 text-[11px] font-medium text-slate-700 hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed"
-          title="Sujungti su dešiniu stulpeliu"
+          title={t['invoice.blockSettings.row.mergeRightTitle']}
         >
-          Sujungti dešiniau →
+          {t['invoice.blockSettings.row.mergeRight']}
         </button>
         <button
           type="button"
           disabled={column.span <= 1}
           onClick={onSplit}
           className="rounded border border-slate-200 bg-slate-50 px-2 py-1 text-[11px] font-medium text-slate-700 hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed"
-          title="Padalinti į atskirus stulpelius"
+          title={t['invoice.blockSettings.row.splitTitle']}
         >
-          Padalinti
+          {t['invoice.blockSettings.row.split']}
         </button>
       </div>
     </div>
@@ -248,6 +250,7 @@ function InstanceSettingsPanel({
   onInstancePatch,
   onRemoveInstance,
 }: InstanceSettingsPanelProps) {
+  const t = useTranslate();
   const marginTopDraft = useCommittedValueDraft(instance.marginTop, (nextMarginTop) => {
     onInstancePatch({ marginTop: nextMarginTop });
   });
@@ -258,10 +261,10 @@ function InstanceSettingsPanel({
 
   return (
     <aside className="w-70 shrink-0 border-r border-slate-200 bg-white p-4 h-full no-print overflow-y-auto">
-      <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Bloko nustatymai</h3>
-      <p className="text-sm font-semibold text-slate-900 mb-4">{blockLabel(instance.kind)}</p>
+      <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">{t['invoice.blockSettings.block.title']}</h3>
+      <p className="text-sm font-semibold text-slate-900 mb-4">{blockLabel(instance.kind, t)}</p>
 
-      <label className="text-xs font-medium text-slate-600 mb-1 block">Lygiavimas</label>
+      <label className="text-xs font-medium text-slate-600 mb-1 block">{t['invoice.blockSettings.block.alignLabel']}</label>
       <select
         className="w-full rounded-md border border-slate-200 px-2 py-1.5 text-sm mb-4"
         value={instance.align}
@@ -272,12 +275,14 @@ function InstanceSettingsPanel({
           }
         }}
       >
-        <option value="left">Kairė</option>
-        <option value="center">Centras</option>
-        <option value="right">Dešinė</option>
+        <option value="left">{t['invoice.blockSettings.block.alignLeft']}</option>
+        <option value="center">{t['invoice.blockSettings.block.alignCenter']}</option>
+        <option value="right">{t['invoice.blockSettings.block.alignRight']}</option>
       </select>
 
-      <label className="text-xs font-medium text-slate-600 mb-1 block">Viršutinis tarpas: {marginTopDraft.value}px</label>
+      <label className="text-xs font-medium text-slate-600 mb-1 block">
+        {withParams(t['invoice.blockSettings.block.marginTop'], { value: marginTopDraft.value })}
+      </label>
       <input
         type="range"
         min={0}
@@ -291,7 +296,9 @@ function InstanceSettingsPanel({
         className="w-full mb-4"
       />
 
-      <label className="text-xs font-medium text-slate-600 mb-1 block">Apatinis tarpas: {marginBottomDraft.value}px</label>
+      <label className="text-xs font-medium text-slate-600 mb-1 block">
+        {withParams(t['invoice.blockSettings.block.marginBottom'], { value: marginBottomDraft.value })}
+      </label>
       <input
         type="range"
         min={0}
@@ -324,7 +331,7 @@ function InstanceSettingsPanel({
       {instance.kind === 'text' && <TextControls instance={instance} onInstancePatch={onInstancePatch} />}
 
       <Button type="button" variant="destructive" className="w-full" onClick={onRemoveInstance}>
-        Pašalinti bloką
+        {t['invoice.blockSettings.block.remove']}
       </Button>
     </aside>
   );
@@ -336,6 +343,7 @@ interface LogoControlsProps {
 }
 
 function LogoControls({ logoBase64, onLogoBase64Change }: LogoControlsProps) {
+  const t = useTranslate();
   const handleLogoUpload = async (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     event.target.value = '';
@@ -347,28 +355,28 @@ function LogoControls({ logoBase64, onLogoBase64Change }: LogoControlsProps) {
 
   return (
     <div className="border-t border-slate-100 pt-3 mb-4">
-      <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500 mb-2">Logotipas</p>
+      <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500 mb-2">{t['invoice.blockSettings.logo.title']}</p>
 
       <div className="flex items-center gap-3 mb-3">
         {logoBase64 ? (
           <img
             src={logoBase64}
-            alt="Logotipas"
+            alt={t['invoice.blockSettings.logo.alt']}
             className="h-14 w-14 rounded border border-slate-200 object-contain p-1"
           />
         ) : (
           <div className="flex h-14 w-14 items-center justify-center rounded border border-dashed border-slate-300 text-xs text-slate-400">
-            Nėra
+            {t['invoice.blockSettings.logo.empty']}
           </div>
         )}
 
         <label className="inline-flex cursor-pointer items-center rounded-md bg-white px-3 py-1.5 text-xs font-medium text-slate-700 ring-1 ring-slate-200 hover:bg-slate-50">
-          Įkelti logotipą
+          {t['invoice.blockSettings.logo.upload']}
           <input
             type="file"
             accept="image/*"
             className="hidden"
-            aria-label="Įkelti logotipą"
+            aria-label={t['invoice.blockSettings.logo.uploadAria']}
             onChange={handleLogoUpload}
           />
         </label>
@@ -382,7 +390,7 @@ function LogoControls({ logoBase64, onLogoBase64Change }: LogoControlsProps) {
           className="w-full"
           onClick={() => onLogoBase64Change?.(undefined)}
         >
-          Pašalinti logotipą
+          {t['invoice.blockSettings.logo.remove']}
         </Button>
       ) : null}
     </div>
@@ -395,6 +403,7 @@ interface BuyerControlsProps {
 }
 
 function BuyerControls({ invoice, onInvoiceChange }: BuyerControlsProps) {
+  const t = useTranslate();
   const createClientMutation = useCreateClient();
   const [isCreateClientOpen, setIsCreateClientOpen] = useState(false);
 
@@ -424,8 +433,8 @@ function BuyerControls({ invoice, onInvoiceChange }: BuyerControlsProps) {
   return (
     <>
       <div className="border-t border-slate-100 pt-3 mb-4">
-        <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500 mb-2">Pirkėjo duomenys</p>
-        <label className="text-xs font-medium text-slate-600 mb-1 block">Klientas</label>
+        <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500 mb-2">{t['invoice.blockSettings.buyer.title']}</p>
+        <label className="text-xs font-medium text-slate-600 mb-1 block">{t['invoice.blockSettings.buyer.clientLabel']}</label>
         <ClientCombobox
           value={invoice.clientId.toString()}
           onChange={(value) => {
@@ -434,7 +443,7 @@ function BuyerControls({ invoice, onInvoiceChange }: BuyerControlsProps) {
             }
             onInvoiceChange(invoice.withClientId(ClientId.fromString(value)));
           }}
-          placeholder="Pasirinkite klientą..."
+          placeholder={t['combobox.client.placeholder']}
         />
         <Button
           type="button"
@@ -442,7 +451,7 @@ function BuyerControls({ invoice, onInvoiceChange }: BuyerControlsProps) {
           className="mt-2 w-full"
           onClick={() => setIsCreateClientOpen(true)}
         >
-          Pridėti klientą
+          {t['invoice.blockSettings.buyer.addClient']}
         </Button>
       </div>
 
@@ -463,9 +472,10 @@ interface TotalsControlsProps {
 }
 
 function TotalsControls({ invoice, onInvoiceChange }: TotalsControlsProps) {
+  const t = useTranslate();
   return (
     <div className="border-t border-slate-100 pt-3 mb-4 flex flex-col gap-2">
-      <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Sumos nustatymai</p>
+      <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">{t['invoice.blockSettings.totals.title']}</p>
       <VatToggle invoice={invoice} onChange={onInvoiceChange} />
       <DiscountToggle invoice={invoice} onChange={onInvoiceChange} />
     </div>
@@ -478,15 +488,16 @@ interface DividerControlsProps {
 }
 
 function DividerControls({ instance, onInstancePatch }: DividerControlsProps) {
+  const t = useTranslate();
   const dividerThicknessDraft = useCommittedValueDraft(instance.dividerThickness, (nextThickness) => {
     onInstancePatch({ kind: 'divider', dividerThickness: nextThickness });
   });
 
   return (
     <div className="border-t border-slate-100 pt-3 mb-4">
-      <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500 mb-2">Skirtuko stilius</p>
+      <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500 mb-2">{t['invoice.blockSettings.divider.title']}</p>
 
-      <label className="text-xs font-medium text-slate-600 mb-1 block">Tipas</label>
+      <label className="text-xs font-medium text-slate-600 mb-1 block">{t['invoice.blockSettings.divider.typeLabel']}</label>
       <select
         className="w-full rounded-md border border-slate-200 px-2 py-1.5 text-sm mb-3"
         value={instance.dividerStyle}
@@ -497,12 +508,14 @@ function DividerControls({ instance, onInstancePatch }: DividerControlsProps) {
           }
         }}
       >
-        <option value="solid">Ištisinė linija</option>
-        <option value="dashed">Punktyrinė linija</option>
-        <option value="spacer">Tuščia vieta</option>
+        <option value="solid">{t['invoice.blockSettings.divider.solid']}</option>
+        <option value="dashed">{t['invoice.blockSettings.divider.dashed']}</option>
+        <option value="spacer">{t['invoice.blockSettings.divider.spacer']}</option>
       </select>
 
-      <label className="text-xs font-medium text-slate-600 mb-1 block">Storis: {dividerThicknessDraft.value}px</label>
+      <label className="text-xs font-medium text-slate-600 mb-1 block">
+        {withParams(t['invoice.blockSettings.divider.thickness'], { value: dividerThicknessDraft.value })}
+      </label>
       <input
         type="range"
         min={1}
@@ -518,7 +531,7 @@ function DividerControls({ instance, onInstancePatch }: DividerControlsProps) {
 
       {instance.dividerStyle !== 'spacer' && (
         <div className="flex flex-col gap-1.5 mb-3">
-          <label className="text-xs font-medium text-slate-600">Spalva</label>
+          <label className="text-xs font-medium text-slate-600">{t['invoice.blockSettings.divider.color']}</label>
           <div className="flex items-center gap-2">
             <input
               type="color"
@@ -531,7 +544,7 @@ function DividerControls({ instance, onInstancePatch }: DividerControlsProps) {
               className="text-[10px] font-medium text-slate-500 hover:text-slate-900"
               onClick={() => onInstancePatch({ kind: 'divider', dividerColor: undefined })}
             >
-              Iš šablono
+              {t['invoice.blockSettings.divider.fromTemplate']}
             </button>
           </div>
         </div>
@@ -546,6 +559,7 @@ interface TextControlsProps {
 }
 
 function TextControls({ instance, onInstancePatch }: TextControlsProps) {
+  const t = useTranslate();
   const textDraft = useTextDraft(instance.text, (nextText) => {
     onInstancePatch({ kind: 'text', text: nextText });
   });
@@ -556,20 +570,22 @@ function TextControls({ instance, onInstancePatch }: TextControlsProps) {
 
   return (
     <div className="border-t border-slate-100 pt-3 mb-4">
-      <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500 mb-2">Teksto stilius</p>
+      <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500 mb-2">{t['invoice.blockSettings.text.title']}</p>
 
-      <label className="text-xs font-medium text-slate-600 mb-1 block">Tekstas</label>
+      <label className="text-xs font-medium text-slate-600 mb-1 block">{t['invoice.blockSettings.text.textLabel']}</label>
       <textarea
         value={textDraft.value}
         onChange={(event) => textDraft.setValue(event.target.value)}
         onFocus={textDraft.beginEditing}
         onBlur={textDraft.commit}
         rows={3}
-        placeholder="Įveskite tekstą"
+        placeholder={t['invoice.text.placeholder']}
         className="w-full rounded-md border border-slate-200 px-2 py-1.5 text-sm mb-3 resize-y"
       />
 
-      <label className="text-xs font-medium text-slate-600 mb-1 block">Šriftas: {fontSizeDraft.value}px</label>
+      <label className="text-xs font-medium text-slate-600 mb-1 block">
+        {withParams(t['invoice.blockSettings.text.fontSize'], { value: fontSizeDraft.value })}
+      </label>
       <input
         type="range"
         min={8}
@@ -583,7 +599,7 @@ function TextControls({ instance, onInstancePatch }: TextControlsProps) {
         className="w-full mb-3"
       />
 
-      <label className="text-xs font-medium text-slate-600 mb-1 block">Storis</label>
+      <label className="text-xs font-medium text-slate-600 mb-1 block">{t['invoice.blockSettings.text.weight']}</label>
       <div className="flex gap-1 mb-3">
         {(['normal', 'bold'] as const).map((weight) => (
           <button
@@ -596,13 +612,13 @@ function TextControls({ instance, onInstancePatch }: TextControlsProps) {
                 : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'
             }`}
           >
-            {weight === 'normal' ? 'Įprastas' : 'Paryškintas'}
+            {weight === 'normal' ? t['invoice.blockSettings.text.weightNormal'] : t['invoice.blockSettings.text.weightBold']}
           </button>
         ))}
       </div>
 
       <div className="flex flex-col gap-1.5 mb-3">
-        <label className="text-xs font-medium text-slate-600">Spalva</label>
+        <label className="text-xs font-medium text-slate-600">{t['invoice.blockSettings.text.color']}</label>
         <div className="flex items-center gap-2">
           <input
             type="color"
@@ -615,7 +631,7 @@ function TextControls({ instance, onInstancePatch }: TextControlsProps) {
             className="text-[10px] font-medium text-slate-500 hover:text-slate-900"
             onClick={() => onInstancePatch({ kind: 'text', textColor: undefined })}
           >
-            Iš šablono
+            {t['invoice.blockSettings.text.fromTemplate']}
           </button>
         </div>
       </div>
@@ -629,6 +645,7 @@ interface CustomImageControlsProps {
 }
 
 function CustomImageControls({ instance, onInstancePatch }: CustomImageControlsProps) {
+  const t = useTranslate();
   const imageWidthDraft = useCommittedValueDraft(instance.imageMaxWidthPct, (nextWidth) => {
     onInstancePatch({ kind: 'custom-image', imageMaxWidthPct: nextWidth });
   });
@@ -647,7 +664,7 @@ function CustomImageControls({ instance, onInstancePatch }: CustomImageControlsP
 
   return (
     <div className="border-t border-slate-100 pt-3 mb-4">
-      <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500 mb-2">Paveikslėlis</p>
+      <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500 mb-2">{t['invoice.blockSettings.image.title']}</p>
 
       {instance.imageBase64 ? (
         <div className="flex flex-col gap-2 mb-3">
@@ -661,19 +678,19 @@ function CustomImageControls({ instance, onInstancePatch }: CustomImageControlsP
             className="text-[11px] font-medium text-red-600 hover:text-red-700"
             onClick={() => onInstancePatch({ kind: 'custom-image', imageBase64: undefined })}
           >
-            Pašalinti paveikslėlį
+            {t['invoice.blockSettings.image.remove']}
           </button>
         </div>
       ) : (
         <label className="flex flex-col items-center justify-center border border-dashed border-slate-300 hover:border-slate-400 rounded-md p-3 bg-slate-50 cursor-pointer text-center mb-3">
-          <span className="text-xs font-medium text-slate-600">Įkelti paveikslėlį</span>
+          <span className="text-xs font-medium text-slate-600">{t['invoice.blockSettings.image.upload']}</span>
           <span className="text-[10px] text-slate-400 mt-0.5">PNG / JPG</span>
           <input type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
         </label>
       )}
 
       <label className="text-xs font-medium text-slate-600 mb-1 block">
-        Plotis: {imageWidthDraft.value}%
+        {withParams(t['invoice.blockSettings.image.widthLabel'], { value: imageWidthDraft.value })}
       </label>
       <input
         type="range"

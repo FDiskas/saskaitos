@@ -2,5 +2,1680 @@
   "home.title": {
     "en": "Invoices",
     "lt": "Sąskaitos"
+  },
+
+  "app.subtitle.devMode": {
+    "en": "In-memory dev mode",
+    "lt": "In-memory dev rėžimas"
+  },
+  "app.subtitle.fallback": {
+    "en": "Invoicing system",
+    "lt": "Sąskaitos sistema"
+  },
+  "app.nav.dashboard": {
+    "en": "Dashboard",
+    "lt": "Į pultą"
+  },
+  "app.nav.clients": {
+    "en": "Clients",
+    "lt": "Klientai"
+  },
+  "app.nav.settings": {
+    "en": "Settings",
+    "lt": "Nustatymai"
+  },
+  "app.nav.logout": {
+    "en": "Log out",
+    "lt": "Atsijungti"
+  },
+  "app.nav.openMenu": {
+    "en": "Open menu",
+    "lt": "Atidaryti meniu"
+  },
+  "app.nav.closeMenu": {
+    "en": "Close menu",
+    "lt": "Uždaryti meniu"
+  },
+
+  "app.footer.copyright": {
+    "en": "© {year} Saskaitos — open-source project (MIT).",
+    "lt": "© {year} Sąskaitos — atviro kodo projektas (MIT)."
+  },
+  "app.footer.language.lt": {
+    "en": "Lithuanian",
+    "lt": "Lietuvių"
+  },
+  "app.footer.language.en": {
+    "en": "English",
+    "lt": "Anglų"
+  },
+
+  "sync.status.idle": {
+    "en": "Idle",
+    "lt": "Laisva"
+  },
+  "sync.status.syncing": {
+    "en": "Syncing…",
+    "lt": "Sinchronizuojama…"
+  },
+  "sync.status.synced": {
+    "en": "Synced",
+    "lt": "Sinchronizuota"
+  },
+  "sync.status.error": {
+    "en": "Error",
+    "lt": "Klaida"
+  },
+
+  "company.switcher.label": {
+    "en": "Legal entity",
+    "lt": "Juridinis vienetas"
+  },
+  "company.switcher.fallbackName": {
+    "en": "Legal entity {index}",
+    "lt": "Juridinis vienetas {index}"
+  },
+
+  "login.title": {
+    "en": "Saskaitos",
+    "lt": "Sąskaitos"
+  },
+  "login.lead": {
+    "en": "Get started — sign in with your Google account. Data is stored in your Google Drive.",
+    "lt": "Pradėkite — prisijunkite su Google paskyra. Duomenys saugomi jūsų Google Drive."
+  },
+  "login.button.signIn": {
+    "en": "Sign in with Google",
+    "lt": "Prisijungti su Google"
+  },
+  "login.button.signingIn": {
+    "en": "Signing in…",
+    "lt": "Jungiamasi…"
+  },
+  "login.warn.invalidClientIdTitle": {
+    "en": "Configuration warning:",
+    "lt": "Konfigūracijos įspėjimas:"
+  },
+  "login.warn.invalidClientIdBodyPrefix": {
+    "en": "It looks like ",
+    "lt": "Atrodo, kad "
+  },
+  "login.warn.invalidClientIdBodyMiddle": {
+    "en": " in the ",
+    "lt": " faile "
+  },
+  "login.warn.invalidClientIdBodySuffix": {
+    "en": " file is invalid. The Google Client ID must end with ",
+    "lt": " yra neteisingas. Google Client ID turi baigtis "
+  },
+  "login.warn.invalidClientIdBodyEnd": {
+    "en": ", but the current value uses a client secret format (",
+    "lt": ", bet dabartinė reikšmė prasideda client secret formatu ("
+  },
+  "login.warn.invalidClientIdBodyClose": {
+    "en": ").",
+    "lt": ")."
+  },
+
+  "dashboard.title": {
+    "en": "Saskaitos — Dashboard",
+    "lt": "Sąskaitos — Dashboard"
+  },
+  "dashboard.action.newInvoice": {
+    "en": "New invoice",
+    "lt": "Nauja sąskaita"
+  },
+  "dashboard.state.errorPrefix": {
+    "en": "Error: ",
+    "lt": "Klaida: "
+  },
+  "dashboard.state.checkingDrive": {
+    "en": "Checking Drive structure…",
+    "lt": "Tikrinama Drive struktūra…"
+  },
+  "dashboard.state.awaitingLogin": {
+    "en": "Waiting for sign-in.",
+    "lt": "Laukiame prisijungimo."
+  },
+  "dashboard.state.loadingInvoices": {
+    "en": "Loading invoices…",
+    "lt": "Kraunamos sąskaitos…"
+  },
+  "dashboard.kpi.issuedThisMonth": {
+    "en": "Issued this month",
+    "lt": "Šį mėnesį išrašyta"
+  },
+  "dashboard.kpi.awaitingPayment": {
+    "en": "Awaiting payment",
+    "lt": "Laukia mokėjimo"
+  },
+  "dashboard.kpi.overdue": {
+    "en": "Overdue",
+    "lt": "Vėluoja"
+  },
+  "dashboard.kpi.paidYtd": {
+    "en": "Paid YTD",
+    "lt": "Apmokėta YTD"
+  },
+  "dashboard.kpi.invoicesShort": {
+    "en": "invs.",
+    "lt": "sąsk."
+  },
+  "dashboard.revenue.monthly": {
+    "en": "Monthly revenue ({year})",
+    "lt": "Mėnesinės pajamos ({year})"
+  },
+  "dashboard.revenue.quarterly": {
+    "en": "Quarterly revenue ({year})",
+    "lt": "Ketvirčio pajamos ({year})"
+  },
+  "dashboard.revenue.annual": {
+    "en": "Annual revenue",
+    "lt": "Metinės pajamos"
+  },
+  "dashboard.filters.searchPlaceholder": {
+    "en": "Search by number or client...",
+    "lt": "Ieškoti numerio arba kliento..."
+  },
+  "dashboard.filters.allClients": {
+    "en": "All clients",
+    "lt": "Visi klientai"
+  },
+  "dashboard.filters.allStatuses": {
+    "en": "All statuses",
+    "lt": "Visi statusai"
+  },
+  "dashboard.table.date": {
+    "en": "Date",
+    "lt": "Data"
+  },
+  "dashboard.table.number": {
+    "en": "Number",
+    "lt": "Numeris"
+  },
+  "dashboard.table.client": {
+    "en": "Client",
+    "lt": "Klientas"
+  },
+  "dashboard.table.amount": {
+    "en": "Amount",
+    "lt": "Suma"
+  },
+  "dashboard.table.status": {
+    "en": "Status",
+    "lt": "Statusas"
+  },
+  "dashboard.table.emptyTitle": {
+    "en": "No invoices found",
+    "lt": "Sąskaitų nerasta"
+  },
+  "dashboard.table.emptyBody": {
+    "en": "Change the filters or create a new invoice.",
+    "lt": "Pakeiskite filtrus arba sukurkite naują sąskaitą."
+  },
+  "dashboard.table.emptyAction": {
+    "en": "Create a new invoice",
+    "lt": "Sukurti naują sąskaitą"
+  },
+
+  "invoice.status.draft": {
+    "en": "Draft",
+    "lt": "Juodraštis"
+  },
+  "invoice.status.sent": {
+    "en": "Sent",
+    "lt": "Išsiųsta"
+  },
+  "invoice.status.paid": {
+    "en": "Paid",
+    "lt": "Apmokėta"
+  },
+  "invoice.status.overdue": {
+    "en": "Overdue",
+    "lt": "Vėluoja"
+  },
+
+  "clients.title": {
+    "en": "Client management",
+    "lt": "Klientų Valdymas"
+  },
+  "clients.state.awaitingSystem": {
+    "en": "Waiting for the system to be ready before loading clients...",
+    "lt": "Laukiame sistemos pasirengimo, kad galėtume krauti klientus..."
+  },
+  "clients.state.loading": {
+    "en": "Loading client list...",
+    "lt": "Kraunamas klientų sąrašas..."
+  },
+  "clients.table.client": {
+    "en": "Client",
+    "lt": "Klientas"
+  },
+  "clients.table.codes": {
+    "en": "Codes",
+    "lt": "Kodai"
+  },
+  "clients.table.address": {
+    "en": "Address",
+    "lt": "Adresas"
+  },
+  "clients.table.contacts": {
+    "en": "Contacts",
+    "lt": "Kontaktai"
+  },
+  "clients.table.actions": {
+    "en": "Actions",
+    "lt": "Veiksmai"
+  },
+  "clients.table.contactPrefix": {
+    "en": "Contact:",
+    "lt": "Kontaktas:"
+  },
+  "clients.table.companyCodePrefix": {
+    "en": "Co:",
+    "lt": "Įm:"
+  },
+  "clients.table.vatCodePrefix": {
+    "en": "VAT:",
+    "lt": "PVM:"
+  },
+  "clients.table.actionIssueInvoice": {
+    "en": "Issue invoice",
+    "lt": "Išrašyti sąskaitą"
+  },
+  "clients.table.actionEdit": {
+    "en": "Edit",
+    "lt": "Redaguoti"
+  },
+  "clients.table.actionDelete": {
+    "en": "Delete",
+    "lt": "Ištrinti"
+  },
+  "clients.table.emptyTitle": {
+    "en": "No clients yet",
+    "lt": "Klientų dar nėra"
+  },
+  "clients.table.emptyBody": {
+    "en": "There are no clients yet. Add a new client to start issuing invoices.",
+    "lt": "Šiuo metu nesukurtas nei vienas klientas. Pridėkite naują klientą, kad galėtumėte išrašyti sąskaitas."
+  },
+  "clients.table.emptyAction": {
+    "en": "Create your first client",
+    "lt": "Sukurti pirmąjį klientą"
+  },
+  "clients.table.searchPlaceholder": {
+    "en": "Search clients by name, code...",
+    "lt": "Ieškoti klientų pagal pavadinimą, kodą..."
+  },
+  "clients.table.newButton": {
+    "en": "New client",
+    "lt": "Naujas klientas"
+  },
+
+  "clients.form.titleEdit": {
+    "en": "Edit client",
+    "lt": "Redaguoti Klientą"
+  },
+  "clients.form.titleCreate": {
+    "en": "Add client",
+    "lt": "Pridėti Klientą"
+  },
+  "clients.form.descriptionEdit": {
+    "en": "Update the client profile information below.",
+    "lt": "Atnaujinkite kliento profilio informaciją žemiau."
+  },
+  "clients.form.descriptionCreate": {
+    "en": "Enter the new client's information to create a profile.",
+    "lt": "Įveskite naujo kliento informaciją profiliui sukurti."
+  },
+  "clients.form.fieldName": {
+    "en": "Name *",
+    "lt": "Pavadinimas *"
+  },
+  "clients.form.fieldAddress": {
+    "en": "Address *",
+    "lt": "Adresas *"
+  },
+  "clients.form.fieldCompanyCode": {
+    "en": "Company code",
+    "lt": "Įmonės kodas"
+  },
+  "clients.form.fieldVatCode": {
+    "en": "VAT code",
+    "lt": "PVM kodas"
+  },
+  "clients.form.fieldEmail": {
+    "en": "Email",
+    "lt": "El. paštas"
+  },
+  "clients.form.fieldPhone": {
+    "en": "Phone",
+    "lt": "Telefonas"
+  },
+  "clients.form.fieldContactPerson": {
+    "en": "Contact person",
+    "lt": "Kontaktinis asmuo"
+  },
+  "clients.form.fieldNotes": {
+    "en": "Notes",
+    "lt": "Pastabos"
+  },
+  "clients.form.placeholderName": {
+    "en": "Example Ltd.",
+    "lt": "UAB Pavyzdys"
+  },
+  "clients.form.placeholderAddress": {
+    "en": "Main St. 1, Vilnius",
+    "lt": "Gedimino pr. 1, Vilnius"
+  },
+  "clients.form.placeholderCompanyCode": {
+    "en": "301234567",
+    "lt": "301234567"
+  },
+  "clients.form.placeholderVatCode": {
+    "en": "LT100012345617",
+    "lt": "LT100012345617"
+  },
+  "clients.form.placeholderEmail": {
+    "en": "info@example.com",
+    "lt": "info@pavyzdys.lt"
+  },
+  "clients.form.placeholderPhone": {
+    "en": "+37060000000",
+    "lt": "+37060000000"
+  },
+  "clients.form.placeholderContactPerson": {
+    "en": "Firstname Lastname",
+    "lt": "Vardenis Pavardenis"
+  },
+  "clients.form.placeholderNotes": {
+    "en": "Additional information...",
+    "lt": "Papildoma informacija..."
+  },
+  "clients.form.actionCancel": {
+    "en": "Cancel",
+    "lt": "Atšaukti"
+  },
+  "clients.form.actionSave": {
+    "en": "Save",
+    "lt": "Išsaugoti"
+  },
+  "clients.form.actionCreate": {
+    "en": "Create",
+    "lt": "Sukurti"
+  },
+  "clients.form.errorNameRequired": {
+    "en": "Name is required",
+    "lt": "Pavadinimas yra privalomas"
+  },
+  "clients.form.errorAddressRequired": {
+    "en": "Address is required",
+    "lt": "Adresas yra privalomas"
+  },
+  "clients.form.errorEmailInvalid": {
+    "en": "Invalid email format",
+    "lt": "Neteisingas el. pašto formatas"
+  },
+  "clients.form.jarsStatusWarning": {
+    "en": "Notice: company status at Registrų centras — {status}.",
+    "lt": "Dėmesio: įmonės statusas Registrų centre — {status}."
+  },
+
+  "clients.delete.title": {
+    "en": "Are you sure you want to delete the client?",
+    "lt": "Ar tikrai norite ištrinti klientą?"
+  },
+  "clients.delete.descriptionPrefix": {
+    "en": "This action will remove client ",
+    "lt": "Šis veiksmas pašalins klientą "
+  },
+  "clients.delete.descriptionSuffix": {
+    "en": " from the main list. The client's Drive folder will be moved to the trash (marked as trashed); the data will not be fully erased.",
+    "lt": " iš pagrindinio sąrašo. Kliento aplankas Drive saugykloje bus perkeltas į šiukšlinę (pažymėtas kaip trashed), jo duomenys nebus visiškai ištrinti."
+  },
+  "clients.delete.cancel": {
+    "en": "Cancel",
+    "lt": "Atšaukti"
+  },
+  "clients.delete.confirm": {
+    "en": "Delete",
+    "lt": "Ištrinti"
+  },
+
+  "combobox.loading": {
+    "en": "Loading...",
+    "lt": "Kraunama..."
+  },
+  "combobox.placeholderDefault": {
+    "en": "Select...",
+    "lt": "Pasirinkite..."
+  },
+  "combobox.searchPlaceholder": {
+    "en": "Search...",
+    "lt": "Ieškoti..."
+  },
+  "combobox.empty": {
+    "en": "Nothing found.",
+    "lt": "Nieko nerasta."
+  },
+  "combobox.client.placeholder": {
+    "en": "Select a client...",
+    "lt": "Pasirinkite klientą..."
+  },
+  "combobox.client.searchPlaceholder": {
+    "en": "Search for client...",
+    "lt": "Ieškoti kliento..."
+  },
+  "combobox.client.empty": {
+    "en": "No clients found.",
+    "lt": "Nėra rasta klientų."
+  },
+  "combobox.client.codePrefix": {
+    "en": "Co. code: {code}",
+    "lt": "Įm. kodas: {code}"
+  },
+
+  "jars.button.disabledNoKey": {
+    "en": "Enter the Jars API key under Settings > Integrations.",
+    "lt": "Įveskite Jars API raktą Nustatymuose > Integracijos."
+  },
+  "jars.button.disabledShortQuery": {
+    "en": "Enter at least 2 characters of a name.",
+    "lt": "Įveskite bent 2 simbolius pavadinimo."
+  },
+  "jars.button.title": {
+    "en": "Search in Jars.lt registry",
+    "lt": "Ieškoti Jars.lt registre"
+  },
+  "jars.button.ariaLabel": {
+    "en": "Search company in Jars.lt",
+    "lt": "Ieškoti įmonės Jars.lt"
+  },
+  "jars.error.noResults": {
+    "en": "No results found for the query.",
+    "lt": "Pagal užklausą rezultatų nerasta."
+  },
+  "jars.error.searchFailed": {
+    "en": "Jars search failed.",
+    "lt": "Jars paieška nepavyko."
+  },
+
+  "dialog.close": {
+    "en": "Close",
+    "lt": "Uždaryti"
+  },
+
+  "settings.error.loadFailedPrefix": {
+    "en": "Error loading settings: ",
+    "lt": "Klaida kraunant nustatymus: "
+  },
+  "settings.state.loading": {
+    "en": "Loading…",
+    "lt": "Kraunama…"
+  },
+  "settings.state.awaitingLogin": {
+    "en": "Waiting for sign-in before loading settings.",
+    "lt": "Laukiame prisijungimo, kad galėtume krauti nustatymus."
+  },
+  "settings.title": {
+    "en": "Configuration",
+    "lt": "Konfigūracija"
+  },
+  "settings.tab.company": {
+    "en": "Company",
+    "lt": "Įmonė"
+  },
+  "settings.tab.series": {
+    "en": "Series",
+    "lt": "Serijos"
+  },
+  "settings.tab.email": {
+    "en": "Email",
+    "lt": "Email"
+  },
+  "settings.tab.integrations": {
+    "en": "Integrations",
+    "lt": "Integracijos"
+  },
+  "settings.tab.design": {
+    "en": "Design",
+    "lt": "Dizainas"
+  },
+  "settings.company.emptySelection": {
+    "en": "Select a legal entity to edit, or create a new one.",
+    "lt": "Pasirinkite juridinį vienetą redagavimui arba sukurkite naują."
+  },
+  "settings.company.field.name": {
+    "en": "Name",
+    "lt": "Pavadinimas"
+  },
+  "settings.company.field.code": {
+    "en": "Company code",
+    "lt": "Įmonės kodas"
+  },
+  "settings.company.field.vatCode": {
+    "en": "VAT code",
+    "lt": "PVM kodas"
+  },
+  "settings.company.field.email": {
+    "en": "Email",
+    "lt": "El. paštas"
+  },
+  "settings.company.field.phone": {
+    "en": "Phone",
+    "lt": "Telefonas"
+  },
+  "settings.company.field.address": {
+    "en": "Address",
+    "lt": "Adresas"
+  },
+  "settings.company.field.bank": {
+    "en": "Bank",
+    "lt": "Bankas"
+  },
+  "settings.company.field.iban": {
+    "en": "IBAN",
+    "lt": "IBAN"
+  },
+  "settings.company.field.logo": {
+    "en": "Logo",
+    "lt": "Logotipas"
+  },
+  "settings.company.placeholder.name": {
+    "en": "Example Ltd.",
+    "lt": "UAB Pavyzdys"
+  },
+  "settings.company.placeholder.code": {
+    "en": "300000000",
+    "lt": "300000000"
+  },
+  "settings.company.placeholder.vatCode": {
+    "en": "LT100000000000",
+    "lt": "LT100000000000"
+  },
+  "settings.company.placeholder.email": {
+    "en": "info@example.com",
+    "lt": "info@pavyzdys.lt"
+  },
+  "settings.company.placeholder.phone": {
+    "en": "+370 600 00000",
+    "lt": "+370 600 00000"
+  },
+  "settings.company.placeholder.address": {
+    "en": "Street, city",
+    "lt": "Gatvė, miestas"
+  },
+  "settings.company.placeholder.bank": {
+    "en": "Swedbank",
+    "lt": "Swedbank"
+  },
+  "settings.company.placeholder.iban": {
+    "en": "LT00 0000 0000 0000 0000",
+    "lt": "LT00 0000 0000 0000 0000"
+  },
+  "settings.company.logo.uploadLabel": {
+    "en": "Upload",
+    "lt": "Įkelti"
+  },
+  "settings.company.logo.removeLabel": {
+    "en": "Remove",
+    "lt": "Pašalinti"
+  },
+  "settings.company.logo.altText": {
+    "en": "Logo",
+    "lt": "Logotipas"
+  },
+  "settings.company.logo.empty": {
+    "en": "None",
+    "lt": "Nėra"
+  },
+
+  "settings.profiles.title": {
+    "en": "Legal entities",
+    "lt": "Juridiniai vienetai"
+  },
+  "settings.profiles.add": {
+    "en": "Add legal entity",
+    "lt": "Pridėti juridinį vienetą"
+  },
+  "settings.profiles.empty": {
+    "en": "No legal entities yet. Create the first one.",
+    "lt": "Juridinių vienetų dar nėra. Sukurkite pirmąjį įrašą."
+  },
+  "settings.profiles.codeUnknown": {
+    "en": "Code not provided",
+    "lt": "Kodas nenurodytas"
+  },
+  "settings.profiles.edit": {
+    "en": "Edit",
+    "lt": "Redaguoti"
+  },
+  "settings.profiles.delete": {
+    "en": "Delete",
+    "lt": "Trinti"
+  },
+
+  "settings.series.head.prefix": {
+    "en": "Prefix",
+    "lt": "Prefiksas"
+  },
+  "settings.series.head.nextNumber": {
+    "en": "Next number",
+    "lt": "Kitas numeris"
+  },
+  "settings.series.head.default": {
+    "en": "Default",
+    "lt": "Numatytoji"
+  },
+  "settings.series.head.actions": {
+    "en": "Actions",
+    "lt": "Veiksmai"
+  },
+  "settings.series.empty": {
+    "en": "No series yet. Add the first one below.",
+    "lt": "Serijų dar nėra. Pridėk pirmąją žemiau."
+  },
+  "settings.series.defaultRadioLabel": {
+    "en": "Default series",
+    "lt": "Numatytoji serija"
+  },
+  "settings.series.deleteDisabled": {
+    "en": "The default series cannot be removed",
+    "lt": "Numatytosios serijos pašalinti negalima"
+  },
+  "settings.series.deleteTitle": {
+    "en": "Remove",
+    "lt": "Pašalinti"
+  },
+  "settings.series.addTitle": {
+    "en": "Add series",
+    "lt": "Pridėti seriją"
+  },
+  "settings.series.addPrefixPlaceholder": {
+    "en": "SF2026-",
+    "lt": "SF2026-"
+  },
+  "settings.series.addButton": {
+    "en": "Add",
+    "lt": "Pridėti"
+  },
+
+  "settings.email.apiKeyLabel": {
+    "en": "Resend API key",
+    "lt": "Resend API raktas"
+  },
+  "settings.email.apiKeyHintPrefix": {
+    "en": "The key is stored in your Drive account, not on our server. Get a key: ",
+    "lt": "Raktas saugomas tavo Drive paskyroje, ne mūsų serveryje. Gauti raktą: "
+  },
+  "settings.email.subjectLabel": {
+    "en": "Default subject",
+    "lt": "Numatytoji tema"
+  },
+  "settings.email.subjectPlaceholder": {
+    "en": "Invoice {{invoice.number}}",
+    "lt": "Sąskaita {{invoice.number}}"
+  },
+  "settings.email.bodyLabel": {
+    "en": "Default message body",
+    "lt": "Numatytas laiško tekstas"
+  },
+  "settings.email.bodyPlaceholder": {
+    "en": "Hello, {{client.name}}!\\n\\nSending invoice {{invoice.number}}.\\n\\nBest regards.",
+    "lt": "Sveiki, {{client.name}}!\\n\\nSiunčiu sąskaitą {{invoice.number}}.\\n\\nPagarbiai."
+  },
+  "settings.email.bodyHint": {
+    "en": "You can use placeholders:",
+    "lt": "Galima naudoti vietas:"
+  },
+  "settings.email.revealKey": {
+    "en": "Show key",
+    "lt": "Rodyti raktą"
+  },
+  "settings.email.hideKey": {
+    "en": "Hide key",
+    "lt": "Slėpti raktą"
+  },
+
+  "settings.integrations.jarsKeyLabel": {
+    "en": "Jars.lt API key",
+    "lt": "Jars.lt API raktas"
+  },
+  "settings.integrations.jarsHint": {
+    "en": "Once a key is entered, a search button appears next to the name field — it fills in the company data from Registrų centras. Up to 100 free queries per month — use it for targeted lookups only. Get a key:",
+    "lt": "Įvedus raktą šalia pavadinimo laukelio atsiras paieškos mygtukas, kuris užpildo įmonės duomenis iš Registrų centro. Nemokamai galima atlikti iki 100 užklausų per mėnesį — naudokite tik tikslinei paieškai. Gauti raktą:"
+  },
+
+  "settings.design.intro": {
+    "en": "Templates are used when creating new invoices.",
+    "lt": "Šablonai naudojami kuriant naujas sąskaitas."
+  },
+  "settings.design.addPreset": {
+    "en": "New template",
+    "lt": "Naujas šablonas"
+  },
+  "settings.design.preset.defaultName": {
+    "en": "Default",
+    "lt": "Numatytasis"
+  },
+  "settings.design.preset.newName": {
+    "en": "New template",
+    "lt": "Naujas šablonas"
+  },
+  "settings.design.color.primary": {
+    "en": "Primary color",
+    "lt": "Pirminė spalva"
+  },
+  "settings.design.color.accent": {
+    "en": "Accent color",
+    "lt": "Akcentinė spalva"
+  },
+  "settings.design.color.text": {
+    "en": "Text color",
+    "lt": "Teksto spalva"
+  },
+  "settings.design.color.muted": {
+    "en": "Muted detail color",
+    "lt": "Pilkų detalių spalva"
+  },
+  "settings.design.color.border": {
+    "en": "Line color",
+    "lt": "Linijų spalva"
+  },
+  "settings.design.color.heading": {
+    "en": "Heading color",
+    "lt": "Antraščių spalva"
+  },
+  "settings.design.font": {
+    "en": "Font",
+    "lt": "Šriftas"
+  },
+  "settings.design.font.searchPlaceholder": {
+    "en": "Search font...",
+    "lt": "Ieškoti šrifto..."
+  },
+  "settings.design.font.placeholder": {
+    "en": "Select a font...",
+    "lt": "Pasirinkite šriftą..."
+  },
+  "settings.design.font.empty": {
+    "en": "No font found.",
+    "lt": "Šriftas nerastas."
+  },
+  "settings.design.background.empty": {
+    "en": "None",
+    "lt": "Nėra"
+  },
+  "settings.design.background.upload": {
+    "en": "Upload background",
+    "lt": "Įkelti foną"
+  },
+  "settings.design.background.altText": {
+    "en": "Background",
+    "lt": "Fonas"
+  },
+  "settings.design.background.remove": {
+    "en": "Remove",
+    "lt": "Pašalinti"
+  },
+  "settings.design.deleteTitle": {
+    "en": "Remove",
+    "lt": "Pašalinti"
+  },
+  "settings.design.deleteDisabledTitle": {
+    "en": "At least one template must remain",
+    "lt": "Bent vienas šablonas turi likti"
+  },
+
+  "invoice.editor.loading": {
+    "en": "Loading editor data...",
+    "lt": "Kraunami redaktoriaus duomenys..."
+  },
+  "invoice.editor.loadFailed": {
+    "en": "Failed to load invoice.",
+    "lt": "Nepavyko užkrauti sąskaitos."
+  },
+  "invoice.editor.notFound": {
+    "en": "Invoice not found.",
+    "lt": "Sąskaita nerasta."
+  },
+  "invoice.editor.backToDashboard": {
+    "en": "Back to dashboard",
+    "lt": "Grįžti į pultą"
+  },
+  "invoice.editor.headerBack": {
+    "en": "Dashboard",
+    "lt": "Pultas"
+  },
+  "invoice.editor.editingNumber": {
+    "en": "Editing: {number}",
+    "lt": "Redaguojama: {number}"
+  },
+  "invoice.editor.previewMode": {
+    "en": "Preview mode",
+    "lt": "Preview režimas"
+  },
+  "invoice.editor.editMode": {
+    "en": "Edit mode",
+    "lt": "Redagavimo režimas"
+  },
+  "invoice.editor.requireClient": {
+    "en": "Select a client to export",
+    "lt": "Pasirinkite klientą, kad galėtumėte eksportuoti"
+  },
+  "invoice.editor.saving": {
+    "en": "Saving...",
+    "lt": "Išsaugoma..."
+  },
+  "invoice.editor.pendingSave": {
+    "en": "Waiting to save...",
+    "lt": "Laukiama išsaugojimo..."
+  },
+  "invoice.editor.savedDrive": {
+    "en": "Saved to Drive",
+    "lt": "Išsaugota Drive"
+  },
+
+  "invoice.picker.title": {
+    "en": "New invoice",
+    "lt": "Nauja sąskaita-faktūra"
+  },
+  "invoice.picker.lead": {
+    "en": "Choose a client to issue a new invoice to.",
+    "lt": "Pasirinkite klientą, kuriam norite išrašyti naują sąskaitą."
+  },
+  "invoice.picker.clientLabel": {
+    "en": "Client",
+    "lt": "Klientas"
+  },
+  "invoice.picker.clientPlaceholder": {
+    "en": "Pick from the list...",
+    "lt": "Pasirinkite iš sąrašo..."
+  },
+  "invoice.picker.createClient": {
+    "en": "Create a new client",
+    "lt": "Sukurti naują klientą"
+  },
+  "invoice.picker.pending": {
+    "en": "Generating invoice number and files...",
+    "lt": "Generuojamas sąskaitos numeris ir failai..."
+  },
+  "invoice.picker.cancel": {
+    "en": "Cancel",
+    "lt": "Atšaukti"
+  },
+
+  "invoice.actions.exportXlsx": {
+    "en": "Export Excel",
+    "lt": "Eksportuoti Excel"
+  },
+  "invoice.actions.sendEmail": {
+    "en": "Send by email",
+    "lt": "Siųsti el. paštu"
+  },
+  "invoice.actions.downloadPdf": {
+    "en": "Download PDF",
+    "lt": "Atsisiųsti PDF"
+  },
+  "invoice.actions.errorPdf": {
+    "en": "Failed to generate the PDF file.",
+    "lt": "Nepavyko sugeneruoti PDF failo."
+  },
+  "invoice.actions.errorXlsx": {
+    "en": "Failed to export the Excel file.",
+    "lt": "Nepavyko eksportuoti Excel failo."
+  },
+
+  "invoice.meta.titleVat": {
+    "en": "VAT Invoice",
+    "lt": "PVM Sąskaita-Faktūra"
+  },
+  "invoice.meta.titleNoVat": {
+    "en": "Invoice",
+    "lt": "Sąskaita-Faktūra"
+  },
+  "invoice.meta.numberPrefix": {
+    "en": "No.",
+    "lt": "Nr."
+  },
+  "invoice.meta.numberPlaceholder": {
+    "en": "Enter the number...",
+    "lt": "Įrašykite numerį..."
+  },
+  "invoice.meta.issueDateLabel": {
+    "en": "Issue date:",
+    "lt": "Išrašymo data:"
+  },
+  "invoice.meta.dueDateLabel": {
+    "en": "Pay by:",
+    "lt": "Apmokėti iki:"
+  },
+
+  "invoice.seller.title": {
+    "en": "Seller",
+    "lt": "Pardavėjas"
+  },
+  "invoice.seller.missingTitle": {
+    "en": "Company details not configured",
+    "lt": "Nenustatyti įmonės rekvizitai"
+  },
+  "invoice.seller.missingBody": {
+    "en": "Fill in the seller details on the settings page.",
+    "lt": "Užpildykite pardavėjo duomenis nustatymų puslapyje."
+  },
+  "invoice.seller.companyCode": {
+    "en": "Company code: {code}",
+    "lt": "Įmonės kodas: {code}"
+  },
+  "invoice.seller.vatCode": {
+    "en": "VAT code: {code}",
+    "lt": "PVM kodas: {code}"
+  },
+  "invoice.seller.iban": {
+    "en": "Account IBAN: {iban}",
+    "lt": "Sąskaita IBAN: {iban}"
+  },
+  "invoice.seller.bank": {
+    "en": "Bank: {bank}",
+    "lt": "Bankas: {bank}"
+  },
+  "invoice.seller.email": {
+    "en": "Email: {email}",
+    "lt": "El. paštas: {email}"
+  },
+  "invoice.seller.phone": {
+    "en": "Phone: {phone}",
+    "lt": "Tel.: {phone}"
+  },
+
+  "invoice.buyer.title": {
+    "en": "Buyer",
+    "lt": "Pirkėjas"
+  },
+  "invoice.buyer.missingClient": {
+    "en": "Client not selected",
+    "lt": "Klientas nepasirinktas"
+  },
+
+  "invoice.lineItems.colNumber": {
+    "en": "No.",
+    "lt": "Nr."
+  },
+  "invoice.lineItems.colDescription": {
+    "en": "Service / item description",
+    "lt": "Paslaugos / prekės aprašymas"
+  },
+  "invoice.lineItems.colQuantity": {
+    "en": "Quantity",
+    "lt": "Kiekis"
+  },
+  "invoice.lineItems.colUnit": {
+    "en": "Unit",
+    "lt": "Mato vnt."
+  },
+  "invoice.lineItems.colPrice": {
+    "en": "Price",
+    "lt": "Kaina"
+  },
+  "invoice.lineItems.colVat": {
+    "en": "VAT %",
+    "lt": "PVM %"
+  },
+  "invoice.lineItems.colTotal": {
+    "en": "Total",
+    "lt": "Suma"
+  },
+  "invoice.lineItems.empty": {
+    "en": "No items or services added. Click the button below to add one.",
+    "lt": "Nėra pridėtų prekių ar paslaugų. Spustelkite mygtuką žemiau, kad pridėtumėte."
+  },
+  "invoice.lineItems.addRow": {
+    "en": "Add row",
+    "lt": "Pridėti eilutę"
+  },
+  "invoice.lineItems.dragAria": {
+    "en": "Drag to reorder",
+    "lt": "Tempkite eilutę pertvarkymui"
+  },
+  "invoice.lineItems.dragTitle": {
+    "en": "Drag to reorder",
+    "lt": "Tempkite, kad pertvarkytumėte"
+  },
+  "invoice.lineItems.removeTitle": {
+    "en": "Remove item",
+    "lt": "Pašalinti prekę"
+  },
+  "invoice.lineItems.descriptionPlaceholder": {
+    "en": "Enter description...",
+    "lt": "Įveskite aprašymą..."
+  },
+  "invoice.lineItems.unitDefault": {
+    "en": "pcs.",
+    "lt": "vnt."
+  },
+
+  "invoice.totals.subtotal": {
+    "en": "Subtotal:",
+    "lt": "Tarpinė suma:"
+  },
+  "invoice.totals.discount": {
+    "en": "Discount",
+    "lt": "Nuolaida"
+  },
+  "invoice.totals.taxableAmount": {
+    "en": "Taxable amount:",
+    "lt": "Apmokestinama suma:"
+  },
+  "invoice.totals.vat": {
+    "en": "VAT amount:",
+    "lt": "PVM suma:"
+  },
+  "invoice.totals.total": {
+    "en": "Total:",
+    "lt": "Iš viso:"
+  },
+
+  "invoice.amountInWords.label": {
+    "en": "Amount in words:",
+    "lt": "Suma žodžiais:"
+  },
+  "invoice.notes.title": {
+    "en": "Additional information / Notes",
+    "lt": "Papildoma informacija / Pastabos"
+  },
+  "invoice.notes.placeholder": {
+    "en": "Add additional notes...",
+    "lt": "Pridėti papildomų pastabų..."
+  },
+
+  "invoice.signatures.issuedBy": {
+    "en": "Issued by:",
+    "lt": "Sąskaitą išrašė:"
+  },
+  "invoice.signatures.acceptedBy": {
+    "en": "Accepted by:",
+    "lt": "Sąskaitą priėmė:"
+  },
+  "invoice.signatures.subtext": {
+    "en": "role, first name, last name, signature",
+    "lt": "pareigos, vardas, pavardė, parašas"
+  },
+
+  "invoice.vat.toggleLabel": {
+    "en": "VAT calculation",
+    "lt": "PVM skaičiavimas"
+  },
+  "invoice.discount.toggleLabel": {
+    "en": "Discount",
+    "lt": "Nuolaida"
+  },
+
+  "invoice.inlineEdit.defaultPlaceholder": {
+    "en": "Click to enter...",
+    "lt": "Spustelkite, kad įvestumėte..."
+  },
+
+  "invoice.text.empty": {
+    "en": "Empty text",
+    "lt": "Tuščias tekstas"
+  },
+  "invoice.text.placeholder": {
+    "en": "Enter text",
+    "lt": "Įveskite tekstą"
+  },
+  "invoice.customImage.empty": {
+    "en": "Choose an image on the right",
+    "lt": "Pasirinkite paveikslėlį dešinėje"
+  },
+
+  "design.sidebar.template": {
+    "en": "Design template",
+    "lt": "Dizaino šablonas"
+  },
+  "design.sidebar.invoiceStyle": {
+    "en": "This invoice's style",
+    "lt": "Šios sąskaitos stilius"
+  },
+  "design.sidebar.resetToPreset": {
+    "en": "Reset to template",
+    "lt": "Atstatyti į šabloną"
+  },
+  "design.sidebar.reset": {
+    "en": "Reset",
+    "lt": "Atstatyti"
+  },
+  "design.sidebar.color.primary": {
+    "en": "Primary color (heading)",
+    "lt": "Pagrindinė spalva (antraštė)"
+  },
+  "design.sidebar.color.accent": {
+    "en": "Accent color (total)",
+    "lt": "Akcento spalva (suma)"
+  },
+  "design.sidebar.color.text": {
+    "en": "Text color",
+    "lt": "Teksto spalva"
+  },
+  "design.sidebar.color.muted": {
+    "en": "Muted details",
+    "lt": "Pilkos detalės"
+  },
+  "design.sidebar.color.border": {
+    "en": "Line color",
+    "lt": "Linijų spalva"
+  },
+  "design.sidebar.color.heading": {
+    "en": "Heading color",
+    "lt": "Antraščių spalva"
+  },
+  "design.sidebar.background": {
+    "en": "Background image",
+    "lt": "Foninis paveikslėlis"
+  },
+  "design.sidebar.backgroundAlt": {
+    "en": "Background",
+    "lt": "Foninis"
+  },
+  "design.sidebar.backgroundRemove": {
+    "en": "Remove background",
+    "lt": "Pašalinti foną"
+  },
+  "design.sidebar.backgroundUpload": {
+    "en": "Upload background",
+    "lt": "Įkelti foną"
+  },
+  "design.sidebar.blockLibrary": {
+    "en": "Block library",
+    "lt": "Blokų biblioteka"
+  },
+  "design.sidebar.rows": {
+    "en": "Rows",
+    "lt": "Eilutės"
+  },
+  "design.sidebar.dataBlocks": {
+    "en": "Data blocks",
+    "lt": "Duomenų blokai"
+  },
+  "design.sidebar.decorBlocks": {
+    "en": "Decoration blocks",
+    "lt": "Dekoraciniai blokai"
+  },
+  "design.sidebar.rowLibraryLabel": {
+    "en": "Row ({columns} col.)",
+    "lt": "Eilutė ({columns} st.)"
+  },
+
+  "invoice.canvas.dropHere": {
+    "en": "Drop a block here",
+    "lt": "Įtempkite bloką čia"
+  },
+  "invoice.canvas.move": {
+    "en": "Move",
+    "lt": "Perkelti"
+  },
+
+  "invoice.blockSettings.title": {
+    "en": "Settings",
+    "lt": "Nustatymai"
+  },
+  "invoice.blockSettings.intro": {
+    "en": "Pick a block or row on the canvas to change its settings.",
+    "lt": "Pasirinkite bloką arba eilutę drobėje, kad galėtumėte keisti nustatymus."
+  },
+  "invoice.blockSettings.row.title": {
+    "en": "Row settings",
+    "lt": "Eilutės nustatymai"
+  },
+  "invoice.blockSettings.row.heading": {
+    "en": "Row",
+    "lt": "Eilutė"
+  },
+  "invoice.blockSettings.row.notFound": {
+    "en": "Selected row was not found.",
+    "lt": "Pasirinkta eilutė nerasta."
+  },
+  "invoice.blockSettings.row.structure": {
+    "en": "Column structure",
+    "lt": "Stulpelių struktūra"
+  },
+  "invoice.blockSettings.row.quickLayout": {
+    "en": "Quick layout",
+    "lt": "Greitas išdėstymas"
+  },
+  "invoice.blockSettings.row.column": {
+    "en": "Column {index}",
+    "lt": "Stulpelis {index}"
+  },
+  "invoice.blockSettings.row.columnWithWidth": {
+    "en": "Column {index} (width {span})",
+    "lt": "Stulpelis {index} (plotis {span})"
+  },
+  "invoice.blockSettings.row.mergeRight": {
+    "en": "Merge right →",
+    "lt": "Sujungti dešiniau →"
+  },
+  "invoice.blockSettings.row.mergeRightTitle": {
+    "en": "Merge with right column",
+    "lt": "Sujungti su dešiniu stulpeliu"
+  },
+  "invoice.blockSettings.row.split": {
+    "en": "Split",
+    "lt": "Padalinti"
+  },
+  "invoice.blockSettings.row.splitTitle": {
+    "en": "Split into separate columns",
+    "lt": "Padalinti į atskirus stulpelius"
+  },
+  "invoice.blockSettings.row.remove": {
+    "en": "Remove row",
+    "lt": "Pašalinti eilutę"
+  },
+
+  "invoice.blockSettings.block.title": {
+    "en": "Block settings",
+    "lt": "Bloko nustatymai"
+  },
+  "invoice.blockSettings.block.alignLabel": {
+    "en": "Alignment",
+    "lt": "Lygiavimas"
+  },
+  "invoice.blockSettings.block.alignLeft": {
+    "en": "Left",
+    "lt": "Kairė"
+  },
+  "invoice.blockSettings.block.alignCenter": {
+    "en": "Center",
+    "lt": "Centras"
+  },
+  "invoice.blockSettings.block.alignRight": {
+    "en": "Right",
+    "lt": "Dešinė"
+  },
+  "invoice.blockSettings.block.marginTop": {
+    "en": "Top margin: {value}px",
+    "lt": "Viršutinis tarpas: {value}px"
+  },
+  "invoice.blockSettings.block.marginBottom": {
+    "en": "Bottom margin: {value}px",
+    "lt": "Apatinis tarpas: {value}px"
+  },
+  "invoice.blockSettings.block.remove": {
+    "en": "Remove block",
+    "lt": "Pašalinti bloką"
+  },
+  "invoice.blockSettings.logo.title": {
+    "en": "Logo",
+    "lt": "Logotipas"
+  },
+  "invoice.blockSettings.logo.empty": {
+    "en": "None",
+    "lt": "Nėra"
+  },
+  "invoice.blockSettings.logo.upload": {
+    "en": "Upload logo",
+    "lt": "Įkelti logotipą"
+  },
+  "invoice.blockSettings.logo.uploadAria": {
+    "en": "Upload logo",
+    "lt": "Įkelti logotipą"
+  },
+  "invoice.blockSettings.logo.remove": {
+    "en": "Remove logo",
+    "lt": "Pašalinti logotipą"
+  },
+  "invoice.blockSettings.logo.alt": {
+    "en": "Logo",
+    "lt": "Logotipas"
+  },
+  "invoice.blockSettings.buyer.title": {
+    "en": "Buyer details",
+    "lt": "Pirkėjo duomenys"
+  },
+  "invoice.blockSettings.buyer.clientLabel": {
+    "en": "Client",
+    "lt": "Klientas"
+  },
+  "invoice.blockSettings.buyer.addClient": {
+    "en": "Add client",
+    "lt": "Pridėti klientą"
+  },
+  "invoice.blockSettings.totals.title": {
+    "en": "Total settings",
+    "lt": "Sumos nustatymai"
+  },
+  "invoice.blockSettings.divider.title": {
+    "en": "Divider style",
+    "lt": "Skirtuko stilius"
+  },
+  "invoice.blockSettings.divider.typeLabel": {
+    "en": "Type",
+    "lt": "Tipas"
+  },
+  "invoice.blockSettings.divider.solid": {
+    "en": "Solid line",
+    "lt": "Ištisinė linija"
+  },
+  "invoice.blockSettings.divider.dashed": {
+    "en": "Dashed line",
+    "lt": "Punktyrinė linija"
+  },
+  "invoice.blockSettings.divider.spacer": {
+    "en": "Spacer",
+    "lt": "Tuščia vieta"
+  },
+  "invoice.blockSettings.divider.thickness": {
+    "en": "Thickness: {value}px",
+    "lt": "Storis: {value}px"
+  },
+  "invoice.blockSettings.divider.color": {
+    "en": "Color",
+    "lt": "Spalva"
+  },
+  "invoice.blockSettings.divider.fromTemplate": {
+    "en": "From template",
+    "lt": "Iš šablono"
+  },
+  "invoice.blockSettings.text.title": {
+    "en": "Text style",
+    "lt": "Teksto stilius"
+  },
+  "invoice.blockSettings.text.textLabel": {
+    "en": "Text",
+    "lt": "Tekstas"
+  },
+  "invoice.blockSettings.text.fontSize": {
+    "en": "Font: {value}px",
+    "lt": "Šriftas: {value}px"
+  },
+  "invoice.blockSettings.text.weight": {
+    "en": "Weight",
+    "lt": "Storis"
+  },
+  "invoice.blockSettings.text.weightNormal": {
+    "en": "Normal",
+    "lt": "Įprastas"
+  },
+  "invoice.blockSettings.text.weightBold": {
+    "en": "Bold",
+    "lt": "Paryškintas"
+  },
+  "invoice.blockSettings.text.color": {
+    "en": "Color",
+    "lt": "Spalva"
+  },
+  "invoice.blockSettings.text.fromTemplate": {
+    "en": "From template",
+    "lt": "Iš šablono"
+  },
+  "invoice.blockSettings.image.title": {
+    "en": "Image",
+    "lt": "Paveikslėlis"
+  },
+  "invoice.blockSettings.image.remove": {
+    "en": "Remove image",
+    "lt": "Pašalinti paveikslėlį"
+  },
+  "invoice.blockSettings.image.upload": {
+    "en": "Upload image",
+    "lt": "Įkelti paveikslėlį"
+  },
+  "invoice.blockSettings.image.widthLabel": {
+    "en": "Width: {value}%",
+    "lt": "Plotis: {value}%"
+  },
+
+  "invoice.blocks.logo": {
+    "en": "Logo",
+    "lt": "Logotipas"
+  },
+  "invoice.blocks.sellerInfo": {
+    "en": "Seller info",
+    "lt": "Pardavėjo info"
+  },
+  "invoice.blocks.buyerInfo": {
+    "en": "Buyer info",
+    "lt": "Pirkėjo info"
+  },
+  "invoice.blocks.invoiceMeta": {
+    "en": "Invoice details",
+    "lt": "Sąskaitos rekvizitai"
+  },
+  "invoice.blocks.lineItems": {
+    "en": "Items table",
+    "lt": "Prekių lentelė"
+  },
+  "invoice.blocks.totals": {
+    "en": "Total",
+    "lt": "Suma"
+  },
+  "invoice.blocks.amountInWords": {
+    "en": "Amount in words",
+    "lt": "Suma žodžiais"
+  },
+  "invoice.blocks.notes": {
+    "en": "Notes",
+    "lt": "Pastabos"
+  },
+  "invoice.blocks.signature": {
+    "en": "Signature",
+    "lt": "Parašas"
+  },
+  "invoice.blocks.divider": {
+    "en": "Divider",
+    "lt": "Skirtukas"
+  },
+  "invoice.blocks.customImage": {
+    "en": "Image",
+    "lt": "Paveikslėlis"
+  },
+  "invoice.blocks.text": {
+    "en": "Text",
+    "lt": "Tekstas"
+  },
+
+  "pdf.invoice.titleVat": {
+    "en": "VAT Invoice",
+    "lt": "PVM Sąskaita-Faktūra"
+  },
+  "pdf.invoice.titleNoVat": {
+    "en": "Invoice",
+    "lt": "Sąskaita-Faktūra"
+  },
+  "pdf.invoice.numberPrefix": {
+    "en": "No. {number}",
+    "lt": "Nr. {number}"
+  },
+  "pdf.invoice.issueDateLabel": {
+    "en": "Issue date:",
+    "lt": "Išrašymo data:"
+  },
+  "pdf.invoice.dueDateLabel": {
+    "en": "Pay by:",
+    "lt": "Apmokėti iki:"
+  },
+  "pdf.seller.title": {
+    "en": "Seller",
+    "lt": "Pardavėjas"
+  },
+  "pdf.seller.companyCode": {
+    "en": "Company code: {code}",
+    "lt": "Įmonės kodas: {code}"
+  },
+  "pdf.seller.vatCode": {
+    "en": "VAT code: {code}",
+    "lt": "PVM kodas: {code}"
+  },
+  "pdf.seller.iban": {
+    "en": "Account IBAN: {iban}",
+    "lt": "Sąskaita IBAN: {iban}"
+  },
+  "pdf.seller.bank": {
+    "en": "Bank: {bank}",
+    "lt": "Bankas: {bank}"
+  },
+  "pdf.seller.email": {
+    "en": "Email: {email}",
+    "lt": "El. paštas: {email}"
+  },
+  "pdf.seller.phone": {
+    "en": "Phone: {phone}",
+    "lt": "Tel.: {phone}"
+  },
+  "pdf.buyer.title": {
+    "en": "Buyer",
+    "lt": "Pirkėjas"
+  },
+  "pdf.table.number": {
+    "en": "No.",
+    "lt": "Nr."
+  },
+  "pdf.table.description": {
+    "en": "Description",
+    "lt": "Aprašymas"
+  },
+  "pdf.table.quantity": {
+    "en": "Quantity",
+    "lt": "Kiekis"
+  },
+  "pdf.table.unit": {
+    "en": "Unit",
+    "lt": "Mato vnt."
+  },
+  "pdf.table.price": {
+    "en": "Price",
+    "lt": "Kaina"
+  },
+  "pdf.table.total": {
+    "en": "Total",
+    "lt": "Suma"
+  },
+  "pdf.notes.title": {
+    "en": "Additional information / Notes",
+    "lt": "Papildoma informacija / Pastabos"
+  },
+  "pdf.totals.subtotal": {
+    "en": "Subtotal:",
+    "lt": "Tarpinė suma:"
+  },
+  "pdf.totals.discount": {
+    "en": "Discount:",
+    "lt": "Nuolaida:"
+  },
+  "pdf.totals.discountPercent": {
+    "en": "Discount ({percent}%):",
+    "lt": "Nuolaida ({percent}%):"
+  },
+  "pdf.totals.taxableAmount": {
+    "en": "Taxable amount:",
+    "lt": "Apmokestinama suma:"
+  },
+  "pdf.totals.vat": {
+    "en": "VAT amount:",
+    "lt": "PVM suma:"
+  },
+  "pdf.totals.total": {
+    "en": "Total:",
+    "lt": "Iš viso:"
+  },
+  "pdf.amountInWords.label": {
+    "en": "Amount in words: {value}",
+    "lt": "Suma žodžiais: {value}"
+  },
+  "pdf.signatures.issuedBy": {
+    "en": "Issued by:",
+    "lt": "Sąskaitą išrašė:"
+  },
+  "pdf.signatures.acceptedBy": {
+    "en": "Accepted by:",
+    "lt": "Sąskaitą priėmė:"
+  },
+  "pdf.signatures.subtext": {
+    "en": "role, first name, last name, signature",
+    "lt": "pareigos, vardas, pavardė, parašas"
+  },
+
+  "email.dialog.title": {
+    "en": "Send invoice by email",
+    "lt": "Siųsti sąskaitą el. paštu"
+  },
+  "email.dialog.description": {
+    "en": "Send the generated invoice to the client directly from this system via Resend.",
+    "lt": "Siųskite sugeneruotą sąskaitą-faktūrą klientui tiesiai iš šios sistemos per Resend."
+  },
+  "email.dialog.warnNoKeyTitle": {
+    "en": "Resend API key not configured",
+    "lt": "Resend API raktas nenustatytas"
+  },
+  "email.dialog.warnNoKeyBody": {
+    "en": "To send emails, enter the API key on the settings page (Email tab).",
+    "lt": "Norėdami siųsti el. laiškus, suveskite API raktą nustatymų puslapyje (Email kortelėje)."
+  },
+  "email.dialog.toLabel": {
+    "en": "To (recipient) *",
+    "lt": "Kam (gavėjas) *"
+  },
+  "email.dialog.toPlaceholder": {
+    "en": "client@company.com",
+    "lt": "klientas@imone.lt"
+  },
+  "email.dialog.ccLabel": {
+    "en": "CC",
+    "lt": "Kopija (CC)"
+  },
+  "email.dialog.ccPlaceholder": {
+    "en": "cc@company.com",
+    "lt": "kopija@imone.lt"
+  },
+  "email.dialog.subjectLabel": {
+    "en": "Subject",
+    "lt": "Tema"
+  },
+  "email.dialog.subjectPlaceholder": {
+    "en": "Subject",
+    "lt": "Tema"
+  },
+  "email.dialog.bodyLabel": {
+    "en": "Body",
+    "lt": "Tekstas"
+  },
+  "email.dialog.bodyPlaceholder": {
+    "en": "Message body...",
+    "lt": "Laiško turinys..."
+  },
+  "email.dialog.attachLabel": {
+    "en": "Attach PDF invoice",
+    "lt": "Prisegti PDF sąskaitą-faktūrą"
+  },
+  "email.dialog.cancel": {
+    "en": "Cancel",
+    "lt": "Atšaukti"
+  },
+  "email.dialog.send": {
+    "en": "Send",
+    "lt": "Siųsti"
+  },
+  "email.dialog.sending": {
+    "en": "Sending...",
+    "lt": "Siunčiama..."
+  },
+  "email.dialog.errorToRequired": {
+    "en": "To field is required.",
+    "lt": "Kam laukas yra privalomas."
+  },
+  "email.dialog.errorSendFailed": {
+    "en": "Failed to send the email.",
+    "lt": "Nepavyko išsiųsti el. laiško."
+  },
+  "email.dialog.sent": {
+    "en": "Email sent successfully.",
+    "lt": "El. laiškas sėkmingai išsiųstas."
+  },
+  "email.defaultSubject": {
+    "en": "Invoice {{invoice.number}}",
+    "lt": "Sąskaita-faktūra {{invoice.number}}"
+  },
+  "email.defaultBody": {
+    "en": "Hello, {{client.name}}!\n\nSending invoice {{invoice.number}}.\n\nBest regards,\n{{company.name}}",
+    "lt": "Sveiki, {{client.name}}!\n\nSiunčiu sąskaitą-faktūrą {{invoice.number}}.\n\nPagarbiai,\n{{company.name}}"
   }
 }

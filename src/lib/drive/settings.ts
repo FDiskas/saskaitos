@@ -6,6 +6,8 @@ import {
   type InvoiceTemplateLayoutDto,
 } from '@/lib/invoice-template/layout';
 import { migrateLegacyLayoutInput } from '@/lib/invoice-template/legacy';
+import { LanguageCodeSchema } from '@/lib/i18n/language';
+import type { LanguageCode } from '@/lib/translate';
 
 export const DEFAULT_SERIES_ID = 'default';
 export const DEFAULT_DESIGN_PRESET_ID = 'default';
@@ -65,6 +67,7 @@ export interface SettingsDto {
   jarsApiKey?: string;
   designPresets: DesignPresetDto[];
   invoiceLayout: InvoiceTemplateLayoutDto;
+  language?: LanguageCode;
 }
 
 const MigratedInvoiceLayoutSchema = z.preprocess(migrateLegacyLayoutInput, InvoiceTemplateLayoutSchema);
@@ -80,6 +83,7 @@ const RawSettingsSchema = z.object({
   jarsApiKey: z.string().optional(),
   designPresets: z.array(DesignPresetDtoSchema).default([]),
   invoiceLayout: MigratedInvoiceLayoutSchema.default(defaultInvoiceTemplateLayout()),
+  language: LanguageCodeSchema.optional(),
 });
 
 function normalizeCompanySelection(raw: z.infer<typeof RawSettingsSchema>): SettingsDto {
@@ -103,6 +107,7 @@ function normalizeCompanySelection(raw: z.infer<typeof RawSettingsSchema>): Sett
     jarsApiKey: raw.jarsApiKey,
     designPresets: raw.designPresets,
     invoiceLayout: raw.invoiceLayout,
+    language: raw.language,
   };
 }
 

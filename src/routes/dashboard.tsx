@@ -6,6 +6,7 @@ import {
   useInvoiceList,
   useInvoiceStatus,
   useSettings,
+  useTranslate,
 } from '@/hooks';
 import { env } from '@/env';
 import { AppFooter, AppHeader } from '@/components/shared';
@@ -33,6 +34,7 @@ export function DashboardPage() {
   const { isAuthenticated } = useGoogleAuth();
   const navigate = useNavigate();
   const { isReady, isPending, error } = useBootstrap();
+  const t = useTranslate();
 
   useEffect(() => {
     if (!env.useInMemory && !isAuthenticated) {
@@ -43,7 +45,7 @@ export function DashboardPage() {
   return (
     <main className="min-h-screen bg-slate-50 px-4 py-6 sm:px-6 sm:py-8">
       <AppHeader
-        title="Sąskaitos — Dashboard"
+        title={t['dashboard.title']}
         current="dashboard"
         actions={
           <Link
@@ -51,7 +53,7 @@ export function DashboardPage() {
             params={{ id: 'new' }}
             className="inline-flex items-center justify-center rounded-md bg-slate-900 px-3 py-1.5 text-sm font-medium text-white shadow-sm hover:bg-slate-800"
           >
-            Nauja sąskaita
+            {t['dashboard.action.newInvoice']}
           </Link>
         }
       />
@@ -59,14 +61,17 @@ export function DashboardPage() {
       {error ? (
         <Card>
           <CardBody>
-            <p className="text-sm text-rose-700">Klaida: {stringify(error)}</p>
+            <p className="text-sm text-rose-700">
+              {t['dashboard.state.errorPrefix']}
+              {stringify(error)}
+            </p>
           </CardBody>
         </Card>
       ) : !isReady ? (
         <Card>
           <CardBody>
             <p className="text-sm text-slate-500">
-              {isPending ? 'Tikrinama Drive struktūra…' : 'Laukiame prisijungimo.'}
+              {isPending ? t['dashboard.state.checkingDrive'] : t['dashboard.state.awaitingLogin']}
             </p>
           </CardBody>
         </Card>
@@ -85,6 +90,7 @@ function DashboardContent() {
   const { summaries, isLoading } = useInvoiceList();
   const statusMutation = useInvoiceStatus();
   const { settings } = useSettings();
+  const t = useTranslate();
   const [filters, setFilters] = useState<DashboardFilterValues>(EMPTY_FILTERS);
 
   const activeCompanyId = settings?.activeCompanyId ?? settings?.companies[0]?.id ?? null;
@@ -129,7 +135,7 @@ function DashboardContent() {
       <Card>
         <CardBody className="flex flex-col items-center py-12">
           <div className="h-8 w-8 animate-spin rounded-full border-4 border-slate-200 border-t-slate-800" />
-          <p className="mt-4 text-sm font-medium text-slate-500">Kraunamos sąskaitos…</p>
+          <p className="mt-4 text-sm font-medium text-slate-500">{t['dashboard.state.loadingInvoices']}</p>
         </CardBody>
       </Card>
     );

@@ -1,11 +1,13 @@
 import { useSyncExternalStore } from 'react';
+import { useTranslate } from '@/hooks';
+import type { translate } from '@/lib/translate';
 import { syncQueue, type SyncQueue, type SyncStatus } from '@/stores';
 
-const LABELS: Record<SyncStatus, string> = {
-  idle: 'Laisva',
-  syncing: 'Sinchronizuojama…',
-  synced: 'Sinchronizuota',
-  error: 'Klaida',
+const LABEL_KEYS: Record<SyncStatus, keyof typeof translate> = {
+  idle: 'sync.status.idle',
+  syncing: 'sync.status.syncing',
+  synced: 'sync.status.synced',
+  error: 'sync.status.error',
 };
 
 const TONES: Record<SyncStatus, string> = {
@@ -20,6 +22,7 @@ export interface SyncStatusBadgeProps {
 }
 
 export function SyncStatusBadge({ queue = syncQueue }: SyncStatusBadgeProps) {
+  const t = useTranslate();
   const status = useSyncExternalStore(
     (cb) => queue.subscribe(cb),
     () => queue.getStatus(),
@@ -32,7 +35,7 @@ export function SyncStatusBadge({ queue = syncQueue }: SyncStatusBadgeProps) {
       className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium ring-1 ring-inset ${TONES[status]}`}
     >
       <Dot status={status} />
-      {LABELS[status]}
+      {t[LABEL_KEYS[status]] as string}
     </span>
   );
 }

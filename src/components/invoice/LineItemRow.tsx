@@ -2,6 +2,7 @@ import { GripVertical, Trash2 } from 'lucide-react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { type LineItem, Money, VatRate, VAT_PERCENTS } from '@/lib/domain';
+import { useTranslate } from '@/hooks';
 import { InlineEditField } from './InlineEditField';
 
 export interface LineItemRowProps {
@@ -23,6 +24,7 @@ export function LineItemRow({
   onRemove,
   isPreview = false,
 }: LineItemRowProps) {
+  const t = useTranslate();
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: item.id,
     disabled: isPreview,
@@ -48,9 +50,9 @@ export function LineItemRow({
             type="button"
             {...attributes}
             {...listeners}
-            aria-label="Tempkite eilutę pertvarkymui"
+            aria-label={t['invoice.lineItems.dragAria']}
             className="cursor-grab active:cursor-grabbing touch-none select-none rounded-md p-2 text-slate-400 hover:text-slate-700 hover:bg-slate-100 opacity-80 group-hover:opacity-100 focus:opacity-100 transition-opacity"
-            title="Tempkite, kad pertvarkytumėte"
+            title={t['invoice.lineItems.dragTitle']}
           >
             <GripVertical className="h-4 w-4" />
           </button>
@@ -62,7 +64,7 @@ export function LineItemRow({
           value={item.description}
           onChange={(val) => onUpdate(item.id, { description: val })}
           readOnly={isPreview}
-          placeholder="Įveskite aprašymą..."
+          placeholder={t['invoice.lineItems.descriptionPlaceholder']}
           className="w-full block"
           inputClassName="w-full"
         />
@@ -88,7 +90,7 @@ export function LineItemRow({
           value={item.unit}
           onChange={(val) => onUpdate(item.id, { unit: val })}
           readOnly={isPreview}
-          placeholder="vnt."
+          placeholder={t['invoice.lineItems.unitDefault']}
           className="w-full text-center"
           inputClassName="text-center"
         />
@@ -134,7 +136,7 @@ export function LineItemRow({
             type="button"
             onClick={() => onRemove(item.id)}
             className="rounded p-1 text-red-500 hover:bg-red-50 hover:text-red-700 opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity"
-            title="Pašalinti prekę"
+            title={t['invoice.lineItems.removeTitle']}
           >
             <Trash2 className="h-4 w-4" />
           </button>

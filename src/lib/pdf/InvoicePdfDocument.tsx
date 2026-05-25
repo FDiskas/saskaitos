@@ -12,6 +12,7 @@ import {
 import { rowTotalSpan, type BlockInstance, type InvoiceTemplateRowDto } from '@/lib/invoice-template/layout';
 import { formatDate } from '@/lib/format/date';
 import { moneyToWordsLt } from '@/lib/format/moneyWordsLt';
+import { translate, withParams } from '@/lib/translate';
 import { getPdfStyles, type PdfPalette } from './InvoicePdfStyles';
 import { resolveFontStack } from './googleFonts';
 
@@ -31,6 +32,7 @@ export interface InvoicePdfDocumentProps {
 }
 
 export function InvoicePdfDocument({ invoice, client, settings }: InvoicePdfDocumentProps) {
+  const t = translate;
   const activePreset =
     settings.designPresets.find((preset) => preset.id === invoice.designPresetId) || settings.designPresets[0];
   const override = invoice.designOverride;
@@ -62,17 +64,19 @@ export function InvoicePdfDocument({ invoice, client, settings }: InvoicePdfDocu
     if (instance.kind === 'seller-info') {
       return (
         <View>
-          <Text style={styles.sectionTitle}>Pardavėjas</Text>
+          <Text style={styles.sectionTitle}>{t['pdf.seller.title']}</Text>
           {settings.company && (
             <View>
               <Text style={styles.companyName}>{settings.company.name}</Text>
-              <Text style={styles.infoText}>Įmonės kodas: {settings.company.code}</Text>
-              {settings.company.vatCode && <Text style={styles.infoText}>PVM kodas: {settings.company.vatCode}</Text>}
+              <Text style={styles.infoText}>{withParams(t['pdf.seller.companyCode'], { code: settings.company.code })}</Text>
+              {settings.company.vatCode && (
+                <Text style={styles.infoText}>{withParams(t['pdf.seller.vatCode'], { code: settings.company.vatCode })}</Text>
+              )}
               <Text style={styles.infoText}>{settings.company.address}</Text>
-              <Text style={[styles.infoText, { marginTop: 4, fontWeight: 'bold' }]}>Sąskaita IBAN: {settings.company.iban}</Text>
-              <Text style={styles.infoText}>Bankas: {settings.company.bankName}</Text>
-              <Text style={styles.infoText}>El. paštas: {settings.company.email}</Text>
-              <Text style={styles.infoText}>Tel.: {settings.company.phone}</Text>
+              <Text style={[styles.infoText, { marginTop: 4, fontWeight: 'bold' }]}>{withParams(t['pdf.seller.iban'], { iban: settings.company.iban })}</Text>
+              <Text style={styles.infoText}>{withParams(t['pdf.seller.bank'], { bank: settings.company.bankName })}</Text>
+              <Text style={styles.infoText}>{withParams(t['pdf.seller.email'], { email: settings.company.email })}</Text>
+              <Text style={styles.infoText}>{withParams(t['pdf.seller.phone'], { phone: settings.company.phone })}</Text>
             </View>
           )}
         </View>
@@ -82,14 +86,14 @@ export function InvoicePdfDocument({ invoice, client, settings }: InvoicePdfDocu
     if (instance.kind === 'invoice-meta') {
       return (
         <View style={styles.invoiceInfoCol}>
-          <Text style={styles.invoiceTitle}>{hasVat ? 'PVM Sąskaita-Faktūra' : 'Sąskaita-Faktūra'}</Text>
-          <Text style={styles.invoiceNo}>Nr. {invoice.number.toString()}</Text>
+          <Text style={styles.invoiceTitle}>{hasVat ? t['pdf.invoice.titleVat'] : t['pdf.invoice.titleNoVat']}</Text>
+          <Text style={styles.invoiceNo}>{withParams(t['pdf.invoice.numberPrefix'], { number: invoice.number.toString() })}</Text>
           <View style={styles.dateRow}>
-            <Text style={styles.dateLabel}>Išrašymo data:</Text>
+            <Text style={styles.dateLabel}>{t['pdf.invoice.issueDateLabel']}</Text>
             <Text style={{ fontWeight: 'bold' }}>{formatDate(invoice.issueDate)}</Text>
           </View>
           <View style={styles.dateRow}>
-            <Text style={styles.dateLabel}>Apmokėti iki:</Text>
+            <Text style={styles.dateLabel}>{t['pdf.invoice.dueDateLabel']}</Text>
             <Text style={{ fontWeight: 'bold' }}>{formatDate(invoice.dueDate)}</Text>
           </View>
         </View>
@@ -99,13 +103,13 @@ export function InvoicePdfDocument({ invoice, client, settings }: InvoicePdfDocu
     if (instance.kind === 'buyer-info') {
       return (
         <View style={styles.buyerCol}>
-          <Text style={styles.sectionTitle}>Pirkėjas</Text>
+          <Text style={styles.sectionTitle}>{t['pdf.buyer.title']}</Text>
           <Text style={styles.companyName}>{client.name}</Text>
-          {client.code && <Text style={styles.infoText}>Įmonės kodas: {client.code}</Text>}
-          {client.vatCode && <Text style={styles.infoText}>PVM kodas: {client.vatCode}</Text>}
+          {client.code && <Text style={styles.infoText}>{withParams(t['pdf.seller.companyCode'], { code: client.code })}</Text>}
+          {client.vatCode && <Text style={styles.infoText}>{withParams(t['pdf.seller.vatCode'], { code: client.vatCode })}</Text>}
           <Text style={styles.infoText}>{client.address}</Text>
-          {client.email && <Text style={styles.infoText}>El. paštas: {client.email}</Text>}
-          {client.phone && <Text style={styles.infoText}>Tel.: {client.phone}</Text>}
+          {client.email && <Text style={styles.infoText}>{withParams(t['pdf.seller.email'], { email: client.email })}</Text>}
+          {client.phone && <Text style={styles.infoText}>{withParams(t['pdf.seller.phone'], { phone: client.phone })}</Text>}
         </View>
       );
     }
@@ -114,12 +118,12 @@ export function InvoicePdfDocument({ invoice, client, settings }: InvoicePdfDocu
       return (
         <View style={styles.table}>
           <View style={styles.tableHeader}>
-            <View style={styles.colNr}><Text style={styles.thText}>Nr.</Text></View>
-            <View style={styles.colDesc}><Text style={styles.thText}>Aprašymas</Text></View>
-            <View style={styles.colQty}><Text style={styles.thText}>Kiekis</Text></View>
-            <View style={styles.colUnit}><Text style={styles.thText}>Mato vnt.</Text></View>
-            <View style={styles.colPrice}><Text style={[styles.thText, { textAlign: 'right' }]}>Kaina</Text></View>
-            <View style={styles.colSum}><Text style={[styles.thText, { textAlign: 'right' }]}>Suma</Text></View>
+            <View style={styles.colNr}><Text style={styles.thText}>{t['pdf.table.number']}</Text></View>
+            <View style={styles.colDesc}><Text style={styles.thText}>{t['pdf.table.description']}</Text></View>
+            <View style={styles.colQty}><Text style={styles.thText}>{t['pdf.table.quantity']}</Text></View>
+            <View style={styles.colUnit}><Text style={styles.thText}>{t['pdf.table.unit']}</Text></View>
+            <View style={styles.colPrice}><Text style={[styles.thText, { textAlign: 'right' }]}>{t['pdf.table.price']}</Text></View>
+            <View style={styles.colSum}><Text style={[styles.thText, { textAlign: 'right' }]}>{t['pdf.table.total']}</Text></View>
           </View>
 
           {items.map((item, index) => (
@@ -146,7 +150,7 @@ export function InvoicePdfDocument({ invoice, client, settings }: InvoicePdfDocu
       if (!invoice.notes) return null;
       return (
         <View>
-          <Text style={styles.sectionTitle}>Papildoma informacija / Pastabos</Text>
+          <Text style={styles.sectionTitle}>{t['pdf.notes.title']}</Text>
           <Text style={styles.notesText}>{invoice.notes}</Text>
         </View>
       );
@@ -155,12 +159,12 @@ export function InvoicePdfDocument({ invoice, client, settings }: InvoicePdfDocu
     if (instance.kind === 'totals') {
       const hasDiscount = !invoice.discount.isZero();
       const discountLabel = invoice.discount.kind === 'percent'
-        ? `Nuolaida (${invoice.discount.percent}%):`
-        : 'Nuolaida:';
+        ? withParams(t['pdf.totals.discountPercent'], { percent: invoice.discount.percent })
+        : t['pdf.totals.discount'];
       return (
         <View style={styles.totalsCol}>
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', width: '100%' }}>
-            <Text style={styles.totalsLabel}>Tarpinė suma:</Text>
+            <Text style={styles.totalsLabel}>{t['pdf.totals.subtotal']}</Text>
             <Text style={styles.totalsValue}>{totals.subtotal.format()}</Text>
           </View>
           {hasDiscount && (
@@ -170,19 +174,19 @@ export function InvoicePdfDocument({ invoice, client, settings }: InvoicePdfDocu
                 <Text style={styles.totalsValue}>−{totals.discountAmount.format()}</Text>
               </View>
               <View style={{ flexDirection: 'row', justifyContent: 'space-between', width: '100%' }}>
-                <Text style={styles.totalsLabel}>Apmokestinama suma:</Text>
+                <Text style={styles.totalsLabel}>{t['pdf.totals.taxableAmount']}</Text>
                 <Text style={styles.totalsValue}>{totals.taxableAmount.format()}</Text>
               </View>
             </>
           )}
           {hasVat && (
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', width: '100%' }}>
-              <Text style={styles.totalsLabel}>PVM suma:</Text>
+              <Text style={styles.totalsLabel}>{t['pdf.totals.vat']}</Text>
               <Text style={styles.totalsValue}>{totals.vatAmount.format()}</Text>
             </View>
           )}
           <View style={styles.totalLine}>
-            <Text style={styles.totalLineLabel}>Iš viso:</Text>
+            <Text style={styles.totalLineLabel}>{t['pdf.totals.total']}</Text>
             <Text style={styles.totalText}>{totals.total.format()}</Text>
           </View>
         </View>
@@ -190,21 +194,25 @@ export function InvoicePdfDocument({ invoice, client, settings }: InvoicePdfDocu
     }
 
     if (instance.kind === 'amount-in-words') {
-      return <Text style={[styles.amountInWords, { textAlign: instance.align }]}>Suma žodžiais: {totalInWords}</Text>;
+      return (
+        <Text style={[styles.amountInWords, { textAlign: instance.align }]}>
+          {withParams(t['pdf.amountInWords.label'], { value: totalInWords })}
+        </Text>
+      );
     }
 
     if (instance.kind === 'signature') {
       return (
         <View style={[styles.signatures, { marginTop: 0 }]} wrap={false}>
           <View style={styles.sigCol}>
-            <Text style={styles.sigTitle}>Sąskaitą išrašė:</Text>
+            <Text style={styles.sigTitle}>{t['pdf.signatures.issuedBy']}</Text>
             <View style={styles.sigLine} />
-            <Text style={styles.sigSubtext}>pareigos, vardas, pavardė, parašas</Text>
+            <Text style={styles.sigSubtext}>{t['pdf.signatures.subtext']}</Text>
           </View>
           <View style={[styles.sigCol, { alignItems: 'flex-end' }]}>
-            <Text style={styles.sigTitle}>Sąskaitą priėmė:</Text>
+            <Text style={styles.sigTitle}>{t['pdf.signatures.acceptedBy']}</Text>
             <View style={[styles.sigLine, { width: '100%' }]} />
-            <Text style={styles.sigSubtext}>pareigos, vardas, pavardė, parašas</Text>
+            <Text style={styles.sigSubtext}>{t['pdf.signatures.subtext']}</Text>
           </View>
         </View>
       );

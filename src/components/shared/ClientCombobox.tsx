@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
-import { useClients } from '@/hooks';
+import { useClients, useTranslate } from '@/hooks';
+import { withParams } from '@/lib/translate';
 import { Combobox, type ComboboxItem } from '@/components/ui';
 
 export interface ClientComboboxProps {
@@ -12,19 +13,21 @@ export interface ClientComboboxProps {
 export function ClientCombobox({
   value,
   onChange,
-  placeholder = 'Pasirinkite klientą...',
+  placeholder,
   className,
 }: ClientComboboxProps) {
   const { clients, isLoading } = useClients();
+  const t = useTranslate();
+  const effectivePlaceholder = placeholder ?? (t['combobox.client.placeholder'] as string);
 
   const items = useMemo<ComboboxItem[]>(
     () =>
       clients.map((c) => ({
         value: c.id.toString(),
         label: c.name,
-        subtitle: c.code ? `Įm. kodas: ${c.code}` : undefined,
+        subtitle: c.code ? withParams(t['combobox.client.codePrefix'], { code: c.code }) : undefined,
       })),
-    [clients],
+    [clients, t],
   );
 
   return (
@@ -33,9 +36,9 @@ export function ClientCombobox({
       onChange={onChange}
       items={items}
       isLoading={isLoading}
-      placeholder={placeholder}
-      searchPlaceholder="Ieškoti kliento..."
-      emptyText="Nėra rasta klientų."
+      placeholder={effectivePlaceholder}
+      searchPlaceholder={t['combobox.client.searchPlaceholder']}
+      emptyText={t['combobox.client.empty']}
       className={className}
     />
   );

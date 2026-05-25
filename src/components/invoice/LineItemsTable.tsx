@@ -15,6 +15,7 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { type Invoice, LineItem, Money } from '@/lib/domain';
+import { useTranslate } from '@/hooks';
 import { LineItemRow } from './LineItemRow';
 
 export interface LineItemsTableProps {
@@ -24,6 +25,7 @@ export interface LineItemsTableProps {
 }
 
 export function LineItemsTable({ invoice, onChange, isPreview = false }: LineItemsTableProps) {
+  const t = useTranslate();
   const items = invoice.lineItems.toArray();
   const currency = invoice.totals().subtotal.currency;
   const hasVat = invoice.vat.enabled;
@@ -40,7 +42,7 @@ export function LineItemsTable({ invoice, onChange, isPreview = false }: LineIte
     const newItem = LineItem.create({
       description: '',
       quantity: 1,
-      unit: 'vnt.',
+      unit: t['invoice.lineItems.unitDefault'] as string,
       unitPrice: Money.zero(currency),
       vatRate: invoice.vat.rate,
     });
@@ -69,13 +71,13 @@ export function LineItemsTable({ invoice, onChange, isPreview = false }: LineIte
       <thead>
         <tr className="border-b border-slate-200 text-xs font-semibold uppercase tracking-wider text-slate-500">
           {showActions && <th className="py-3 pl-1 pr-2 w-8 no-print"></th>}
-          <th className="py-3 pl-1 text-center w-1">Nr.</th>
-          <th className="py-3 pl-4 min-w-auto">Paslaugos / prekės aprašymas</th>
-          <th className="py-3 pl-4 text-center w-1">Kiekis</th>
-          <th className="py-3 pl-4 text-center w-1">Mato&nbsp;vnt.</th>
-          <th className="py-3 pl-4 text-right w-1">Kaina</th>
-          {hasVat && <th className="py-3 px-4 text-center w-1">PVM&nbsp;%</th>}
-          <th className="py-3 pl-4 text-right w-1">Suma</th>
+          <th className="py-3 pl-1 text-center w-1">{t['invoice.lineItems.colNumber']}</th>
+          <th className="py-3 pl-4 min-w-auto">{t['invoice.lineItems.colDescription']}</th>
+          <th className="py-3 pl-4 text-center w-1">{t['invoice.lineItems.colQuantity']}</th>
+          <th className="py-3 pl-4 text-center w-1">{t['invoice.lineItems.colUnit']}</th>
+          <th className="py-3 pl-4 text-right w-1">{t['invoice.lineItems.colPrice']}</th>
+          {hasVat && <th className="py-3 px-4 text-center w-1">{t['invoice.lineItems.colVat']}</th>}
+          <th className="py-3 pl-4 text-right w-1">{t['invoice.lineItems.colTotal']}</th>
           {showActions && <th className="py-3 pl-2 pr-1 w-12 no-print"></th>}
         </tr>
       </thead>
@@ -83,7 +85,7 @@ export function LineItemsTable({ invoice, onChange, isPreview = false }: LineIte
         {items.length === 0 ? (
           <tr>
             <td colSpan={columnCount} className="py-8 text-center text-slate-400 italic">
-              Nėra pridėtų prekių ar paslaugų. Spustelkite mygtuką žemiau, kad pridėtumėte.
+              {t['invoice.lineItems.empty']}
             </td>
           </tr>
         ) : showActions ? (
@@ -141,7 +143,7 @@ export function LineItemsTable({ invoice, onChange, isPreview = false }: LineIte
             className="flex items-center gap-1.5 rounded-md border border-dashed border-slate-300 hover:border-slate-400 bg-white px-3.5 py-1.5 text-xs font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition-all cursor-pointer shadow-sm"
           >
             <Plus className="h-3.5 w-3.5" />
-            Pridėti eilutę
+            {t['invoice.lineItems.addRow']}
           </button>
         </div>
       )}

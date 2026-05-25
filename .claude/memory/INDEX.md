@@ -22,6 +22,13 @@
 - [pdf-palette-colors](decisions/pdf-palette-colors.md) — preset/override expose 6 colors (primary/accent/text/muted/border/heading); PDF uses PdfPalette, no hardcoded grays. keywords: palette, colors, design-preset, override, pdf
 - [jars-company-lookup](decisions/jars-company-lookup.md) — manual-button jars.lt company search; user key in Drive settings; 100/mo free quota → no auto-fire. keywords: jars, company-search, api-key, lookup, integrations
 - [invoice-company-scoping](decisions/invoice-company-scoping.md) — invoices carry optional companyId; dashboard implicitly filters by active company; legacy entries → first profile. keywords: invoice, company, multi-company, filter, dashboard, companyId
+- [language-sync-priority](decisions/language-sync-priority.md) — useLanguageSync: Drive wins on first load (didInitialSync ref), UI wins after; useLanguage() in useTranslate is intentional re-render subscription. keywords: language, sync, race-condition, useLanguageSync, useTranslate, i18n
+- [react-layering](decisions/react-layering.md) — src/lib React-agnostic; Providers in src/providers/ split into Provider.tsx + context.ts; hooks in src/hooks/. keywords: architecture, layering, providers, hooks, lib, react-context, fast-refresh
+
+## incidents/
+
+- [tokenref-race-condition](incidents/tokenref-race-condition.md) — Drive API 403 after auth refactor: tokenRef must be initialized with stored token, not null. keywords: tokenRef, drive, 403, race-condition, auth, GoogleAuthProvider
+- [pdf-dataview-font-race](incidents/pdf-dataview-font-race.md) — PDF download crashed with DataView RangeError: inflight font cache was deleted after load, causing re-registration that wiped font store mid-render. keywords: pdf, dataview, font, race-condition, googleFonts, crash
 
 ## developer/
 

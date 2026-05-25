@@ -30,6 +30,7 @@ import {
   type InvoiceTemplateRowDto,
 } from '@/lib/invoice-template/layout';
 import { GripVertical } from 'lucide-react';
+import { useTranslate } from '@/hooks';
 import { paginateCanvasRows } from './canvasPagination';
 import {
   type CanvasPalette,
@@ -255,6 +256,7 @@ interface DroppableColumnProps {
 }
 
 function DroppableColumn({ rowId, columnId, span, isPreview, isEmpty, children }: DroppableColumnProps) {
+  const t = useTranslate();
   const dropId = canvasColumnDropId(rowId, columnId);
   const { setNodeRef, isOver } = useDroppable({ id: dropId });
 
@@ -277,7 +279,7 @@ function DroppableColumn({ rowId, columnId, span, isPreview, isEmpty, children }
     >
       {children}
       {isEmpty && !isPreview && (
-        <p className="text-[11px] text-slate-400 font-medium">Įtempkite bloką čia</p>
+        <p className="text-[11px] text-slate-400 font-medium">{t['invoice.canvas.dropHere']}</p>
       )}
     </div>
   );
@@ -292,6 +294,7 @@ interface PlacedInstanceShellProps {
 }
 
 function PlacedInstanceShell({ instance, isPreview, isSelected, onSelect, children }: PlacedInstanceShellProps) {
+  const t = useTranslate();
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: canvasInstanceDragId(instance.id),
     disabled: isPreview,
@@ -334,14 +337,14 @@ function PlacedInstanceShell({ instance, isPreview, isSelected, onSelect, childr
     >
       {!isPreview && (
         <div className="mb-2 flex items-center justify-between">
-          <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-400">{blockLabel(instance.kind)}</p>
+          <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-400">{blockLabel(instance.kind, t)}</p>
           <button
             type="button"
             className="rounded border border-slate-200 bg-slate-50 px-1.5 py-0.5 text-[10px] text-slate-500 cursor-grab active:cursor-grabbing"
             {...listeners}
             {...attributes}
           >
-            Perkelti
+            {t['invoice.canvas.move']}
           </button>
         </div>
       )}

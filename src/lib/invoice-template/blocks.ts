@@ -1,26 +1,27 @@
+import { translate } from '@/lib/translate';
 import type { BlockKind, DataBlockKind, DecorBlockKind } from './layout';
 
 export interface InvoiceTemplateBlockDefinition {
   kind: BlockKind;
-  label: string;
+  labelKey: keyof typeof translate;
 }
 
 export const DATA_BLOCK_DEFINITIONS: readonly InvoiceTemplateBlockDefinition[] = [
-  { kind: 'logo', label: 'Logotipas' },
-  { kind: 'seller-info', label: 'Pardavėjo info' },
-  { kind: 'buyer-info', label: 'Pirkėjo info' },
-  { kind: 'invoice-meta', label: 'Sąskaitos rekvizitai' },
-  { kind: 'line-items', label: 'Prekių lentelė' },
-  { kind: 'totals', label: 'Suma' },
-  { kind: 'amount-in-words', label: 'Suma žodžiais' },
-  { kind: 'notes', label: 'Pastabos' },
-  { kind: 'signature', label: 'Parašas' },
+  { kind: 'logo', labelKey: 'invoice.blocks.logo' },
+  { kind: 'seller-info', labelKey: 'invoice.blocks.sellerInfo' },
+  { kind: 'buyer-info', labelKey: 'invoice.blocks.buyerInfo' },
+  { kind: 'invoice-meta', labelKey: 'invoice.blocks.invoiceMeta' },
+  { kind: 'line-items', labelKey: 'invoice.blocks.lineItems' },
+  { kind: 'totals', labelKey: 'invoice.blocks.totals' },
+  { kind: 'amount-in-words', labelKey: 'invoice.blocks.amountInWords' },
+  { kind: 'notes', labelKey: 'invoice.blocks.notes' },
+  { kind: 'signature', labelKey: 'invoice.blocks.signature' },
 ] as const;
 
 export const DECOR_BLOCK_DEFINITIONS: readonly InvoiceTemplateBlockDefinition[] = [
-  { kind: 'divider', label: 'Skirtukas' },
-  { kind: 'custom-image', label: 'Paveikslėlis' },
-  { kind: 'text', label: 'Tekstas' },
+  { kind: 'divider', labelKey: 'invoice.blocks.divider' },
+  { kind: 'custom-image', labelKey: 'invoice.blocks.customImage' },
+  { kind: 'text', labelKey: 'invoice.blocks.text' },
 ] as const;
 
 export const INVOICE_TEMPLATE_BLOCKS: readonly InvoiceTemplateBlockDefinition[] = [
@@ -30,9 +31,10 @@ export const INVOICE_TEMPLATE_BLOCKS: readonly InvoiceTemplateBlockDefinition[] 
 
 export const ROW_LIBRARY_COLUMNS = [1, 2, 3, 4] as const;
 
-export function blockLabel(kind: BlockKind): string {
+export function blockLabel(kind: BlockKind, t: typeof translate = translate): string {
   const match = INVOICE_TEMPLATE_BLOCKS.find((item) => item.kind === kind);
-  return match?.label ?? kind;
+  if (!match) return kind;
+  return t[match.labelKey] as string;
 }
 
 export function isSingletonDataKind(kind: BlockKind): kind is DataBlockKind {

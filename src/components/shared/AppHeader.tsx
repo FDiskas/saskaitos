@@ -1,7 +1,8 @@
 import { useState, type ReactNode } from 'react';
 import { Link } from '@tanstack/react-router';
 import { Menu, X } from 'lucide-react';
-import { useGoogleAuth } from '@/hooks';
+import { useGoogleAuth, useTranslate } from '@/hooks';
+import type { translate } from '@/lib/translate';
 import { env } from '@/env';
 import { CompanyProfileSwitcher } from './CompanyProfileSwitcher';
 import { SyncStatusBadge } from './SyncStatusBadge';
@@ -10,13 +11,13 @@ export type AppHeaderPage = 'dashboard' | 'clients' | 'settings';
 
 interface NavLinkDef {
   to: '/dashboard' | '/clients' | '/settings';
-  label: string;
+  labelKey: keyof typeof translate;
 }
 
 const NAV_LINKS: Record<AppHeaderPage, NavLinkDef> = {
-  dashboard: { to: '/dashboard', label: 'Į pultą' },
-  clients: { to: '/clients', label: 'Klientai' },
-  settings: { to: '/settings', label: 'Nustatymai' },
+  dashboard: { to: '/dashboard', labelKey: 'app.nav.dashboard' },
+  clients: { to: '/clients', labelKey: 'app.nav.clients' },
+  settings: { to: '/settings', labelKey: 'app.nav.settings' },
 };
 
 const LINK_CLASS =
@@ -33,11 +34,12 @@ export interface AppHeaderProps {
 
 export function AppHeader({ title, current, actions }: AppHeaderProps) {
   const { user, logout } = useGoogleAuth();
+  const t = useTranslate();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const subtitle = env.useInMemory
-    ? 'In-memory dev rėžimas'
-    : user?.email ?? 'Sąskaitos sistema';
+    ? t['app.subtitle.devMode']
+    : user?.email ?? t['app.subtitle.fallback'];
 
   const otherPages = (Object.keys(NAV_LINKS) as AppHeaderPage[]).filter(
     (page) => page !== current,
@@ -61,19 +63,19 @@ export function AppHeader({ title, current, actions }: AppHeaderProps) {
           <nav className="hidden items-center gap-2 md:flex">
             {otherPages.map((page) => (
               <Link key={page} to={NAV_LINKS[page].to} className={LINK_CLASS}>
-                {NAV_LINKS[page].label}
+                {t[NAV_LINKS[page].labelKey] as string}
               </Link>
             ))}
             {!env.useInMemory ? (
               <button type="button" onClick={logout} className={LOGOUT_CLASS}>
-                Atsijungti
+                {t['app.nav.logout']}
               </button>
             ) : null}
           </nav>
 
           <button
             type="button"
-            aria-label={isMenuOpen ? 'Uždaryti meniu' : 'Atidaryti meniu'}
+            aria-label={isMenuOpen ? t['app.nav.closeMenu'] : t['app.nav.openMenu']}
             aria-expanded={isMenuOpen}
             onClick={() => setIsMenuOpen((open) => !open)}
             className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-slate-200 bg-white text-slate-700 md:hidden"
@@ -92,7 +94,7 @@ export function AppHeader({ title, current, actions }: AppHeaderProps) {
               className={LINK_CLASS}
               onClick={closeMenu}
             >
-              {NAV_LINKS[page].label}
+              {t[NAV_LINKS[page].labelKey] as string}
             </Link>
           ))}
           {!env.useInMemory ? (
@@ -104,7 +106,7 @@ export function AppHeader({ title, current, actions }: AppHeaderProps) {
               }}
               className={LOGOUT_CLASS}
             >
-              Atsijungti
+              {t['app.nav.logout']}
             </button>
           ) : null}
         </nav>

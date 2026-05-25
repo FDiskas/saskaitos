@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Check, ChevronDown } from 'lucide-react';
+import { useTranslate } from '@/hooks';
 import type { InvoiceStatus } from '@/lib/domain';
 import { ALL_STATUSES, statusMeta } from './statusMeta';
 
@@ -16,11 +17,12 @@ interface MenuCoords {
 }
 
 export function StatusPicker({ value, onChange, disabled }: StatusPickerProps) {
+  const t = useTranslate();
   const [open, setOpen] = useState(false);
   const [coords, setCoords] = useState<MenuCoords | null>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
-  const meta = statusMeta(value);
+  const meta = statusMeta(value, t);
 
   useEffect(() => {
     if (!open) return;
@@ -76,7 +78,7 @@ export function StatusPicker({ value, onChange, disabled }: StatusPickerProps) {
               className="z-50 w-44 rounded-md border border-slate-200 bg-white py-1 shadow-lg"
             >
               {ALL_STATUSES.map((s) => {
-                const m = statusMeta(s);
+                const m = statusMeta(s, t);
                 const active = s === value;
                 return (
                   <button

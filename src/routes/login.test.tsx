@@ -22,9 +22,13 @@ vi.mock('@tanstack/react-router', () => ({
 
 // Mock hooks
 const mockUseGoogleAuth = vi.fn();
-vi.mock('@/hooks', () => ({
-  useGoogleAuth: () => mockUseGoogleAuth(),
-}));
+vi.mock('@/hooks', async (importOriginal) => {
+  const actual = (await importOriginal()) as Record<string, unknown>;
+  return {
+    ...actual,
+    useGoogleAuth: () => mockUseGoogleAuth(),
+  };
+});
 
 // Mock env using the hoisted variable
 vi.mock('@/env', () => ({

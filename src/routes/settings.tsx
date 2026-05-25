@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo } from 'react';
 import { useNavigate } from '@tanstack/react-router';
-import { useGoogleAuth, useSettings, useStorageOrNull } from '@/hooks';
+import { useGoogleAuth, useSettings, useStorageOrNull, useTranslate } from '@/hooks';
 import { env } from '@/env';
 import { Card, CardBody, CardHeader, CardTitle, Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui';
 import { AppFooter, AppHeader } from '@/components/shared';
@@ -29,6 +29,7 @@ export function SettingsPage() {
   const { isAuthenticated } = useGoogleAuth();
   const navigate = useNavigate();
   const storage = useStorageOrNull();
+  const t = useTranslate();
 
   useEffect(() => {
     if (!env.useInMemory && !isAuthenticated) {
@@ -38,14 +39,14 @@ export function SettingsPage() {
 
   return (
     <main className="min-h-screen bg-slate-50 px-4 py-6 sm:px-6 sm:py-8">
-      <AppHeader title="Nustatymai" current="settings" />
+      <AppHeader title={t['app.nav.settings']} current="settings" />
 
       {storage ? (
         <SettingsContent />
       ) : (
         <Card>
           <CardBody>
-            <p className="text-sm text-slate-500">Laukiame prisijungimo, kad galėtume krauti nustatymus.</p>
+            <p className="text-sm text-slate-500">{t['settings.state.awaitingLogin']}</p>
           </CardBody>
         </Card>
       )}
@@ -56,6 +57,7 @@ export function SettingsPage() {
 }
 
 function SettingsContent() {
+  const t = useTranslate();
   const { settings, isLoading, error, update } = useSettings();
 
   const activeCompanyId = useMemo(() => {
@@ -180,7 +182,9 @@ function SettingsContent() {
     return (
       <Card>
         <CardBody>
-          <p className="text-sm text-red-600">Klaida kraunant nustatymus: {String(error)}</p>
+          <p className="text-sm text-red-600">
+            {t['settings.error.loadFailedPrefix']}{String(error)}
+          </p>
         </CardBody>
       </Card>
     );
@@ -190,7 +194,7 @@ function SettingsContent() {
     return (
       <Card>
         <CardBody>
-          <p className="text-sm text-slate-500">Kraunama…</p>
+          <p className="text-sm text-slate-500">{t['settings.state.loading']}</p>
         </CardBody>
       </Card>
     );
@@ -199,16 +203,16 @@ function SettingsContent() {
   return (
     <Card>
       <CardHeader className="flex items-center justify-between">
-        <CardTitle>Konfigūracija</CardTitle>
+        <CardTitle>{t['settings.title']}</CardTitle>
       </CardHeader>
       <CardBody>
         <Tabs defaultValue="company" className="space-y-5">
           <TabsList>
-            <TabsTrigger value="company">Įmonė</TabsTrigger>
-            <TabsTrigger value="series">Serijos</TabsTrigger>
-            <TabsTrigger value="email">Email</TabsTrigger>
-            <TabsTrigger value="integrations">Integracijos</TabsTrigger>
-            <TabsTrigger value="design">Dizainas</TabsTrigger>
+            <TabsTrigger value="company">{t['settings.tab.company']}</TabsTrigger>
+            <TabsTrigger value="series">{t['settings.tab.series']}</TabsTrigger>
+            <TabsTrigger value="email">{t['settings.tab.email']}</TabsTrigger>
+            <TabsTrigger value="integrations">{t['settings.tab.integrations']}</TabsTrigger>
+            <TabsTrigger value="design">{t['settings.tab.design']}</TabsTrigger>
           </TabsList>
           <TabsContent value="company">
             <div className="space-y-4">
@@ -223,7 +227,7 @@ function SettingsContent() {
                 <CompanyTab value={activeCompany} onChange={setCompany} jarsApiKey={settings.jarsApiKey} />
               ) : (
                 <div className="rounded-lg border border-dashed border-slate-300 bg-slate-50 p-4 text-sm text-slate-500">
-                  Pasirinkite juridinį vienetą redagavimui arba sukurkite naują.
+                  {t['settings.company.emptySelection']}
                 </div>
               )}
             </div>

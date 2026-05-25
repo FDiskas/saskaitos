@@ -49,7 +49,7 @@ function InnerAuthProvider({ children }: { children: ReactNode }) {
   const [isRestoring, setIsRestoring] = useState(validStoredSession !== null);
   const [expiresAt, setExpiresAt] = useState<number | null>(validStoredSession?.expiresAt ?? null);
   const [error, setError] = useState<string | null>(null);
-  const tokenRef = useRef<string | null>(null);
+  const tokenRef = useRef<string | null>(validStoredSession?.accessToken ?? null);
   const refreshResolverRef = useRef<((token: string | null) => void) | null>(null);
 
   useEffect(() => {
@@ -60,6 +60,10 @@ function InnerAuthProvider({ children }: { children: ReactNode }) {
     async (token: string, expiresInSeconds: number): Promise<void> => {
       const session = sessionFromTokenResponse(token, expiresInSeconds);
       saveSession(session);
+      // Set tokenRef synchronously BEFORE state update so that any Drive API
+      // calls triggered in the very next render already have the correct token.
+      // useEffect-based sync runs too late (after commit phase).
+      tokenRef.current = token;
       setAccessToken(token);
       setExpiresAt(session.expiresAt);
       try {

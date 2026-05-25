@@ -1,22 +1,109 @@
+import { useLanguage, useTranslate } from '@/hooks';
+import { withParams, type LanguageCode } from '@/lib/translate';
+
 const REPO_URL = 'https://github.com/FDiskas/saskaitos';
 
 export function AppFooter() {
+  const t = useTranslate();
   const year = new Date().getFullYear();
   return (
     <footer className="mt-10 border-t border-slate-200 pt-4 text-xs text-slate-500">
       <div className="flex flex-col items-center justify-between gap-2 sm:flex-row">
-        <p>© {year} Sąskaitos — atviro kodo projektas (MIT).</p>
-        <a
-          href={REPO_URL}
-          target="_blank"
-          rel="noreferrer"
-          className="inline-flex items-center gap-1.5 rounded-md px-2 py-1 hover:bg-slate-100 hover:text-slate-800"
-        >
-          <GithubMark />
-          github.com/FDiskas/saskaitos
-        </a>
+        <p>{withParams(t['app.footer.copyright'], { year })}</p>
+        <div className="flex items-center gap-3">
+          <LanguageToggle />
+          <a
+            href={REPO_URL}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center gap-1.5 rounded-md px-2 py-1 hover:bg-slate-100 hover:text-slate-800"
+          >
+            <GithubMark />
+            github.com/FDiskas/saskaitos
+          </a>
+        </div>
       </div>
     </footer>
+  );
+}
+
+function LanguageToggle() {
+  const { language, setLanguage } = useLanguage();
+  const t = useTranslate();
+  return (
+    <div className="inline-flex items-center gap-1 rounded-md border border-slate-200 bg-white p-0.5">
+      <FlagButton
+        code="lt"
+        active={language === 'lt'}
+        title={t['app.footer.language.lt']}
+        onClick={() => setLanguage('lt')}
+      />
+      <FlagButton
+        code="en"
+        active={language === 'en'}
+        title={t['app.footer.language.en']}
+        onClick={() => setLanguage('en')}
+      />
+    </div>
+  );
+}
+
+interface FlagButtonProps {
+  code: LanguageCode;
+  active: boolean;
+  title: string;
+  onClick: () => void;
+}
+
+function FlagButton({ code, active, title, onClick }: FlagButtonProps) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      title={title}
+      aria-label={title}
+      aria-pressed={active}
+      className={`inline-flex h-6 items-center rounded px-1.5 text-xs font-semibold uppercase transition ${
+        active
+          ? 'bg-slate-900 text-white'
+          : 'text-slate-500 hover:bg-slate-100 hover:text-slate-800'
+      }`}
+    >
+      <Flag code={code} />
+      <span className="ml-1">{code}</span>
+    </button>
+  );
+}
+
+function Flag({ code }: { code: LanguageCode }) {
+  if (code === 'lt') return <LithuaniaFlag />;
+  return <UnitedKingdomFlag />;
+}
+
+function LithuaniaFlag() {
+  return (
+    <svg viewBox="0 0 9 6" aria-hidden className="h-3 w-4 rounded-[1px] ring-1 ring-black/10">
+      <rect width="9" height="2" y="0" fill="#FDB913" />
+      <rect width="9" height="2" y="2" fill="#006A44" />
+      <rect width="9" height="2" y="4" fill="#C1272D" />
+    </svg>
+  );
+}
+
+function UnitedKingdomFlag() {
+  return (
+    <svg viewBox="0 0 60 30" aria-hidden className="h-3 w-4 rounded-[1px] ring-1 ring-black/10">
+      <clipPath id="lang-flag-uk-clip">
+        <rect width="60" height="30" />
+      </clipPath>
+      <g clipPath="url(#lang-flag-uk-clip)">
+        <rect width="60" height="30" fill="#012169" />
+        <path d="M0,0 L60,30 M60,0 L0,30" stroke="#fff" strokeWidth="6" />
+        <path d="M0,0 L60,30 M60,0 L0,30" stroke="#C8102E" strokeWidth="4" clipPath="url(#lang-flag-uk-clip)" />
+        <path d="M30,0 V30 M0,15 H60" stroke="#fff" strokeWidth="10" />
+        <path d="M30,0 V30 M0,15 H60" stroke="#C8102E" strokeWidth="6" />
+      </g>
+    </svg>
   );
 }
 

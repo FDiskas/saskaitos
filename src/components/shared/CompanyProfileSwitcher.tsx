@@ -1,8 +1,10 @@
 import { useMemo } from 'react';
-import { useSettings } from '@/hooks';
+import { useSettings, useTranslate } from '@/hooks';
+import { withParams } from '@/lib/translate';
 
 export function CompanyProfileSwitcher() {
   const { settings, update } = useSettings();
+  const t = useTranslate();
 
   const activeCompanyId = useMemo(() => {
     if (!settings) return null;
@@ -17,7 +19,7 @@ export function CompanyProfileSwitcher() {
   return (
     <div className="flex items-center gap-2">
       <label htmlFor="active-company-header" className="text-xs font-medium text-slate-500">
-        Juridinis vienetas
+        {t['company.switcher.label']}
       </label>
       <select
         id="active-company-header"
@@ -40,7 +42,8 @@ export function CompanyProfileSwitcher() {
       >
         {profiles.map((profile, index) => (
           <option key={profile.id} value={profile.id}>
-            {profile.company.name.trim() || `Juridinis vienetas ${index + 1}`}
+            {profile.company.name.trim() ||
+              withParams(t['company.switcher.fallbackName'], { index: index + 1 })}
           </option>
         ))}
       </select>

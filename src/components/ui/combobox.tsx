@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Check, ChevronsUpDown, Search, X } from 'lucide-react';
+import { useTranslate } from '@/hooks';
 
 export interface ComboboxItem {
   value: string;
@@ -105,12 +106,16 @@ export function Combobox({
   onChange,
   items,
   isLoading = false,
-  placeholder = 'Pasirinkite...',
-  searchPlaceholder = 'Ieškoti...',
-  emptyText = 'Nieko nerasta.',
+  placeholder,
+  searchPlaceholder,
+  emptyText,
   className = '',
   allowClear = true,
 }: ComboboxProps) {
+  const t = useTranslate();
+  const effectivePlaceholder = placeholder ?? (t['combobox.placeholderDefault'] as string);
+  const effectiveSearchPlaceholder = searchPlaceholder ?? (t['combobox.searchPlaceholder'] as string);
+  const effectiveEmptyText = emptyText ?? (t['combobox.empty'] as string);
   const [isOpen, setIsOpen] = useState(false);
   const [search, setSearch] = useState('');
   const containerRef = useRef<HTMLDivElement>(null);
@@ -145,7 +150,7 @@ export function Combobox({
         className="flex h-9 w-full items-center justify-between rounded-md border border-slate-200 bg-white px-3 py-2 text-sm shadow-sm hover:bg-slate-50 focus:outline-none focus:ring-1 focus:ring-slate-900 disabled:cursor-not-allowed disabled:opacity-50 text-left"
       >
         <span className={selected ? 'text-slate-900' : 'text-slate-500'}>
-          {isLoading ? 'Kraunama...' : selected ? selected.label : placeholder}
+          {isLoading ? t['combobox.loading'] : selected ? selected.label : effectivePlaceholder}
         </span>
         <div className="flex items-center gap-1.5">
           {selected && allowClear && (
@@ -168,8 +173,8 @@ export function Combobox({
         <DropdownPanel
           filtered={filtered}
           selectedValue={value}
-          searchPlaceholder={searchPlaceholder}
-          emptyText={emptyText}
+          searchPlaceholder={effectiveSearchPlaceholder}
+          emptyText={effectiveEmptyText}
           search={search}
           onSearch={setSearch}
           onPick={handlePick}

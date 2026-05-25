@@ -5,9 +5,13 @@ import { Client, ClientId, Invoice, InvoiceId, InvoiceNumber, LineItems, VatRate
 
 const mockUseClients = vi.fn();
 
-vi.mock('@/hooks', () => ({
-  useClients: () => mockUseClients(),
-}));
+vi.mock('@/hooks', async (importOriginal) => {
+  const actual = (await importOriginal()) as Record<string, unknown>;
+  return {
+    ...actual,
+    useClients: () => mockUseClients(),
+  };
+});
 
 function createInvoice(clientId: ClientId): Invoice {
   return Invoice.create({

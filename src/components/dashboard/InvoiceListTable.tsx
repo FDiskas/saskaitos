@@ -10,6 +10,7 @@ import {
 } from '@tanstack/react-table';
 import { ArrowDown, ArrowUp, ChevronsUpDown, FileText } from 'lucide-react';
 import { Card } from '@/components/ui';
+import { useTranslate } from '@/hooks';
 import type { InvoiceStatus, InvoiceSummary } from '@/lib/domain';
 import { formatDateLT } from '@/lib/format/date';
 import { StatusPicker } from './StatusPicker';
@@ -27,13 +28,14 @@ export function InvoiceListTable({
   onRowOpen,
   onStatusChange,
 }: InvoiceListTableProps) {
+  const t = useTranslate();
   const [sorting, setSorting] = useState<SortingState>([{ id: 'date', desc: true }]);
 
   const columns = useMemo<ColumnDef<InvoiceSummary>[]>(
     () => [
       {
         id: 'date',
-        header: 'Data',
+        header: t['dashboard.table.date'] as string,
         accessorFn: (s) => s.issueDate.getTime(),
         cell: (info) => (
           <span className="text-slate-700">{formatDateLT(info.row.original.issueDate)}</span>
@@ -41,7 +43,7 @@ export function InvoiceListTable({
       },
       {
         id: 'number',
-        header: 'Numeris',
+        header: t['dashboard.table.number'] as string,
         accessorFn: (s) => s.number,
         cell: (info) => (
           <span className="font-medium text-slate-900">{info.row.original.number}</span>
@@ -49,13 +51,13 @@ export function InvoiceListTable({
       },
       {
         id: 'client',
-        header: 'Klientas',
+        header: t['dashboard.table.client'] as string,
         accessorFn: (s) => s.clientName,
         cell: (info) => <span className="text-slate-700">{info.row.original.clientName}</span>,
       },
       {
         id: 'amount',
-        header: () => <div className="text-right">Suma</div>,
+        header: () => <div className="text-right">{t['dashboard.table.amount']}</div>,
         accessorFn: (s) => s.amount.toCents(),
         cell: (info) => (
           <div className="text-right font-medium text-slate-900">
@@ -65,7 +67,7 @@ export function InvoiceListTable({
       },
       {
         id: 'status',
-        header: 'Statusas',
+        header: t['dashboard.table.status'] as string,
         cell: (info) => {
           const s = info.row.original;
           return (
@@ -79,7 +81,7 @@ export function InvoiceListTable({
         },
       },
     ],
-    [today, onStatusChange],
+    [today, onStatusChange, t],
   );
 
   const table = useReactTable({
@@ -98,9 +100,9 @@ export function InvoiceListTable({
           <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-slate-100">
             <FileText className="h-6 w-6 text-slate-600" />
           </div>
-          <h3 className="mt-4 text-base font-semibold text-slate-900">Sąskaitų nerasta</h3>
+          <h3 className="mt-4 text-base font-semibold text-slate-900">{t['dashboard.table.emptyTitle']}</h3>
           <p className="mt-2 text-sm text-slate-500 mb-6">
-            Pakeiskite filtrus arba sukurkite naują sąskaitą.
+            {t['dashboard.table.emptyBody']}
           </p>
           <div className="flex justify-center">
             <Link
@@ -108,7 +110,7 @@ export function InvoiceListTable({
               params={{ id: 'new' }}
               className="inline-flex items-center gap-2 rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 shadow-sm cursor-pointer"
             >
-              Sukurti naują sąskaitą
+              {t['dashboard.table.emptyAction']}
             </Link>
           </div>
         </div>

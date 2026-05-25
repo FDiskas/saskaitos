@@ -1,4 +1,5 @@
 import { type Invoice, VatRate, type VatPercent } from '@/lib/domain';
+import { useTranslate } from '@/hooks';
 
 export interface VatToggleProps {
   invoice: Invoice;
@@ -7,6 +8,7 @@ export interface VatToggleProps {
 }
 
 export function VatToggle({ invoice, onChange, isPreview = false }: VatToggleProps) {
+  const t = useTranslate();
   if (isPreview) {
     return null;
   }
@@ -34,7 +36,7 @@ export function VatToggle({ invoice, onChange, isPreview = false }: VatTogglePro
           onChange={(e) => handleToggle(e.target.checked)}
           className="rounded border-slate-300 text-slate-900 focus:ring-slate-900 cursor-pointer"
         />
-        PVM skaičiavimas
+        {t['invoice.vat.toggleLabel']}
       </label>
 
       {hasVat && (

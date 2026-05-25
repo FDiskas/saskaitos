@@ -1,5 +1,6 @@
 import { useState, type ChangeEvent } from 'react';
 import { Discount, type Invoice, Money } from '@/lib/domain';
+import { useTranslate } from '@/hooks';
 
 export interface DiscountToggleProps {
   invoice: Invoice;
@@ -20,6 +21,7 @@ function discountRawValueOf(discount: Discount): string {
 }
 
 export function DiscountToggle({ invoice, onChange, isPreview = false }: DiscountToggleProps) {
+  const t = useTranslate();
   const persistedEnabled = !invoice.discount.isZero();
   const [enabledLocal, setEnabledLocal] = useState(persistedEnabled);
   const [draftKind, setDraftKind] = useState<DiscountUiKind>(discountKindOf(invoice.discount));
@@ -61,7 +63,7 @@ export function DiscountToggle({ invoice, onChange, isPreview = false }: Discoun
           onChange={(event) => handleEnable(event.target.checked)}
           className="rounded border-slate-300 text-slate-900 focus:ring-slate-900 cursor-pointer"
         />
-        Nuolaida
+        {t['invoice.discount.toggleLabel']}
       </label>
 
       {enabled && (

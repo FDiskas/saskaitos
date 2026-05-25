@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Download, FileDown, Loader2, Mail } from 'lucide-react';
 import { type Invoice, type Client } from '@/lib/domain';
 import type { SettingsDto } from '@/lib/drive/settings';
-import { useStorage, getInvoicePdfPath } from '@/hooks';
+import { useStorage, useTranslate, getInvoicePdfPath } from '@/hooks';
 import { exportInvoiceToXlsx } from '@/lib/excel/invoiceToXlsx';
 import { generateInvoicePdfBlob } from '@/lib/pdf';
 import { formatDate } from '@/lib/format/date';
@@ -32,6 +32,7 @@ function pdfFilename(invoice: Invoice): string {
 
 export function InvoiceActions({ invoice, client, settings }: InvoiceActionsProps) {
   const storage = useStorage();
+  const t = useTranslate();
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
   const [isExportingXlsx, setIsExportingXlsx] = useState(false);
   const [isEmailOpen, setIsEmailOpen] = useState(false);
@@ -48,7 +49,7 @@ export function InvoiceActions({ invoice, client, settings }: InvoiceActionsProp
         .catch((err) => console.error('Failed to upload PDF copy to Drive', err));
     } catch (err) {
       console.error('Failed to generate PDF', err);
-      setError('Nepavyko sugeneruoti PDF failo.');
+      setError(t['invoice.actions.errorPdf']);
     } finally {
       setIsGeneratingPdf(false);
     }
@@ -61,7 +62,7 @@ export function InvoiceActions({ invoice, client, settings }: InvoiceActionsProp
       await exportInvoiceToXlsx(invoice, client, settings);
     } catch (err) {
       console.error('Failed to export Excel', err);
-      setError('Nepavyko eksportuoti Excel failo.');
+      setError(t['invoice.actions.errorXlsx']);
     } finally {
       setIsExportingXlsx(false);
     }
@@ -86,12 +87,12 @@ export function InvoiceActions({ invoice, client, settings }: InvoiceActionsProp
           ) : (
             <FileDown className="h-3.5 w-3.5 text-slate-500" />
           )}
-          Eksportuoti Excel
+          {t['invoice.actions.exportXlsx']}
         </Button>
 
         <Button variant="secondary" size="sm" onClick={() => setIsEmailOpen(true)}>
           <Mail className="h-3.5 w-3.5 text-slate-500" />
-          Siųsti el. paštu
+          {t['invoice.actions.sendEmail']}
         </Button>
 
         <Button
@@ -105,7 +106,7 @@ export function InvoiceActions({ invoice, client, settings }: InvoiceActionsProp
           ) : (
             <Download className="h-3.5 w-3.5" />
           )}
-          Atsisiųsti PDF
+          {t['invoice.actions.downloadPdf']}
         </Button>
       </div>
 

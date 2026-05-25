@@ -17,6 +17,7 @@ import {
 import { sendInvoiceEmail } from '@/lib/resend/sendInvoiceEmail';
 import { generateInvoicePdfBlob } from '@/lib/pdf';
 import { formatDate } from '@/lib/format/date';
+import { useTranslate } from '@/hooks';
 
 export interface EmailDialogProps {
   open: boolean;
@@ -37,13 +38,14 @@ function resolveTemplate(template: string, invoice: Invoice, client: Client, set
 }
 
 export function EmailDialog({ open, onOpenChange, invoice, client, settings }: EmailDialogProps) {
+  const t = useTranslate();
   const [to, setTo] = useState(client.email || '');
   const [cc, setCc] = useState('');
   const [subject, setSubject] = useState(
-    resolveTemplate(settings.defaultEmailSubject || 'Sąskaita-faktūra {{invoice.number}}', invoice, client, settings),
+    resolveTemplate(settings.defaultEmailSubject || (t['email.defaultSubject'] as string), invoice, client, settings),
   );
   const [body, setBody] = useState(
-    resolveTemplate(settings.defaultEmailBody || 'Sveiki, {{client.name}}!\n\nSiunčiu sąskaitą-faktūrą {{invoice.number}}.\n\nPagarbiai,\n{{company.name}}', invoice, client, settings),
+    resolveTemplate(settings.defaultEmailBody || (t['email.defaultBody'] as string), invoice, client, settings),
   );
   const [attachPdf, setAttachPdf] = useState(true);
   const [isSending, setIsSending] = useState(false);
@@ -55,7 +57,7 @@ export function EmailDialog({ open, onOpenChange, invoice, client, settings }: E
 
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!to) return setError('Kam laukas yra privalomas.');
+    if (!to) return setError(t['email.dialog.errorToRequired']);
 
     setIsSending(true);
     setError(null);
@@ -77,10 +79,10 @@ export function EmailDialog({ open, onOpenChange, invoice, client, settings }: E
         fromName: settings.company?.name || undefined,
       });
 
-      setSentMessage('El. laiškas sėkmingai išsiųstas.');
+      setSentMessage(t['email.dialog.sent']);
       setTimeout(() => onOpenChange(false), 1200);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Nepavyko išsiųsti el. laiško.');
+      setError(err instanceof Error ? err.message : (t['email.dialog.errorSendFailed'] as string));
     } finally {
       setIsSending(false);
     }
@@ -91,10 +93,10 @@ export function EmailDialog({ open, onOpenChange, invoice, client, settings }: E
       <DialogHeader>
         <DialogTitle className="flex items-center gap-2">
           <Mail className="h-5 w-5 text-slate-500" />
-          Siųsti sąskaitą el. paštu
+          {t['email.dialog.title']}
         </DialogTitle>
         <DialogDescription>
-          Siųskite sugeneruotą sąskaitą-faktūrą klientui tiesiai iš šios sistemos per Resend.
+          {t['email.dialog.description']}
         </DialogDescription>
       </DialogHeader>
 
@@ -105,10 +107,8 @@ export function EmailDialog({ open, onOpenChange, invoice, client, settings }: E
           <div className="rounded-md bg-amber-50 border border-amber-200 p-3 flex gap-2 text-amber-800 text-xs">
             <AlertCircle className="h-4 w-4 shrink-0 text-amber-600" />
             <div>
-              <p className="font-semibold">Resend API raktas nenustatytas</p>
-              <p className="mt-0.5">
-                Norėdami siųsti el. laiškus, suveskite API raktą nustatymų puslapyje (Email kortelėje).
-              </p>
+              <p className="font-semibold">{t['email.dialog.warnNoKeyTitle']}</p>
+              <p className="mt-0.5">{t['email.dialog.warnNoKeyBody']}</p>
             </div>
           </div>
         )}
@@ -129,11 +129,11 @@ export function EmailDialog({ open, onOpenChange, invoice, client, settings }: E
 
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="email-to">Kam (gavėjas) *</Label>
+            <Label htmlFor="email-to">{t['email.dialog.toLabel']}</Label>
             <Input
               id="email-to"
               type="text"
-              placeholder="klientas@imone.lt"
+              placeholder={t['email.dialog.toPlaceholder']}
               value={to}
               onChange={(e) => setTo(e.target.value)}
               disabled={isSending || !hasApiKey}
@@ -142,11 +142,11 @@ export function EmailDialog({ open, onOpenChange, invoice, client, settings }: E
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="email-cc">Kopija (CC)</Label>
+            <Label htmlFor="email-cc">{t['email.dialog.ccLabel']}</Label>
             <Input
               id="email-cc"
               type="text"
-              placeholder="kopija@imone.lt"
+              placeholder={t['email.dialog.ccPlaceholder']}
               value={cc}
               onChange={(e) => setCc(e.target.value)}
               disabled={isSending || !hasApiKey}
@@ -155,11 +155,11 @@ export function EmailDialog({ open, onOpenChange, invoice, client, settings }: E
         </div>
 
         <div className="flex flex-col gap-1.5">
-          <Label htmlFor="email-subject">Tema</Label>
+          <Label htmlFor="email-subject">{t['email.dialog.subjectLabel']}</Label>
           <Input
             id="email-subject"
             type="text"
-            placeholder="Tema"
+            placeholder={t['email.dialog.subjectPlaceholder']}
             value={subject}
             onChange={(e) => setSubject(e.target.value)}
             disabled={isSending || !hasApiKey}
@@ -168,10 +168,10 @@ export function EmailDialog({ open, onOpenChange, invoice, client, settings }: E
         </div>
 
         <div className="flex flex-col gap-1.5">
-          <Label htmlFor="email-body">Tekstas</Label>
+          <Label htmlFor="email-body">{t['email.dialog.bodyLabel']}</Label>
           <Textarea
             id="email-body"
-            placeholder="Laiško turinys..."
+            placeholder={t['email.dialog.bodyPlaceholder']}
             value={body}
             onChange={(e) => setBody(e.target.value)}
             disabled={isSending || !hasApiKey}
@@ -190,7 +190,7 @@ export function EmailDialog({ open, onOpenChange, invoice, client, settings }: E
             className="rounded border-slate-350 text-slate-900 focus:ring-slate-900 cursor-pointer"
           />
           <Label htmlFor="email-attach" className="cursor-pointer font-medium text-slate-700">
-            Prisegti PDF sąskaitą-faktūrą
+            {t['email.dialog.attachLabel']}
           </Label>
         </div>
 
@@ -202,7 +202,7 @@ export function EmailDialog({ open, onOpenChange, invoice, client, settings }: E
             disabled={isSending}
             className="cursor-pointer"
           >
-            Atšaukti
+            {t['email.dialog.cancel']}
           </Button>
           <Button
             type="submit"
@@ -212,10 +212,10 @@ export function EmailDialog({ open, onOpenChange, invoice, client, settings }: E
             {isSending ? (
               <>
                 <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
-                Siunčiama...
+                {t['email.dialog.sending']}
               </>
             ) : (
-              'Siųsti'
+              t['email.dialog.send']
             )}
           </Button>
         </DialogFooter>

@@ -24,14 +24,7 @@ const FONT_WEIGHTS = [400, 700] as const;
 const FALLBACK_FAMILY = 'Roboto';
 const BUILTIN_FALLBACK = 'Helvetica';
 
-interface RegisteredSource {
-  fontWeight: number;
-  data: unknown;
-}
-interface RegisteredFamily {
-  sources: RegisteredSource[];
-}
-
+const done = new Map<string, FontStack>();
 const inflight = new Map<string, Promise<FontStack>>();
 const catalog = Catalog.parse(rawCatalog);
 
@@ -62,21 +55,12 @@ export function isFontAvailable(family: string): boolean {
   return findEntry(family) !== undefined;
 }
 
-function clearStaleSources(
-  store: Record<string, RegisteredFamily>,
-  family: string,
-): void {
-  if (store[family]) delete store[family];
-}
-
 function buildFontSources(entry: CatalogFontT): Array<{ src: string; fontWeight: number }> {
   return FONT_WEIGHTS.map((w) => ({ src: entry.files[w], fontWeight: w }));
 }
 
 async function registerAndLoad(entry: CatalogFontT): Promise<void> {
   const { Font } = await import('@react-pdf/renderer');
-  const store = Font.getRegisteredFonts() as Record<string, RegisteredFamily>;
-  clearStaleSources(store, entry.family);
   Font.register({ family: entry.family, fonts: buildFontSources(entry) });
   await Promise.all(
     FONT_WEIGHTS.map((w) => Font.load({ fontFamily: entry.family, fontWeight: w })),
@@ -88,17 +72,23 @@ export async function ensureGoogleFontRegistered(
 ): Promise<FontStack> {
   const base = resolveBaseFamily(family);
   const stack = resolveFontStack(family);
+
+  // Return immediately if already fully loaded
+  const cached = done.get(base);
+  if (cached) return cached;
+
+  // Deduplicate concurrent callers — return the same in-flight promise
   const existing = inflight.get(base);
   if (existing) return existing;
 
   const entry = findEntry(base);
   if (!entry) throw new GoogleFontNotInCatalogError(base);
 
-  const task = registerAndLoad(entry).then(() => stack);
-  inflight.set(base, task);
-  try {
-    return await task;
-  } finally {
+  const task = registerAndLoad(entry).then(() => {
+    done.set(base, stack); // Persist permanently — never re-register or clear
     inflight.delete(base);
-  }
+    return stack;
+  });
+  inflight.set(base, task);
+  return task;
 }

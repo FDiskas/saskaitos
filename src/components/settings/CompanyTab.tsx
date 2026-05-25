@@ -3,6 +3,8 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Button, Input, Label, Textarea } from '@/components/ui';
 import { JarsCompanySearchButton } from '@/components/shared';
+import { useTranslate } from '@/hooks';
+import { withParams } from '@/lib/translate';
 import { fileToBase64 } from '@/lib/files';
 import { CompanyDtoSchema, type CompanyDto } from '@/lib/drive/settings';
 import type { JarsCompany } from '@/lib/jars';
@@ -35,6 +37,7 @@ export function CompanyTab({ value, onChange, jarsApiKey }: CompanyTabProps) {
   });
   const { register, watch, setValue, formState, reset } = form;
   const lastSnapshotRef = useRef<string>(JSON.stringify(defaults));
+  const t = useTranslate();
   const [jarsError, setJarsError] = useState<string | null>(null);
 
   function applyJarsResult(company: JarsCompany): void {
@@ -48,7 +51,7 @@ export function CompanyTab({ value, onChange, jarsApiKey }: CompanyTabProps) {
     }
     const status = company.status;
     if (status && status !== 'ACTIVE') {
-      setJarsError(`Dėmesio: įmonės statusas Registrų centre — ${status}.`);
+      setJarsError(withParams(t['clients.form.jarsStatusWarning'], { status }));
       return;
     }
     setJarsError(null);
@@ -90,9 +93,9 @@ export function CompanyTab({ value, onChange, jarsApiKey }: CompanyTabProps) {
 
   return (
     <form className="grid gap-5 lg:grid-cols-2" onSubmit={(e) => e.preventDefault()}>
-      <Field label="Pavadinimas" error={jarsError ?? undefined}>
+      <Field label={t['settings.company.field.name']} error={jarsError ?? undefined}>
         <div className="flex items-center gap-2">
-          <Input {...register('name')} placeholder="UAB Pavyzdys" />
+          <Input {...register('name')} placeholder={t['settings.company.placeholder.name']} />
           <JarsCompanySearchButton
             apiKey={jarsApiKey}
             query={nameQuery}
@@ -101,43 +104,43 @@ export function CompanyTab({ value, onChange, jarsApiKey }: CompanyTabProps) {
           />
         </div>
       </Field>
-      <Field label="Įmonės kodas">
-        <Input {...register('code')} placeholder="300000000" />
+      <Field label={t['settings.company.field.code']}>
+        <Input {...register('code')} placeholder={t['settings.company.placeholder.code']} />
       </Field>
-      <Field label="PVM kodas">
-        <Input {...register('vatCode')} placeholder="LT100000000000" />
+      <Field label={t['settings.company.field.vatCode']}>
+        <Input {...register('vatCode')} placeholder={t['settings.company.placeholder.vatCode']} />
       </Field>
-      <Field label="El. paštas" error={typeof emailError === 'string' ? emailError : undefined}>
-        <Input type="email" {...register('email')} placeholder="info@pavyzdys.lt" />
+      <Field label={t['settings.company.field.email']} error={typeof emailError === 'string' ? emailError : undefined}>
+        <Input type="email" {...register('email')} placeholder={t['settings.company.placeholder.email']} />
       </Field>
-      <Field label="Telefonas">
-        <Input {...register('phone')} placeholder="+370 600 00000" />
+      <Field label={t['settings.company.field.phone']}>
+        <Input {...register('phone')} placeholder={t['settings.company.placeholder.phone']} />
       </Field>
-      <Field label="Adresas">
-        <Textarea rows={2} {...register('address')} placeholder="Gatvė, miestas" />
+      <Field label={t['settings.company.field.address']}>
+        <Textarea rows={2} {...register('address')} placeholder={t['settings.company.placeholder.address']} />
       </Field>
-      <Field label="Bankas">
-        <Input {...register('bankName')} placeholder="Swedbank" />
+      <Field label={t['settings.company.field.bank']}>
+        <Input {...register('bankName')} placeholder={t['settings.company.placeholder.bank']} />
       </Field>
-      <Field label="IBAN">
-        <Input {...register('iban')} placeholder="LT00 0000 0000 0000 0000" />
+      <Field label={t['settings.company.field.iban']}>
+        <Input {...register('iban')} placeholder={t['settings.company.placeholder.iban']} />
       </Field>
       <div className="lg:col-span-2">
-        <Label>Logotipas</Label>
+        <Label>{t['settings.company.field.logo']}</Label>
         <div className="mt-1.5 flex items-center gap-3">
           {logoBase64 ? (
             <img
               src={logoBase64}
-              alt="Logotipas"
+              alt={t['settings.company.logo.altText']}
               className="h-14 w-14 rounded border border-slate-200 object-contain p-1"
             />
           ) : (
             <div className="flex h-14 w-14 items-center justify-center rounded border border-dashed border-slate-300 text-xs text-slate-400">
-              Nėra
+              {t['settings.company.logo.empty']}
             </div>
           )}
           <label className="inline-flex cursor-pointer items-center rounded-md bg-white px-3 py-1.5 text-xs font-medium text-slate-700 ring-1 ring-slate-200 hover:bg-slate-50">
-            Įkelti
+            {t['settings.company.logo.uploadLabel']}
             <input
               type="file"
               accept="image/*"
@@ -155,7 +158,7 @@ export function CompanyTab({ value, onChange, jarsApiKey }: CompanyTabProps) {
               size="sm"
               onClick={() => setValue('logoBase64', undefined, { shouldDirty: true })}
             >
-              Pašalinti
+              {t['settings.company.logo.removeLabel']}
             </Button>
           ) : null}
         </div>

@@ -1,6 +1,8 @@
 import { useMemo } from 'react';
 import { Plus, Trash2 } from 'lucide-react';
 import { Button, Combobox, Input, Label, type ComboboxItem } from '@/components/ui';
+import { useTranslate } from '@/hooks';
+import type { translate } from '@/lib/translate';
 import { fileToBase64 } from '@/lib/files';
 import {
   DEFAULT_ACCENT_COLOR,
@@ -24,19 +26,20 @@ interface ColorFieldConfig {
     DesignPresetDto,
     'primaryColor' | 'accentColor' | 'textColor' | 'mutedColor' | 'borderColor' | 'headingColor'
   >;
-  label: string;
+  labelKey: keyof typeof translate;
 }
 
 const COLOR_FIELDS: readonly ColorFieldConfig[] = [
-  { key: 'primaryColor', label: 'Pirminė spalva' },
-  { key: 'accentColor', label: 'Akcentinė spalva' },
-  { key: 'textColor', label: 'Teksto spalva' },
-  { key: 'mutedColor', label: 'Pilkų detalių spalva' },
-  { key: 'borderColor', label: 'Linijų spalva' },
-  { key: 'headingColor', label: 'Antraščių spalva' },
+  { key: 'primaryColor', labelKey: 'settings.design.color.primary' },
+  { key: 'accentColor', labelKey: 'settings.design.color.accent' },
+  { key: 'textColor', labelKey: 'settings.design.color.text' },
+  { key: 'mutedColor', labelKey: 'settings.design.color.muted' },
+  { key: 'borderColor', labelKey: 'settings.design.color.border' },
+  { key: 'headingColor', labelKey: 'settings.design.color.heading' },
 ];
 
 export function DesignTab({ presets, onChange }: DesignTabProps) {
+  const t = useTranslate();
   function updatePreset(id: string, patch: Partial<DesignPresetDto>): void {
     onChange(presets.map((p) => (p.id === id ? { ...p, ...patch } : p)));
   }
@@ -49,7 +52,7 @@ export function DesignTab({ presets, onChange }: DesignTabProps) {
   function addPreset(): void {
     const next: DesignPresetDto = {
       id: crypto.randomUUID(),
-      name: 'Naujas šablonas',
+      name: t['settings.design.preset.newName'] as string,
       primaryColor: DEFAULT_PRIMARY_COLOR,
       accentColor: DEFAULT_ACCENT_COLOR,
       textColor: DEFAULT_TEXT_COLOR,
@@ -69,9 +72,9 @@ export function DesignTab({ presets, onChange }: DesignTabProps) {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <p className="text-sm text-slate-500">Šablonai naudojami kuriant naujas sąskaitas.</p>
+        <p className="text-sm text-slate-500">{t['settings.design.intro']}</p>
         <Button onClick={addPreset}>
-          <Plus className="h-4 w-4" /> Naujas šablonas
+          <Plus className="h-4 w-4" /> {t['settings.design.addPreset']}
         </Button>
       </div>
       <ul className="grid gap-4 lg:grid-cols-2">
@@ -100,6 +103,7 @@ interface DesignCardProps {
 }
 
 function DesignCard({ preset, canDelete, onUpdate, onRemove, onBackground }: DesignCardProps) {
+  const t = useTranslate();
   return (
     <div className="space-y-3">
       <div className="flex items-start justify-between gap-2">
@@ -113,7 +117,7 @@ function DesignCard({ preset, canDelete, onUpdate, onRemove, onBackground }: Des
           size="sm"
           onClick={onRemove}
           disabled={!canDelete}
-          title={canDelete ? 'Pašalinti' : 'Bent vienas šablonas turi likti'}
+          title={canDelete ? t['settings.design.deleteTitle'] : t['settings.design.deleteDisabledTitle']}
         >
           <Trash2 className="h-4 w-4" />
         </Button>
@@ -122,7 +126,7 @@ function DesignCard({ preset, canDelete, onUpdate, onRemove, onBackground }: Des
         {COLOR_FIELDS.map((colorField) => (
           <ColorField
             key={colorField.key}
-            label={colorField.label}
+            label={t[colorField.labelKey] as string}
             value={preset[colorField.key]}
             onChange={(value) => onUpdate({ [colorField.key]: value })}
           />
@@ -136,16 +140,16 @@ function DesignCard({ preset, canDelete, onUpdate, onRemove, onBackground }: Des
         {preset.backgroundImageBase64 ? (
           <img
             src={preset.backgroundImageBase64}
-            alt="Fonas"
+            alt={t['settings.design.background.altText']}
             className="h-12 w-20 rounded border border-slate-200 object-cover"
           />
         ) : (
           <div className="flex h-12 w-20 items-center justify-center rounded border border-dashed border-slate-300 text-xs text-slate-400">
-            Nėra
+            {t['settings.design.background.empty']}
           </div>
         )}
         <label className="inline-flex cursor-pointer items-center rounded-md bg-white px-3 py-1.5 text-xs font-medium text-slate-700 ring-1 ring-slate-200 hover:bg-slate-50">
-          Įkelti foną
+          {t['settings.design.background.upload']}
           <input
             type="file"
             accept="image/*"
@@ -163,7 +167,7 @@ function DesignCard({ preset, canDelete, onUpdate, onRemove, onBackground }: Des
             size="sm"
             onClick={() => onUpdate({ backgroundImageBase64: undefined })}
           >
-            Pašalinti
+            {t['settings.design.background.remove']}
           </Button>
         ) : null}
       </div>
@@ -198,20 +202,21 @@ function ColorField({
 }
 
 function FontPicker({ value, onChange }: { value: string; onChange: (next: string) => void }) {
+  const t = useTranslate();
   const items = useMemo<ComboboxItem[]>(
     () => availableFontFamilies.map((f) => ({ value: f, label: f })),
     [],
   );
   return (
     <div className="flex flex-col gap-1.5">
-      <Label>Šriftas</Label>
+      <Label>{t['settings.design.font']}</Label>
       <Combobox
         value={value}
         onChange={(next) => onChange(next ?? 'Inter')}
         items={items}
-        placeholder="Pasirinkite šriftą..."
-        searchPlaceholder="Ieškoti šrifto..."
-        emptyText="Šriftas nerastas."
+        placeholder={t['settings.design.font.placeholder']}
+        searchPlaceholder={t['settings.design.font.searchPlaceholder']}
+        emptyText={t['settings.design.font.empty']}
         allowClear={false}
       />
     </div>

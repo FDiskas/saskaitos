@@ -21,7 +21,9 @@ import {
   useSettings,
   useClients,
   useInvoiceAutosave,
+  useTranslate,
 } from '@/hooks';
+import { withParams } from '@/lib/translate';
 import {
   DesignSidebar,
   InvoiceCanvas,
@@ -50,6 +52,7 @@ import {
 export function InvoiceEditorPage() {
   const { id } = useParams({ from: '/invoice-editor/$id' });
   const { clientId } = useSearch({ from: '/invoice-editor/$id' });
+  const t = useTranslate();
   const isNew = id === 'new';
 
   const { invoice, isLoading: isInvoiceLoading, error: invoiceError } = useInvoice(id);
@@ -169,7 +172,7 @@ export function InvoiceEditorPage() {
     return (
       <div className="flex h-screen w-screen flex-col items-center justify-center gap-3 bg-slate-50">
         <Loader2 className="h-8 w-8 animate-spin text-slate-800" />
-        <p className="text-sm font-medium text-slate-600">Kraunami redaktoriaus duomenys...</p>
+        <p className="text-sm font-medium text-slate-600">{t['invoice.editor.loading']}</p>
       </div>
     );
   }
@@ -177,10 +180,10 @@ export function InvoiceEditorPage() {
   if (!isNew && (invoiceError || !invoice)) {
     return (
       <div className="flex h-screen w-screen flex-col items-center justify-center gap-4 bg-slate-50 p-4 text-center">
-        <p className="text-red-600 font-semibold">Nepavyko užkrauti sąskaitos.</p>
-        <p className="text-sm text-slate-500 max-w-md">{(invoiceError as Error)?.message || 'Sąskaita nerasta.'}</p>
+        <p className="text-red-600 font-semibold">{t['invoice.editor.loadFailed']}</p>
+        <p className="text-sm text-slate-500 max-w-md">{(invoiceError as Error)?.message || t['invoice.editor.notFound']}</p>
         <Link to="/dashboard" className="text-sm font-medium text-blue-600 hover:underline">
-          Grįžti į pultą
+          {t['invoice.editor.backToDashboard']}
         </Link>
       </div>
     );
@@ -304,11 +307,11 @@ export function InvoiceEditorPage() {
             className="flex items-center gap-1.5 text-xs font-semibold text-slate-600 hover:text-slate-900 bg-slate-50 hover:bg-slate-100 border border-slate-200 px-3 py-1.5 rounded-md transition"
           >
             <ArrowLeft className="h-3.5 w-3.5" />
-            Pultas
+            {t['invoice.editor.headerBack']}
           </Link>
           <div className="h-4 w-px bg-slate-250" />
           <span className="text-sm font-bold text-slate-900 font-mono">
-            Redaguojama: {localInvoice.number.toString()}
+            {withParams(t['invoice.editor.editingNumber'], { number: localInvoice.number.toString() })}
           </span>
           <CompanyProfileSwitcher />
         </div>
@@ -320,14 +323,14 @@ export function InvoiceEditorPage() {
           className="rounded-md border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50"
           onClick={() => setIsPreview((current) => !current)}
         >
-          {isPreview ? 'Redagavimo režimas' : 'Preview režimas'}
+          {isPreview ? t['invoice.editor.editMode'] : t['invoice.editor.previewMode']}
         </button>
 
         {client ? (
           <InvoiceActions invoice={localInvoice} client={client} settings={settings} />
         ) : (
           <div className="text-xs text-amber-600 bg-amber-50 px-3 py-1.5 rounded-md border border-amber-100 font-medium">
-            Pasirinkite klientą, kad galėtumėte eksportuoti
+            {t['invoice.editor.requireClient']}
           </div>
         )}
       </header>
@@ -383,11 +386,12 @@ interface SyncStatusPillProps {
 }
 
 function SyncStatusPill({ isSaving, isPendingSave }: SyncStatusPillProps) {
+  const t = useTranslate();
   if (isSaving) {
     return (
       <span className="inline-flex items-center gap-1.5 rounded-full bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-600/20">
         <Loader2 className="h-3 w-3 animate-spin" />
-        Išsaugoma...
+        {t['invoice.editor.saving']}
       </span>
     );
   }
@@ -395,14 +399,14 @@ function SyncStatusPill({ isSaving, isPendingSave }: SyncStatusPillProps) {
     return (
       <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-2 py-1 text-xs font-medium text-amber-700 ring-1 ring-inset ring-amber-600/20">
         <CloudLightning className="h-3 w-3" />
-        Laukiama išsaugojimo...
+        {t['invoice.editor.pendingSave']}
       </span>
     );
   }
   return (
     <span className="inline-flex items-center gap-1.5 rounded-full bg-green-50 px-2 py-1 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20">
       <CheckCircle2 className="h-3 w-3" />
-      Išsaugota Drive
+      {t['invoice.editor.savedDrive']}
     </span>
   );
 }

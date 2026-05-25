@@ -23,9 +23,13 @@ vi.mock('@tanstack/react-router', () => ({
 }));
 
 const mockUseGoogleAuth = vi.fn();
-vi.mock('@/hooks', () => ({
-  useGoogleAuth: () => mockUseGoogleAuth(),
-}));
+vi.mock('@/hooks', async (importOriginal) => {
+  const actual = (await importOriginal()) as Record<string, unknown>;
+  return {
+    ...actual,
+    useGoogleAuth: () => mockUseGoogleAuth(),
+  };
+});
 
 vi.mock('@/env', () => ({ env: mockEnv }));
 

@@ -2,6 +2,7 @@ import { type CSSProperties, type ReactNode } from 'react';
 import { type Invoice } from '@/lib/domain';
 import { type SettingsDto } from '@/lib/drive/settings';
 import { type BlockKind, type BlockInstance } from '@/lib/invoice-template/layout';
+import { useTranslate } from '@/hooks';
 import { AmountInWordsBlock } from './AmountInWordsBlock';
 import { BuyerBlock } from './BuyerBlock';
 import { InvoiceMetaBlock } from './InvoiceMetaBlock';
@@ -117,6 +118,7 @@ interface TextBlockViewProps {
 }
 
 function TextBlockView({ instanceId, text, fontSize, fontWeight, color, align, isPreview, onPatch }: TextBlockViewProps) {
+  const t = useTranslate();
   const textDraft = useTextDraft(text, (nextText) => {
     if (!onPatch) return;
     onPatch(instanceId, { kind: 'text', text: nextText });
@@ -134,7 +136,7 @@ function TextBlockView({ instanceId, text, fontSize, fontWeight, color, align, i
   if (isPreview || !onPatch) {
     return (
       <div style={style}>
-        {text || (isPreview ? '' : 'Tuščias tekstas')}
+        {text || (isPreview ? '' : t['invoice.text.empty'])}
       </div>
     );
   }
@@ -145,7 +147,7 @@ function TextBlockView({ instanceId, text, fontSize, fontWeight, color, align, i
       onFocus={textDraft.beginEditing}
       onBlur={textDraft.commit}
       onClick={(event) => event.stopPropagation()}
-      placeholder="Įveskite tekstą"
+      placeholder={t['invoice.text.placeholder']}
       value={textDraft.value}
       rows={Math.max(1, textDraft.value.split('\n').length)}
       className="w-full resize-y rounded border border-dashed border-slate-200 bg-transparent p-1 focus:border-slate-400 focus:outline-none"
@@ -172,11 +174,16 @@ function renderDivider(style: 'solid' | 'dashed' | 'spacer', thickness: number, 
 
 function renderCustomImage(base64: string | undefined, maxWidthPct: number): ReactNode {
   if (!base64) {
-    return (
-      <div className="flex h-20 w-full items-center justify-center rounded border border-dashed border-slate-300 bg-slate-50 text-xs text-slate-400">
-        Pasirinkite paveikslėlį dešinėje
-      </div>
-    );
+    return <CustomImageEmpty />;
   }
   return <img src={base64} alt="" style={{ maxWidth: `${maxWidthPct}%`, height: 'auto', objectFit: 'contain' }} />;
+}
+
+function CustomImageEmpty() {
+  const t = useTranslate();
+  return (
+    <div className="flex h-20 w-full items-center justify-center rounded border border-dashed border-slate-300 bg-slate-50 text-xs text-slate-400">
+      {t['invoice.customImage.empty']}
+    </div>
+  );
 }

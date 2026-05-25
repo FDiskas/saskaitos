@@ -17,10 +17,14 @@ vi.mock('@/components/shared', () => ({
   JarsCompanySearchButton: () => null,
 }));
 
-vi.mock('@/hooks', () => ({
-  useCreateClient: () => mockUseCreateClient(),
-  useSettings: () => ({ settings: null, isLoading: false, isUpdating: false, error: null, update: vi.fn() }),
-}));
+vi.mock('@/hooks', async (importOriginal) => {
+  const actual = (await importOriginal()) as Record<string, unknown>;
+  return {
+    ...actual,
+    useCreateClient: () => mockUseCreateClient(),
+    useSettings: () => ({ settings: null, isLoading: false, isUpdating: false, error: null, update: vi.fn() }),
+  };
+});
 
 vi.mock('@/lib/files', () => ({
   fileToBase64: (file: File) => mockFileToBase64(file),

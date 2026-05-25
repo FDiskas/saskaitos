@@ -1,4 +1,5 @@
 import { Card } from '@/components/ui';
+import { useTranslate } from '@/hooks';
 import type { DashboardKpi } from '@/lib/utils/dashboardKpi';
 
 interface KpiTileProps {
@@ -30,16 +31,17 @@ export interface KpiCardsProps {
 }
 
 export function KpiCards({ kpi }: KpiCardsProps) {
+  const t = useTranslate();
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-      <KpiTile label="Šį mėnesį išrašyta" value={kpi.issuedThisMonth.format()} tone="neutral" />
-      <KpiTile label="Laukia mokėjimo" value={kpi.awaitingPayment.format()} tone="blue" />
+      <KpiTile label={t['dashboard.kpi.issuedThisMonth']} value={kpi.issuedThisMonth.format()} tone="neutral" />
+      <KpiTile label={t['dashboard.kpi.awaitingPayment']} value={kpi.awaitingPayment.format()} tone="blue" />
       <KpiTile
-        label="Vėluoja"
-        value={`${kpi.overdueCount} ${kpi.overdueCount === 1 ? 'sąsk.' : 'sąsk.'}`}
+        label={t['dashboard.kpi.overdue']}
+        value={`${kpi.overdueCount} ${t['dashboard.kpi.invoicesShort']}`}
         tone="rose"
       />
-      <KpiTile label="Apmokėta YTD" value={kpi.paidYtd.format()} tone="emerald" />
+      <KpiTile label={t['dashboard.kpi.paidYtd']} value={kpi.paidYtd.format()} tone="emerald" />
     </div>
   );
 }

@@ -1,6 +1,7 @@
 import { Search } from 'lucide-react';
 import { Input } from '@/components/ui';
 import { ClientCombobox } from '@/components/shared';
+import { useTranslate } from '@/hooks';
 import { ClientId, type InvoiceStatus } from '@/lib/domain';
 import { StatusMultiSelect } from './StatusMultiSelect';
 
@@ -29,6 +30,7 @@ function toInputDate(d: Date | null): string {
 }
 
 export function DashboardFilters({ values, onChange }: DashboardFiltersProps) {
+  const t = useTranslate();
   const patch = (p: Partial<DashboardFilterValues>) => onChange({ ...values, ...p });
 
   return (
@@ -36,7 +38,7 @@ export function DashboardFilters({ values, onChange }: DashboardFiltersProps) {
       <div className="relative lg:col-span-2">
         <Search className="pointer-events-none absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
         <Input
-          placeholder="Ieškoti numerio arba kliento..."
+          placeholder={t['dashboard.filters.searchPlaceholder']}
           value={values.search}
           onChange={(e) => patch({ search: e.target.value })}
           className="bg-white pl-9"
@@ -46,7 +48,7 @@ export function DashboardFilters({ values, onChange }: DashboardFiltersProps) {
       <ClientCombobox
         value={values.clientId ? values.clientId.toString() : null}
         onChange={(id) => patch({ clientId: id ? ClientId.fromString(id) : null })}
-        placeholder="Visi klientai"
+        placeholder={t['dashboard.filters.allClients']}
       />
 
       <StatusMultiSelect

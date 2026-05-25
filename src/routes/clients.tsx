@@ -9,6 +9,7 @@ import {
   useDeleteClient,
   useGoogleAuth,
   useStorageOrNull,
+  useTranslate,
 } from '@/hooks';
 import { env } from '@/env';
 import { Client, ClientId } from '@/lib/domain';
@@ -26,6 +27,7 @@ export function ClientsPage() {
   const navigate = useNavigate();
   const storage = useStorageOrNull();
   const { isReady } = useBootstrap();
+  const t = useTranslate();
 
   useEffect(() => {
     if (!env.useInMemory && !isAuthenticated) {
@@ -36,12 +38,10 @@ export function ClientsPage() {
   if (!storage || !isReady) {
     return (
       <main className="min-h-screen bg-slate-50 px-4 py-6 sm:px-6 sm:py-8">
-        <AppHeader title="Klientų Valdymas" current="clients" />
+        <AppHeader title={t['clients.title']} current="clients" />
         <Card>
           <CardBody>
-            <p className="text-sm text-slate-500">
-              Laukiame sistemos pasirengimo, kad galėtume krauti klientus...
-            </p>
+            <p className="text-sm text-slate-500">{t['clients.state.awaitingSystem']}</p>
           </CardBody>
         </Card>
         <AppFooter />
@@ -51,7 +51,7 @@ export function ClientsPage() {
 
   return (
     <main className="min-h-screen bg-slate-50 px-4 py-6 sm:px-6 sm:py-8">
-      <AppHeader title="Klientų Valdymas" current="clients" />
+      <AppHeader title={t['clients.title']} current="clients" />
       <ClientsContent />
       <AppFooter />
     </main>
@@ -59,6 +59,7 @@ export function ClientsPage() {
 }
 
 function ClientsContent() {
+  const t = useTranslate();
   const { clients, isLoading } = useClients();
   const createMutation = useCreateClient();
   const updateMutation = useUpdateClient();
@@ -124,7 +125,7 @@ function ClientsContent() {
       <Card>
         <CardBody className="py-12 flex flex-col items-center justify-center">
           <div className="h-8 w-8 animate-spin rounded-full border-4 border-slate-200 border-t-slate-800" />
-          <p className="mt-4 text-sm text-slate-500 font-medium">Kraunamas klientų sąrašas...</p>
+          <p className="mt-4 text-sm text-slate-500 font-medium">{t['clients.state.loading']}</p>
         </CardBody>
       </Card>
     );
