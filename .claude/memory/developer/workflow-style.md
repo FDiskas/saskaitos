@@ -1,9 +1,9 @@
 ---
 name: workflow-style
 description: User prefers stage-by-stage vibe-coding workflow — discrete prompts with acceptance criteria per phase, not big-bang implementation.
-keywords: workflow, vibe-coding, prompts, lithuanian, communication, staging
+keywords: workflow, vibe-coding, prompts, lithuanian, communication, staging, subagents, validation-gates
 created: 2026-05-21
-updated: 2026-05-21
+updated: 2026-05-30
 ---
 
 **Fact / Rule:** User drives implementation by feeding numbered stage prompts to AI tools (Cursor / Claude Code / Lovable), committing between stages. Plans should be structured as executable stage prompts with explicit acceptance criteria per stage.
@@ -15,3 +15,4 @@ updated: 2026-05-21
 - Default response language: Lithuanian (user writes in LT and prefers replies in LT).
 - Don't bundle multiple unrelated changes into one stage — each stage should be independently committable and revertible.
 - User values clean code: strict TS (no `any`), Zod for all external boundaries, pure utility functions in `lib/utils/`, components < 200 lines. These rules belong in project `CLAUDE.md`.
+- For large multi-concern refactors (e.g. the 2026-05-30 8-dimension cleanup), user chose **sequential** subagents (one at a time, not parallel) working **directly on main**, with `pnpm typecheck`/`lint`/`test` run as a gate between each phase and revert-on-red. Same revertible-stages philosophy as above — apply it to orchestration, not just planning.

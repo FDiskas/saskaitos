@@ -20,7 +20,6 @@ export function AlertDialog({ open, onOpenChange, children }: AlertDialogProps) 
     };
   }, [open]);
 
-  // Handle ESC key press
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && open) {
@@ -35,12 +34,10 @@ export function AlertDialog({ open, onOpenChange, children }: AlertDialogProps) 
 
   return createPortal(
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      {/* Backdrop */}
       <div
         className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs transition-opacity"
         onClick={() => onOpenChange(false)}
       />
-      {/* Content */}
       <div className="relative w-full max-w-md rounded-lg bg-white p-6 shadow-lg ring-1 ring-slate-200 animate-in zoom-in-95 duration-200">
         {children}
       </div>

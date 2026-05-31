@@ -3,7 +3,13 @@ export { useStorage, useStorageOrNull } from './useStorage';
 export { useBootstrap } from './useBootstrap';
 export { useSettings, type UseSettingsResult } from './useSettings';
 export { useClients, useCreateClient, useUpdateClient, useDeleteClient } from './useClients';
-export { useInvoice, getClientFolder, getInvoicePath, getInvoicePdfPath } from './useInvoice';
+export { useInvoice } from './useInvoice';
+export {
+  getClientFolder,
+  getClientIndexPath,
+  getInvoicePath,
+  getInvoicePdfPath,
+} from '@/lib/storage/clientPaths';
 export { useCreateInvoice, useUpdateInvoice, useDeleteInvoice } from './useInvoiceMutations';
 export { useInvoiceAutosave, type AutosaveOptions } from './useInvoiceAutosave';
 export { useInvoiceList } from './useInvoiceList';

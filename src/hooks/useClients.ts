@@ -4,6 +4,7 @@ import { APP_ROOT, CLIENTS_FILE, StoragePath, type Storage } from '@/lib/storage
 import { useStorage } from './useStorage';
 import type { Client } from '@/lib/domain';
 import { ClientsFileSchema, clientToDto, clientFromDto } from '@/lib/drive/schemas';
+import { getClientFolder, getClientFolderPath, getClientIndexPath } from '@/lib/storage/clientPaths';
 import { syncQueue } from '@/stores';
 
 const CLIENTS_PATH = StoragePath.of(APP_ROOT, CLIENTS_FILE);
@@ -12,6 +13,10 @@ async function readClients(storage: Storage): Promise<Client[]> {
   const raw = await storage.read(CLIENTS_PATH, ClientsFileSchema);
   if (!raw) return [];
   return raw.clients.map(clientFromDto);
+}
+
+async function writeClients(storage: Storage, clients: Client[]): Promise<void> {
+  await storage.write(CLIENTS_PATH, { clients: clients.map(clientToDto) });
 }
 
 export function useClients() {
@@ -37,24 +42,16 @@ export function useCreateClient() {
 
   return useMutation<void, Error, Client, { prev: Client[] | undefined }>({
     mutationFn: async (newClient) => {
-      // 1. Write the new clients list to clients.json
       await syncQueue.enqueue(async () => {
-        const latest = await storage.read(CLIENTS_PATH, ClientsFileSchema);
-        const latestClients = latest ? latest.clients.map(clientFromDto) : [];
-        const updatedClients = [...latestClients, newClient];
-        
-        await storage.write(CLIENTS_PATH, {
-          clients: updatedClients.map(clientToDto),
-        });
+        const latestClients = await readClients(storage);
+        await writeClients(storage, [...latestClients, newClient]);
       });
 
-      // 2. Create the client directory structure by writing profile.json and invoices_index.json
-      const folderName = `Client_${newClient.slug()}_${newClient.id.toString().slice(0, 6)}`;
-      const clientFolder = `Saskaitos_App/Clients/${folderName}`;
-      
+      const clientFolder = getClientFolder(newClient);
+
       await syncQueue.enqueue(async () => {
         await storage.write(StoragePath.of(clientFolder, 'profile.json'), clientToDto(newClient));
-        await storage.write(StoragePath.of(clientFolder, 'invoices_index.json'), []);
+        await storage.write(getClientIndexPath(newClient), []);
       });
     },
     onMutate: async (newClient) => {
@@ -80,23 +77,16 @@ export function useUpdateClient() {
 
   return useMutation<void, Error, Client, { prev: Client[] | undefined }>({
     mutationFn: async (updatedClient) => {
-      // 1. Update the client in clients.json
       await syncQueue.enqueue(async () => {
-        const latest = await storage.read(CLIENTS_PATH, ClientsFileSchema);
-        const latestClients = latest ? latest.clients.map(clientFromDto) : [];
+        const latestClients = await readClients(storage);
         const updatedList = latestClients.map((c) =>
           c.id.equals(updatedClient.id) ? updatedClient : c,
         );
-        
-        await storage.write(CLIENTS_PATH, {
-          clients: updatedList.map(clientToDto),
-        });
+        await writeClients(storage, updatedList);
       });
 
-      // 2. Write the updated profile.json to client folder
-      const folderName = `Client_${updatedClient.slug()}_${updatedClient.id.toString().slice(0, 6)}`;
-      const clientFolder = `Saskaitos_App/Clients/${folderName}`;
-      
+      const clientFolder = getClientFolder(updatedClient);
+
       await syncQueue.enqueue(async () => {
         await storage.write(StoragePath.of(clientFolder, 'profile.json'), clientToDto(updatedClient));
       });
@@ -126,21 +116,14 @@ export function useDeleteClient() {
 
   return useMutation<void, Error, Client, { prev: Client[] | undefined }>({
     mutationFn: async (clientToDelete) => {
-      // 1. Remove the client from clients.json
       await syncQueue.enqueue(async () => {
-        const latest = await storage.read(CLIENTS_PATH, ClientsFileSchema);
-        const latestClients = latest ? latest.clients.map(clientFromDto) : [];
+        const latestClients = await readClients(storage);
         const updatedList = latestClients.filter((c) => !c.id.equals(clientToDelete.id));
-        
-        await storage.write(CLIENTS_PATH, {
-          clients: updatedList.map(clientToDto),
-        });
+        await writeClients(storage, updatedList);
       });
 
-      // 2. Trash the client folder
-      const folderName = `Client_${clientToDelete.slug()}_${clientToDelete.id.toString().slice(0, 6)}`;
-      const folderPath = StoragePath.of('Saskaitos_App/Clients', folderName);
-      
+      const folderPath = getClientFolderPath(clientToDelete);
+
       await syncQueue.enqueue(async () => {
         await storage.delete(folderPath);
       });

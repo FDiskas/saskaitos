@@ -7,16 +7,9 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import { type Palette, resolvePalette } from '@/lib/design';
 import { type Invoice } from '@/lib/domain';
-import {
-  DEFAULT_ACCENT_COLOR,
-  DEFAULT_BORDER_COLOR,
-  DEFAULT_HEADING_COLOR,
-  DEFAULT_MUTED_COLOR,
-  DEFAULT_PRIMARY_COLOR,
-  DEFAULT_TEXT_COLOR,
-  type SettingsDto,
-} from '@/lib/drive/settings';
+import { type SettingsDto } from '@/lib/drive/settings';
 import { blockLabel } from '@/lib/invoice-template/blocks';
 import {
   canvasColumnDropId,
@@ -32,10 +25,7 @@ import {
 import { GripVertical } from 'lucide-react';
 import { useTranslate } from '@/hooks';
 import { paginateCanvasRows } from './canvasPagination';
-import {
-  type CanvasPalette,
-  renderBlockInstanceContent,
-} from './instanceContentRenderers';
+import { renderBlockInstanceContent } from './instanceContentRenderers';
 
 export interface InvoiceCanvasProps {
   invoice: Invoice;
@@ -67,14 +57,7 @@ export function InvoiceCanvas({
   const activePreset =
     settings.designPresets.find((p) => p.id === invoice.designPresetId) || settings.designPresets[0];
   const override = invoice.designOverride;
-  const palette: CanvasPalette = {
-    primaryColor: override?.primaryColor ?? activePreset?.primaryColor ?? DEFAULT_PRIMARY_COLOR,
-    accentColor: override?.accentColor ?? activePreset?.accentColor ?? DEFAULT_ACCENT_COLOR,
-    textColor: override?.textColor ?? activePreset?.textColor ?? DEFAULT_TEXT_COLOR,
-    mutedColor: override?.mutedColor ?? activePreset?.mutedColor ?? DEFAULT_MUTED_COLOR,
-    borderColor: override?.borderColor ?? activePreset?.borderColor ?? DEFAULT_BORDER_COLOR,
-    headingColor: override?.headingColor ?? activePreset?.headingColor ?? DEFAULT_HEADING_COLOR,
-  };
+  const palette = resolvePalette(activePreset, override);
   const effectiveBg = override?.backgroundImageBase64 ?? activePreset?.backgroundImageBase64;
   useGoogleFontInBrowser(activePreset?.fontFamily);
 
@@ -358,7 +341,7 @@ function renderInstance(
   invoice: Invoice,
   onChange: (updatedInvoice: Invoice) => void,
   settings: SettingsDto,
-  palette: CanvasPalette,
+  palette: Palette,
   isPreview: boolean,
   onInstancePatch: ((instanceId: string, patch: Partial<BlockInstance>) => void) | undefined,
 ): React.ReactNode {

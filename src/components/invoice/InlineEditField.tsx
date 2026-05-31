@@ -17,6 +17,9 @@ export function InlineEditField<T = string>({
   value,
   onChange,
   format = (val) => String(val),
+  // Identity default: only reachable when T resolves to the default `string`
+  // (every non-string caller supplies its own `parse`). TS cannot prove the
+  // generic `T` is `string` here, so a cast is required for the default.
   parse = (val) => val as unknown as T,
   type = 'text',
   readOnly = false,
@@ -34,7 +37,6 @@ export function InlineEditField<T = string>({
     if (isEditing && inputRef.current) {
       inputRef.current.focus();
       if (type !== 'date') {
-        // Safe check for select method
         if ('select' in inputRef.current) {
           inputRef.current.select();
         }

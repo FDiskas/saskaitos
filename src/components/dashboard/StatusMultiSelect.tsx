@@ -33,7 +33,7 @@ export function StatusMultiSelect({
     else onChange([...value, s]);
   };
 
-  const clear = (e: React.MouseEvent) => {
+  const clear = (e: React.SyntheticEvent) => {
     e.stopPropagation();
     onChange([]);
   };
@@ -60,7 +60,7 @@ export function StatusMultiSelect({
               tabIndex={0}
               onClick={clear}
               onKeyDown={(e) => {
-                if (e.key === 'Enter') clear(e as unknown as React.MouseEvent);
+                if (e.key === 'Enter') clear(e);
               }}
               className="rounded-full p-0.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600"
             >

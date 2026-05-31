@@ -1,4 +1,5 @@
 import { type CSSProperties, type ReactNode } from 'react';
+import { type Palette } from '@/lib/design';
 import { type Invoice } from '@/lib/domain';
 import { type SettingsDto } from '@/lib/drive/settings';
 import { type BlockKind, type BlockInstance } from '@/lib/invoice-template/layout';
@@ -14,20 +15,11 @@ import { SellerBlock } from './SellerBlock';
 import { TotalsBox } from './TotalsBox';
 import { useTextDraft } from './useTextDraft';
 
-export interface CanvasPalette {
-  primaryColor: string;
-  accentColor: string;
-  textColor: string;
-  mutedColor: string;
-  borderColor: string;
-  headingColor: string;
-}
-
 export interface InstanceRenderContext {
   invoice: Invoice;
   onChange: (updatedInvoice: Invoice) => void;
   settings: SettingsDto;
-  palette: CanvasPalette;
+  palette: Palette;
   isPreview: boolean;
   onInstancePatch: ((instanceId: string, patch: Partial<BlockInstance>) => void) | undefined;
 }

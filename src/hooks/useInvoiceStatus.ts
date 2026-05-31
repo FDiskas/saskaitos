@@ -13,15 +13,11 @@ import {
 import { formatDate } from '@/lib/format/date';
 import { syncQueue } from '@/stores';
 import { useClients } from './useClients';
-import { getClientFolder, getInvoicePath } from './useInvoice';
+import { getClientFolder, getClientIndexPath, getInvoicePath } from '@/lib/storage/clientPaths';
 
 interface StatusMutationVars {
   summary: InvoiceSummary;
   status: InvoiceStatus;
-}
-
-function indexPathFor(client: Client): StoragePath {
-  return StoragePath.of(getClientFolder(client), 'invoices_index.json');
 }
 
 function patchIndexEntry(
@@ -53,7 +49,7 @@ async function persistStatusChange(
   const invoicePath = getInvoicePath(client, updated.number, updated.issueDate);
   await storage.write(invoicePath, invoiceToDto(updated));
 
-  const idxPath = indexPathFor(client);
+  const idxPath = getClientIndexPath(client);
   const idx = (await storage.read(idxPath, InvoicesIndexFileSchema)) ?? [];
   await storage.write(idxPath, patchIndexEntry(idx, updated.id.toString(), { status: target }));
 }

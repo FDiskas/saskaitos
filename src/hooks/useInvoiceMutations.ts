@@ -22,13 +22,9 @@ import {
 import { SettingsDtoSchema, defaultSettings, type SettingsDto } from '@/lib/drive/settings';
 import { syncQueue } from '@/stores';
 import { useClients } from './useClients';
-import { getClientFolder, getInvoicePath } from './useInvoice';
+import { getClientIndexPath, getInvoicePath } from '@/lib/storage/clientPaths';
 
 const SETTINGS_PATH = StoragePath.of(APP_ROOT, SETTINGS_FILE);
-
-function indexPathFor(client: Client): StoragePath {
-  return StoragePath.of(getClientFolder(client), 'invoices_index.json');
-}
 
 function buildIndexEntry(invoice: Invoice): InvoiceIndexEntry {
   return {
@@ -95,7 +91,7 @@ export function useCreateInvoice() {
         });
 
         const invoicePath = getInvoicePath(client, number, invoice.issueDate);
-        const indexPath = indexPathFor(client);
+        const indexPath = getClientIndexPath(client);
         const previousIndex = (await storage.read(indexPath, InvoicesIndexFileSchema)) || [];
         const updatedSettings = applySeriesIncrement(latestSettings, updatedSeries);
         const updatedIndex = [...previousIndex, buildIndexEntry(invoice)];
@@ -183,14 +179,14 @@ async function writeInvoiceFile(ctx: UpdateContext): Promise<void> {
 }
 
 async function syncIndexAcrossClients(ctx: UpdateContext): Promise<void> {
-  const prevIndexPath = indexPathFor(ctx.prevClient);
+  const prevIndexPath = getClientIndexPath(ctx.prevClient);
   const prevIndex = (await ctx.storage.read(prevIndexPath, InvoicesIndexFileSchema)) || [];
   await ctx.storage.write(
     prevIndexPath,
     prevIndex.filter((e) => e.id !== ctx.updated.id.toString()),
   );
 
-  const nextIndexPath = indexPathFor(ctx.nextClient);
+  const nextIndexPath = getClientIndexPath(ctx.nextClient);
   const nextIndex = (await ctx.storage.read(nextIndexPath, InvoicesIndexFileSchema)) || [];
   await ctx.storage.write(nextIndexPath, [
     ...nextIndex.filter((e) => e.id !== ctx.updated.id.toString()),
@@ -199,7 +195,7 @@ async function syncIndexAcrossClients(ctx: UpdateContext): Promise<void> {
 }
 
 async function syncIndexSameClient(ctx: UpdateContext): Promise<void> {
-  const indexPath = indexPathFor(ctx.nextClient);
+  const indexPath = getClientIndexPath(ctx.nextClient);
   const index = (await ctx.storage.read(indexPath, InvoicesIndexFileSchema)) || [];
   const entry = buildIndexEntry(ctx.updated);
   const hasEntry = index.some((e) => e.id === ctx.updated.id.toString());
@@ -276,7 +272,7 @@ export function useDeleteInvoice() {
           console.warn(`Nepavyko ištrinti sąskaitos failo: ${path.toString()}`, err);
         }
 
-        const indexPath = indexPathFor(client);
+        const indexPath = getClientIndexPath(client);
         const index = (await storage.read(indexPath, InvoicesIndexFileSchema)) || [];
         await storage.write(
           indexPath,

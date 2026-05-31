@@ -46,6 +46,10 @@ function createTranslationHelper(language: LanguageCode): Translate {
     result[key] = typeof value === "string" ? value : "";
   }
 
+  // `Translate` maps each key to a string OR a (count) => string based on a
+  // per-key conditional type. TS cannot infer that the loop above populates
+  // each key with the matching variant, so the assertion is unavoidable here;
+  // the runtime branch on `isPlural` guarantees the shape is correct.
   return result as unknown as Translate;
 }
 

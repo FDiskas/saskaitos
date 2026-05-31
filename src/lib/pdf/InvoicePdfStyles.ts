@@ -1,15 +1,7 @@
 import { StyleSheet } from '@react-pdf/renderer';
+import { type Palette } from '@/lib/design';
 
-export interface PdfPalette {
-  primaryColor: string;
-  accentColor: string;
-  textColor: string;
-  mutedColor: string;
-  borderColor: string;
-  headingColor: string;
-}
-
-export const getPdfStyles = (palette: PdfPalette, fontFamily: string | readonly string[]) => {
+export const getPdfStyles = (palette: Palette, fontFamily: string | readonly string[]) => {
   const { primaryColor, accentColor, textColor, mutedColor, borderColor, headingColor } = palette;
   return StyleSheet.create({
     page: {

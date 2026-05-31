@@ -50,18 +50,22 @@ export function migrateLegacyLayoutInput(input: unknown): unknown {
 function migrateItem(
   item: LegacyColumnContentItem,
   legacySettings: Record<string, LegacyBlockSettings>,
-): BlockInstance | Record<string, unknown> {
+): BlockInstance | LegacyColumnContentItem {
   if (typeof item !== 'string') return item;
-  if (!DATA_KINDS_SET.has(item as DataBlockKind)) return item as unknown as Record<string, unknown>;
+  if (!isLegacyDataKind(item)) return item;
 
   const settings = legacySettings[item] ?? {};
   return {
     id: `legacy-${item}`,
-    kind: item as DataBlockKind,
+    kind: item,
     align: settings.align ?? 'left',
     marginTop: settings.marginTop ?? 0,
     marginBottom: settings.marginBottom ?? 0,
   };
+}
+
+function isLegacyDataKind(value: string): value is DataBlockKind {
+  return DATA_KINDS_SET.has(value as DataBlockKind);
 }
 
 function isObject(value: unknown): value is Record<string, unknown> {

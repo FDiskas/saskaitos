@@ -6,6 +6,7 @@
 - [shared-app-header](project/shared-app-header.md) — AppHeader is single shared top nav for dashboard/clients/settings with mobile hamburger drawer. keywords: header, navigation, responsive, mobile, app-header
 - [in-picker-client-creation](project/in-picker-client-creation.md) — NewInvoicePicker has inline "Sukurti naują klientą" button that opens ClientFormDialog without leaving invoice flow. keywords: client, picker, invoice, dialog, inline, create
 - [opensource-repo](project/opensource-repo.md) — MIT open-source repo github.com/FDiskas/saskaitos; AppFooter shows link in dashboard/clients/settings. keywords: opensource, github, license, mit, footer, app-footer
+- [deferred-cleanup-followups](project/deferred-cleanup-followups.md) — items left untouched in 2026-05-30 audit (missing coverage-v8 dep, unused useDeleteInvoice, auth swallow, legacy migration) + clean baseline. keywords: cleanup, tech-debt, followups, audit, coverage-v8
 
 ## decisions/
 

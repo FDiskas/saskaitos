@@ -1,4 +1,9 @@
+import { z } from 'zod';
 import type { Fetcher } from './http/Fetcher';
+
+const FileListResponseSchema = z.object({
+  files: z.array(z.unknown()).optional(),
+});
 
 export interface DriveFile {
   id: string;
@@ -69,7 +74,7 @@ export class GoogleDriveClient implements DriveClient {
     if (opts.mimeType) clauses.push(`mimeType='${opts.mimeType}'`);
     const url = `${API_BASE}/files?q=${encodeURIComponent(clauses.join(' and '))}&fields=files(id,name,mimeType,modifiedTime,size)&pageSize=1000`;
     const res = await this.fetchOk(new Request(url, { method: 'GET' }));
-    const data = (await res.json()) as { files?: unknown[] };
+    const data = FileListResponseSchema.parse(await res.json());
     return (data.files ?? []).map(parseDriveFile);
   }
 
@@ -118,7 +123,7 @@ export class GoogleDriveClient implements DriveClient {
   private async findByQuery(q: string): Promise<DriveFile | null> {
     const url = `${API_BASE}/files?q=${encodeURIComponent(q)}&fields=files(id,name,mimeType,modifiedTime,size)&pageSize=1`;
     const res = await this.fetchOk(new Request(url, { method: 'GET' }));
-    const data = (await res.json()) as { files?: unknown[] };
+    const data = FileListResponseSchema.parse(await res.json());
     const first = data.files?.[0];
     return first ? parseDriveFile(first) : null;
   }

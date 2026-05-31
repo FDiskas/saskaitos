@@ -1,19 +1,12 @@
 import { Document, Image, Page, Text, View } from '@react-pdf/renderer';
+import { resolvePalette } from '@/lib/design';
 import type { Client, Invoice } from '@/lib/domain';
-import {
-  DEFAULT_ACCENT_COLOR,
-  DEFAULT_BORDER_COLOR,
-  DEFAULT_HEADING_COLOR,
-  DEFAULT_MUTED_COLOR,
-  DEFAULT_PRIMARY_COLOR,
-  DEFAULT_TEXT_COLOR,
-  type SettingsDto,
-} from '@/lib/drive/settings';
+import { type SettingsDto } from '@/lib/drive/settings';
 import { rowTotalSpan, type BlockInstance, type InvoiceTemplateRowDto } from '@/lib/invoice-template/layout';
 import { formatDate } from '@/lib/format/date';
 import { moneyToWordsLt } from '@/lib/format/moneyWordsLt';
 import { translate, withParams } from '@/lib/translate';
-import { getPdfStyles, type PdfPalette } from './InvoicePdfStyles';
+import { getPdfStyles } from './InvoicePdfStyles';
 import { resolveFontStack } from './googleFonts';
 
 const PX_TO_PT = 0.75;
@@ -36,14 +29,7 @@ export function InvoicePdfDocument({ invoice, client, settings }: InvoicePdfDocu
   const activePreset =
     settings.designPresets.find((preset) => preset.id === invoice.designPresetId) || settings.designPresets[0];
   const override = invoice.designOverride;
-  const palette: PdfPalette = {
-    primaryColor: override?.primaryColor ?? activePreset?.primaryColor ?? DEFAULT_PRIMARY_COLOR,
-    accentColor: override?.accentColor ?? activePreset?.accentColor ?? DEFAULT_ACCENT_COLOR,
-    textColor: override?.textColor ?? activePreset?.textColor ?? DEFAULT_TEXT_COLOR,
-    mutedColor: override?.mutedColor ?? activePreset?.mutedColor ?? DEFAULT_MUTED_COLOR,
-    borderColor: override?.borderColor ?? activePreset?.borderColor ?? DEFAULT_BORDER_COLOR,
-    headingColor: override?.headingColor ?? activePreset?.headingColor ?? DEFAULT_HEADING_COLOR,
-  };
+  const palette = resolvePalette(activePreset, override);
   const fontStack = resolveFontStack(activePreset?.fontFamily);
 
   const totals = invoice.totals();

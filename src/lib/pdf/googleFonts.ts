@@ -73,7 +73,6 @@ export async function ensureGoogleFontRegistered(
   const base = resolveBaseFamily(family);
   const stack = resolveFontStack(family);
 
-  // Return immediately if already fully loaded
   const cached = done.get(base);
   if (cached) return cached;
 

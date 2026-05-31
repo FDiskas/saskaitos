@@ -123,21 +123,11 @@ export function InvoiceEditorPage() {
     (nextLogoBase64: string | undefined) => {
       updateSettings((current) => {
         const companies = current.companies ?? [];
-        const fallbackActiveId = current.activeCompanyId ?? companies[0]?.id ?? null;
-
-        if (!fallbackActiveId) {
-          if (!current.company) return current;
-          return {
-            ...current,
-            company: {
-              ...current.company,
-              logoBase64: nextLogoBase64,
-            },
-          };
-        }
+        const activeId = current.activeCompanyId ?? companies[0]?.id ?? null;
+        if (!activeId) return current;
 
         const nextCompanies = companies.map((profile) =>
-          profile.id === fallbackActiveId
+          profile.id === activeId
             ? {
                 ...profile,
                 company: {
@@ -148,7 +138,7 @@ export function InvoiceEditorPage() {
             : profile,
         );
 
-        const activeCompany = nextCompanies.find((profile) => profile.id === fallbackActiveId)?.company;
+        const activeCompany = nextCompanies.find((profile) => profile.id === activeId)?.company;
         if (!activeCompany) return current;
 
         return {

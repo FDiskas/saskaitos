@@ -1,10 +1,10 @@
 import { useQuery } from '@tanstack/react-query';
 import { queryKeys } from '@/query-keys';
-import { StoragePath, type Storage } from '@/lib/storage';
+import { type Storage } from '@/lib/storage';
 import { useStorage } from './useStorage';
 import { InvoiceId, InvoiceSummary, Money, type Client } from '@/lib/domain';
 import { InvoicesIndexFileSchema, type InvoiceIndexEntry } from '@/lib/drive/schemas';
-import { getClientFolder } from './useInvoice';
+import { getClientIndexPath } from '@/lib/storage/clientPaths';
 import { useClients } from './useClients';
 import { useSettings } from './useSettings';
 
@@ -33,7 +33,7 @@ async function readClientSummaries(
   client: Client,
   defaultCompanyId: string | null,
 ): Promise<InvoiceSummary[]> {
-  const indexPath = StoragePath.of(getClientFolder(client), 'invoices_index.json');
+  const indexPath = getClientIndexPath(client);
   try {
     const entries = await storage.read(indexPath, InvoicesIndexFileSchema);
     if (!entries) return [];
